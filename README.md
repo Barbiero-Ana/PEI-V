@@ -29,7 +29,7 @@ Este repositório reúne todo o trabalho desenvolvido pela equipe ao longo do Pr
 | Nome | Papel |
 | ---- | ----- |
 | Ana Carolina Da Silva Barbiero | Líder de projeto e UX |
-| | |
+| Tulio F. Q. Dantas | DBA |
 | | |
 | | |
 | | |
