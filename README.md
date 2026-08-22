@@ -31,7 +31,7 @@ Este repositório reúne todo o trabalho desenvolvido pela equipe ao longo do Pr
 | Ana Carolina Da Silva Barbiero | Líder de projeto - FrontEnd |
 | Tulio F. Q. Dantas | DBA |
 | Yuri Zambrana A. de Magalhaes | QA |
-| Joao Vitor dos Reis Leme Franco | Analista |
+| Joao Vitor dos Reis Leme Franco | DEV  back-end |
 | | |
 | | |
 
