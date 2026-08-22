@@ -33,7 +33,6 @@ Este repositório reúne todo o trabalho desenvolvido pela equipe ao longo do Pr
 | Yuri Zambrana A. de Magalhaes | QA |
 | Joao Vitor dos Reis Leme Franco | DEV  back-end |
 | | |
-| | |
 
 ---
 
