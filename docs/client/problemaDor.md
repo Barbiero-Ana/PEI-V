@@ -95,5 +95,5 @@ Essa dor foi identificada junto à ECSA — Escola Chave do Saber, e serve como 
 </p>
 
 <p align="center">
-  <img src="src/img/UNIVAGLogo.png" alt="Logo UNIVAG" width="220">
+  <img src="../../src/img/UNIVAGLogo.png" alt="Logo UNIVAG" width="220">
 </p>
