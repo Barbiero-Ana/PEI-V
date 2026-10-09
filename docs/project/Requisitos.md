@@ -527,39 +527,6 @@ Cada requisito especificado neste documento possui um método de verificação q
 
 ---
 
-## 10. Matriz de permissões
-
-### Legenda
-
-- **T:** Acesso total.
-- **P:** Acesso parcial, restrito aos próprios dados ou às próprias turmas.
-- **—:** Sem acesso.
-
-| Funcionalidade | Administrador | Gestão | Professor | Aluno |
-|---|:---:|:---:|:---:|:---:|
-| Usuários | T | — | — | — |
-| Turmas e vínculos | T | T | P | P |
-| Catálogo de missões | T | T | T | P |
-| Atividades | — | P | T | P |
-| Avaliação e feedback | — | P | T | P |
-| Análise de aprendizagem | — | P | T | P |
-| Painel de indicadores | — | T | T | — |
-| Gamificação e personalização | — | — | — | T |
-| Relatório para a família | — | — | P | T |
-| Acessibilidade | T | T | T | T |
-| Perfil e senha | T | T | T | T |
-| Notificações | P | P | P | P |
-
----
-
-## Informações acadêmicas
-
-**Instituição:** Centro Universitário de Várzea Grande — UNIVAG  
-**Disciplina:** Projeto Extensionista Integrador IV  
-**Projeto:** Modolume  
-**Professor orientador:** Brendo Yuri Maia do Vale  
-**Local:** Várzea Grande — MT  
-**Ano:** 2026
 
 ---
 
