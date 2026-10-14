@@ -41,11 +41,8 @@
 
 ## 1. Resumo
 
-O **Modolume** é uma plataforma educacional projetada para apoiar a aprendizagem de Matemática e ampliar as possibilidades de acompanhamento pedagógico.
 
-Para o aluno, oferece um aplicativo móvel em que os conteúdos são apresentados como missões: minigames visuais e interativos construídos a partir de situações do dia a dia, organizados em mapas e acompanhados por um mascote, com dicas, retorno imediato, elementos de gamificação e recursos de acessibilidade.
-
-Para o professor, oferece uma plataforma web com gestão de turmas e atividades e com indicadores que mostram o desempenho dos alunos em diferentes formatos de atividade: em quais apresentam maior facilidade, quanto acertam de primeira, quanto utilizam as dicas e como evoluem ao longo do tempo.
+O Modolume é uma plataforma educacional que atua como ponte entre aluno e professor. Seu objetivo não é apenas facilitar a prática, mas permitir que o professor compreenda como cada aluno aprende. Para o aluno, oferece um aplicativo móvel com atividades em formatos diferentes — associação visual, montagem, sequência, manipulação de objetos e exploração em 3D — apresentadas como minijogos a partir de situações do dia a dia, com dicas, retorno imediato, gamificação e recursos de acessibilidade. Cada atividade realizada gera dados sobre o desempenho do aluno em cada formato: quanto acerta de primeira, quanto depende de dicas e como evolui ao longo do tempo. Para o professor, a plataforma web reúne esses dados em um perfil de aprendizagem por aluno e por turma, indicando os formatos em que cada aluno compreende melhor e aqueles em que tem mais dificuldade. Com essa informação, o professor pode reestruturar provas e planos de aula de forma objetiva, adaptando a forma de ensinar e de avaliar para atender os alunos com dificuldade. A Matemática do Ensino Fundamental é o conteúdo inicial da plataforma. Este documento especifica os requisitos funcionais e não funcionais do sistema.
 
 ---
 
