@@ -18,11 +18,11 @@ export async function apiDaEquipe<T>(
   opcoes: { metodo?: "GET" | "POST" | "PUT" | "DELETE"; corpo?: unknown } = {},
 ): Promise<T> {
   const sessao = await sessaoDaEquipe();
-  if (!sessao?.token || !usandoApi()) redirect("/professor/entrar?expirou=1");
+  if (!sessao?.token || !usandoApi()) redirect("/entrar?expirou=1");
   try {
     return await chamarApi<T>(caminho, { ...opcoes, token: sessao.token });
   } catch (e) {
-    if (e instanceof ErroApi && e.status === 401) redirect("/professor/entrar?expirou=1");
+    if (e instanceof ErroApi && e.status === 401) redirect("/entrar?expirou=1");
     // papel mudou enquanto a pessoa estava logada: leva para a área certa
     if (e instanceof ErroApi && e.status === 403) redirect(INICIO_DO_PAPEL[papelDa(sessao)]);
     throw e;

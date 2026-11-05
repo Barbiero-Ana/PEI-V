@@ -60,5 +60,5 @@ export async function entrar(_anterior: EstadoEntrar, form: FormData): Promise<E
 
 export async function sair() {
   await apagarSessao();
-  redirect("/professor/entrar");
+  redirect("/entrar");
 }

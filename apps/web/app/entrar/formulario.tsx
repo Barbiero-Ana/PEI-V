@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { entrar, type EstadoEntrar } from "../acoes";
+import { entrar, type EstadoEntrar } from "@/app/professor/acoes";
 
 const INICIAL: EstadoEntrar = { erro: null, email: "" };
 

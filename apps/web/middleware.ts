@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { COOKIE_SESSAO, INICIO_DO_PAPEL, lerSessao, papelDa, type PapelEquipe } from "@/lib/painel/sessao";
 
 /**
- * Protege as áreas do painel. Sem sessão válida, qualquer página leva ao login.
+ * Protege as áreas do painel. O login (/entrar) é um portal só para toda a equipe. Sem sessão válida, qualquer página leva ao login.
  * Com sessão, cada papel só abre a sua área: professor em /professor,
  * coordenação em /coordenacao e administrador em /admin (a API confere de novo
  * em cada chamada). Quem entrou com senha provisória troca a senha antes.
@@ -14,7 +14,7 @@ const AREA_DO_CAMINHO: [string, PapelEquipe][] = [
   ["/admin", "admin"],
 ];
 
-const LOGIN = "/professor/entrar";
+const LOGIN = "/entrar";
 const TROCAR_SENHA = "/conta/senha";
 
 export async function middleware(req: NextRequest) {
@@ -45,6 +45,7 @@ export async function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
+    "/entrar",
     "/professor",
     "/professor/:caminho*",
     "/coordenacao",

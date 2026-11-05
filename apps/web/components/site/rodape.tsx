@@ -26,7 +26,7 @@ const COLUNAS: { titulo: string; links: { rotulo: string; href: string; externo?
   {
     titulo: "Acesso",
     links: [
-      { rotulo: "Entrar no painel", href: "/professor/entrar" },
+      { rotulo: "Entrar na plataforma", href: "/entrar" },
       { rotulo: CONTATO_EMAIL, href: contato("Contato pelo site"), externo: true },
     ],
   },

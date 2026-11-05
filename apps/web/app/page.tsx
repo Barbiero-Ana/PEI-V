@@ -22,7 +22,7 @@ import meninoRiso from "@/public/fotos/menino-riso.webp";
 
 /**
  * Página inicial do site: quem somos, o objetivo, como funciona, as soluções e
- * planos sem preço (lib/planos.ts), com demonstração e contato de vendas, e o acesso do professor.
+ * planos sem preço (lib/planos.ts), com demonstração e contato de vendas, e a entrada da equipe da escola (/entrar).
  * O app do aluno é só para celular (ADR 0018). Fotos: Unsplash (licença livre),
  * recortadas com fundo transparente.
  */
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
     "Missões de Matemática no celular do aluno e um painel que mostra ao professor como cada aluno aprende. Conheça as soluções para a sua escola.",
 };
 
-const ACESSO_PROFESSOR = "/professor/entrar";
+const ENTRAR = "/entrar";
 const contato = (assunto: string) => `mailto:${CONTATO_EMAIL}?subject=${encodeURIComponent(assunto)}`;
 
 const FORMATOS = [
@@ -104,10 +104,8 @@ export default function Inicio() {
                 {rotulo}
               </a>
             ))}
-            <BotaoLink href={ACESSO_PROFESSOR} className="min-h-11 whitespace-nowrap px-4 py-2.5">
-              {/* no celular, o rótulo curto cabe numa linha ao lado da marca */}
-              <span className="sm:hidden">Professor</span>
-              <span className="hidden sm:inline">Acesso do professor</span>
+            <BotaoLink href={ENTRAR} className="min-h-11 whitespace-nowrap px-4 py-2.5">
+              Entrar
             </BotaoLink>
           </nav>
         </div>
@@ -510,10 +508,10 @@ export default function Inicio() {
                   Solicite uma demo
                 </a>
                 <Link
-                  href={ACESSO_PROFESSOR}
+                  href={ENTRAR}
                   className="inline-flex min-h-12 items-center justify-center rounded-xl border border-white/40 px-5 py-3 font-display text-[0.95rem] font-semibold text-white hover:bg-white/10"
                 >
-                  Já uso: acesso do professor
+                  Já uso: entrar na plataforma
                 </Link>
               </div>
             </div>

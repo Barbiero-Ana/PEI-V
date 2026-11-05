@@ -51,13 +51,19 @@ export default function EntrarProfessor() {
         <div className="relative flex flex-1 items-center justify-center py-10">
           <div className="w-full max-w-[400px] rounded-[2rem] border border-borda bg-superficie p-7 shadow-[0_40px_80px_-50px_rgb(30_42_120/0.55)] sm:p-9">
             <h2 className="text-[1.7rem]">Boas-vindas!</h2>
-            <p className="mt-1 text-texto-suave">Entre com o e-mail cadastrado pela sua escola.</p>
+            <p className="mt-1 text-texto-suave">
+              Professores, coordenação e administração entram por aqui, com o e-mail cadastrado pela escola.
+            </p>
             <div className="mt-8">
               <FormularioEntrar />
             </div>
             <div className="mt-7 rounded-2xl bg-suave px-4 py-3 text-sm text-texto">
-              <p className="font-semibold text-tinta">Acesso de demonstração</p>
-              <p className="mt-0.5 break-words">marina.alves@escola.example · senha modolume2026</p>
+              <p className="font-semibold text-tinta">Acesso de demonstração (senha modolume2026)</p>
+              <ul className="mt-1 flex flex-col gap-0.5 break-words">
+                <li>Professora: marina.alves@escola.example</li>
+                <li>Coordenação: coordenacao@escola.example</li>
+                <li>Administração: admin@escola.example</li>
+              </ul>
             </div>
           </div>
         </div>

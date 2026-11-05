@@ -120,7 +120,7 @@ const sessaoAtual = cache(async () => lerSessao((await cookies()).get(COOKIE_SES
 /** Token da API do professor logado (usado pelas outras partes do painel que falam com a API). */
 export async function tokenDaApi() {
   const sessao = await sessaoAtual();
-  if (!sessao?.token) redirect("/professor/entrar?expirou=1");
+  if (!sessao?.token) redirect("/entrar?expirou=1");
   return sessao.token;
 }
 
@@ -152,7 +152,7 @@ const carregar = cache(
       return { dados: converter(api), avatares, acessos };
     } catch (e) {
       // token vencido ou de outro servidor: volta ao login
-      if (e instanceof ErroApi && (e.status === 401 || e.status === 403)) redirect("/professor/entrar?expirou=1");
+      if (e instanceof ErroApi && (e.status === 401 || e.status === 403)) redirect("/entrar?expirou=1");
       throw e;
     }
   },
@@ -175,10 +175,10 @@ export async function acessoDoAluno(alunoId: string): Promise<AcessoDoAluno | nu
  */
 export const professorLogado = cache(async function professorLogado(): Promise<Professor> {
   const sessao = await sessaoAtual();
-  if (!sessao) redirect("/professor/entrar");
+  if (!sessao) redirect("/entrar");
   const todos = await carregarTudo();
   const professor = todos.professores.find((p) => p.id === sessao.professorId);
-  if (!professor) redirect("/professor/entrar?expirou=1");
+  if (!professor) redirect("/entrar?expirou=1");
   return professor;
 });
 
