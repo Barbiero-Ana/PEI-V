@@ -92,13 +92,14 @@ function guardaDe(...papeis: Papel[]) {
       }
       if (!papeis.includes(sessao.papel)) throw new ForbiddenException("Você não tem permissão para isso.");
       if (sessao.papel === "aluno") {
-        // código novo (celular perdido, código vazado) ou aluno desativado: a sessão deixa de valer
+        // Código novo, transferência ou desativação invalidam o acesso anterior.
         const aluno = await this.banco.aluno.findUnique({
           where: { id: sessao.sub },
-          select: { ativo: true, versaoAcesso: true },
+          select: { ativo: true, versaoAcesso: true, turmaId: true, turma: { select: { ativa: true } } },
         });
-        if (!aluno || !aluno.ativo || aluno.versaoAcesso !== sessao.v)
+        if (!aluno || !aluno.ativo || aluno.versaoAcesso !== sessao.v || aluno.turmaId !== sessao.turmaId)
           throw new UnauthorizedException("Seu acesso mudou. Entre de novo com o código que o professor passou.");
+        if (!aluno.turma.ativa) throw new ForbiddenException("Sua turma está encerrada. Fale com a escola.");
       } else {
         // equipe: desativar a pessoa ou mudar o papel dela vale na hora, sem esperar o token vencer
         const pessoa = await this.banco.professor.findUnique({

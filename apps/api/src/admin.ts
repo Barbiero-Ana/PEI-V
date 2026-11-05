@@ -284,7 +284,15 @@ export class AdminController {
   async ativarTurma(@EquipeAtual() eu: Equipe, @Param("id") id: string, @Body() corpo: unknown) {
     const { ativa: valor } = validar(ativa, corpo);
     const turma = await this.turmaDaEscola(eu, id);
-    await this.banco.turma.update({ where: { id }, data: { ativa: valor } });
+    if (valor) {
+      await this.banco.turma.update({ where: { id }, data: { ativa: true } });
+    } else {
+      // Encerramento e revogação juntos: reabrir não restaura sessões anteriores.
+      await this.banco.$transaction([
+        this.banco.turma.update({ where: { id }, data: { ativa: false } }),
+        this.banco.aluno.updateMany({ where: { turmaId: id }, data: { versaoAcesso: { increment: 1 } } }),
+      ]);
+    }
     await registrar(this.banco, eu, valor ? "turma.reaberta" : "turma.encerrada", {
       tipo: "turma",
       id,
@@ -318,6 +326,7 @@ export class AdminController {
   async criarAluno(@EquipeAtual() eu: Equipe, @Body() corpo: unknown) {
     const d = validar(dadosAluno, corpo);
     const turma = await this.turmaDaEscola(eu, d.turmaId);
+    if (!turma.ativa) throw new BadRequestException("Não é possível cadastrar alunos em uma turma encerrada.");
     if (await this.banco.aluno.findFirst({ where: { turmaId: d.turmaId, matricula: d.matricula } }))
       throw new ConflictException("Já existe um aluno com essa matrícula nesta turma.");
     const aluno = await this.banco.aluno.create({
@@ -342,16 +351,24 @@ export class AdminController {
     const d = validar(dadosAluno, corpo);
     const atual = await this.alunoDaEscola(eu, id);
     const destino = await this.turmaDaEscola(eu, d.turmaId);
+    const trocou = atual.turmaId !== d.turmaId;
+    if (trocou && !destino.ativa)
+      throw new BadRequestException("Não é possível transferir alunos para uma turma encerrada.");
     const repetido = await this.banco.aluno.findFirst({
       where: { turmaId: d.turmaId, matricula: d.matricula, NOT: { id } },
     });
     if (repetido) throw new ConflictException("Já existe um aluno com essa matrícula nesta turma.");
     await this.banco.aluno.update({
       where: { id },
-      data: { nome: d.nome, matricula: d.matricula, turmaId: d.turmaId },
+      data: {
+        nome: d.nome,
+        matricula: d.matricula,
+        turmaId: d.turmaId,
+        // Mesma gravação da transferência: nenhum token da turma anterior continua válido.
+        ...(trocou ? { versaoAcesso: { increment: 1 } } : {}),
+      },
     });
     // as jogadas ficam ligadas ao aluno: trocar de turma preserva o histórico (RN-18)
-    const trocou = atual.turmaId !== d.turmaId;
     await registrar(this.banco, eu, trocou ? "aluno.trocou_turma" : "aluno.editado", {
       tipo: "aluno",
       id,

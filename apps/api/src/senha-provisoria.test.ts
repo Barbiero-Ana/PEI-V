@@ -58,7 +58,14 @@ const banco = {
       return { ...pessoa };
     },
   },
-  aluno: { findUnique: async () => ({ ativo: alunoAtivo, versaoAcesso: versaoAluno }) },
+  aluno: {
+    findUnique: async () => ({
+      ativo: alunoAtivo,
+      versaoAcesso: versaoAluno,
+      turmaId: "turma-teste",
+      turma: { ativa: true },
+    }),
+  },
   registro: {
     create: async () => {
       escritas++;
