@@ -1,0 +1,44 @@
+{
+  "expo": {
+    "name": "Modolume",
+    "slug": "modolume",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "platforms": ["ios", "android"],
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "br.com.modolume.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#FAF8FE",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false,
+      "package": "br.com.modolume.app"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-status-bar",
+      "expo-font",
+      "expo-sharing",
+      "expo-sqlite"
+    ],
+    "scheme": "modolume",
+    "backgroundColor": "#F7F6FD",
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "deaf1673-1a7f-4ebd-96f6-1d08e049d694"
+      }
+    },
+    "owner": "anabarbiero23"
+  }
+}

@@ -1,0 +1,630 @@
+<title>Questly — Plano de Ação do MVP</title>
+<meta name="description" content="Plano de desenvolvimento do MVP do Questly para validação com escolas." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+  rel="stylesheet"
+  href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Open+Sans:wght@400;500;600&display=swap"
+/>
+<style>
+  :root {
+    color-scheme: light;
+    --ground: #f3eee1;
+    --surface: #fffdf8;
+    --surface-2: #faf5e9;
+    --sunk: #ebe2cf;
+    --line: #e3d9c3;
+    --line-strong: #cebfa0;
+
+    --ink: #2a2521;
+    --ink-soft: #5f574a;
+    --ink-faint: #938a77;
+
+    --green: #1f7a52;
+    --green-deep: #15603f;
+    --green-soft: #e0efe3;
+    --orange: #d6702a;
+    --orange-soft: #f8e6d3;
+    --yellow: #e9a71c;
+    --yellow-soft: #f8ecc6;
+
+    --radius: 14px;
+    --shadow: 0 1px 2px rgba(42, 37, 33, 0.05), 0 14px 34px -20px rgba(42, 37, 33, 0.28);
+    --sans: "Open Sans", ui-sans-serif, system-ui, sans-serif;
+    --display: "Poppins", var(--sans);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 15.5px;
+    line-height: 1.62;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3, h4 {
+    font-family: var(--display);
+    font-weight: 600;
+    line-height: 1.18;
+    text-wrap: balance;
+    margin: 0;
+  }
+  p { margin: 0; }
+  a { color: var(--green-deep); }
+  strong { font-weight: 600; }
+
+  /* ---------- shell ---------- */
+  .shell {
+    display: grid;
+    grid-template-columns: 1fr;
+    max-width: 1320px;
+    margin: 0 auto;
+    min-height: 100vh;
+  }
+  @media (min-width: 960px) {
+    .shell { grid-template-columns: 264px 1fr; }
+  }
+
+  .sidebar {
+    background: var(--surface);
+    border-right: 1px solid var(--line);
+    padding: 30px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 26px;
+  }
+  @media (min-width: 960px) {
+    .sidebar { position: sticky; top: 0; height: 100vh; }
+  }
+  .brand { display: flex; align-items: center; gap: 11px; }
+  .brand .mark {
+    width: 38px; height: 38px;
+    display: grid; place-items: center;
+    background: var(--green);
+    color: #fff;
+    border-radius: 11px;
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: 20px;
+  }
+  .brand b { font-family: var(--display); font-weight: 600; font-size: 19px; display: block; }
+  .brand span {
+    font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-faint);
+  }
+
+  .toc { display: flex; flex-direction: column; gap: 2px; }
+  .toc a {
+    display: flex; gap: 10px; align-items: baseline;
+    padding: 8px 10px;
+    border-radius: 9px;
+    color: var(--ink-soft);
+    text-decoration: none;
+    font-size: 14px;
+  }
+  .toc a:hover { background: var(--surface-2); color: var(--ink); }
+  .toc a b { font-family: var(--display); font-weight: 600; font-size: 12px; color: var(--green); min-width: 14px; }
+
+  .sidebar .foot {
+    margin-top: auto;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--ink-faint);
+    border-top: 1px solid var(--line);
+    padding-top: 16px;
+  }
+  .sidebar .foot b { color: var(--ink-soft); font-weight: 600; }
+
+  /* ---------- main ---------- */
+  main { padding: 0; }
+  .band {
+    padding: 52px clamp(24px, 5vw, 64px) 40px;
+    background:
+      radial-gradient(120% 140% at 100% 0%, var(--green-soft) 0%, transparent 55%),
+      var(--surface-2);
+    border-bottom: 1px solid var(--line);
+  }
+  .eyebrow {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: 12px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--green);
+    margin-bottom: 14px;
+  }
+  .band h1 { font-size: clamp(2.1rem, 5vw, 3rem); font-weight: 700; }
+  .band .lede {
+    margin-top: 14px;
+    max-width: 62ch;
+    font-size: clamp(1rem, 2vw, 1.16rem);
+    color: var(--ink-soft);
+  }
+  .meta {
+    margin-top: 26px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .chip {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 6px 13px;
+    font-size: 12.5px;
+    color: var(--ink-soft);
+  }
+  .chip b { color: var(--ink); font-family: var(--display); font-weight: 600; }
+
+  .section {
+    padding: 46px clamp(24px, 5vw, 64px);
+    border-bottom: 1px solid var(--line);
+    scroll-margin-top: 20px;
+  }
+  .section:last-child { border-bottom: 0; }
+  .section > h2 {
+    font-size: 1.5rem;
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 6px;
+  }
+  .section > h2 .n {
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: #fff;
+    background: var(--green);
+    border-radius: 8px;
+    padding: 3px 9px;
+  }
+  .section > .intro {
+    max-width: 68ch;
+    color: var(--ink-soft);
+    margin-bottom: 26px;
+  }
+  .prose p + p { margin-top: 14px; }
+  .prose { max-width: 72ch; }
+  .prose h3 { font-size: 1.08rem; margin: 26px 0 8px; }
+
+  .callout {
+    background: var(--green-soft);
+    border-left: 4px solid var(--green);
+    border-radius: 0 10px 10px 0;
+    padding: 16px 20px;
+    margin: 22px 0;
+    max-width: 78ch;
+  }
+  .callout.orange { background: var(--orange-soft); border-color: var(--orange); }
+  .callout p + p { margin-top: 8px; }
+
+  /* ---------- flow strip ---------- */
+  .flow {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 10px;
+    margin-top: 8px;
+  }
+  .flow .step {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 14px 16px;
+    position: relative;
+  }
+  .flow .step .k {
+    font-family: var(--display); font-weight: 700; font-size: 12px;
+    color: var(--orange);
+  }
+  .flow .step p { font-size: 13.5px; margin-top: 4px; color: var(--ink-soft); }
+
+  /* ---------- grids ---------- */
+  .grid { display: grid; gap: 16px; }
+  .grid.two { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+  .grid.three { grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); }
+  .grid.four { grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 20px;
+    box-shadow: var(--shadow);
+  }
+  .card h3 { font-size: 1rem; margin-bottom: 4px; }
+  .card h3.k-green { color: var(--green-deep); }
+  .card h3.k-faint { color: var(--ink-faint); }
+  .card .cap {
+    font-family: var(--display); font-weight: 500;
+    font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--ink-faint); margin-bottom: 12px;
+  }
+  .card ul { margin: 0; padding-left: 18px; }
+  .card li { margin: 6px 0; }
+  .card.muted li { color: var(--ink-soft); }
+
+  .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; background: var(--surface); }
+  th, td { text-align: left; padding: 12px 16px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  tr:last-child td { border-bottom: 0; }
+  thead th {
+    font-family: var(--display); font-weight: 600;
+    font-size: 11px; letter-spacing: 0.09em; text-transform: uppercase;
+    color: var(--ink-faint);
+    background: var(--surface-2);
+  }
+  tbody td:first-child { font-family: var(--display); font-weight: 600; }
+
+  /* ---------- roadmap ---------- */
+  .roadmap { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+  .phase {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-top: 4px solid var(--green);
+    border-radius: 12px;
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .phase:nth-child(2) { border-top-color: var(--orange); }
+  .phase:nth-child(3) { border-top-color: var(--yellow); }
+  .phase:nth-child(4) { border-top-color: var(--line-strong); }
+  .phase .top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .phase .fase { font-family: var(--display); font-weight: 700; font-size: 12px; color: var(--ink-faint); }
+  .phase .badge {
+    font-family: var(--display); font-weight: 600; font-size: 10.5px;
+    text-transform: uppercase; letter-spacing: 0.05em;
+    padding: 3px 8px; border-radius: 999px;
+    background: var(--green-soft); color: var(--green-deep);
+  }
+  .phase .badge.wip { background: var(--yellow-soft); color: #8a6209; }
+  .phase h3 { font-size: 1.02rem; }
+  .phase .dur { font-size: 12px; color: var(--orange); font-weight: 600; }
+  .phase ul { margin: 4px 0 0; padding-left: 17px; }
+  .phase li { margin: 4px 0; font-size: 13.5px; color: var(--ink-soft); }
+
+  /* ---------- risks / steps ---------- */
+  .risk { border-left: 3px solid var(--line-strong); padding: 4px 0 4px 14px; margin: 12px 0; }
+  .risk b { font-family: var(--display); font-weight: 600; display: block; font-size: 14.5px; }
+  .risk span { color: var(--ink-soft); font-size: 14px; }
+
+  ol.steps { list-style: none; counter-reset: s; margin: 0; padding: 0; display: grid; gap: 2px; }
+  ol.steps li {
+    counter-increment: s;
+    position: relative;
+    padding: 14px 0 14px 46px;
+    border-bottom: 1px solid var(--line);
+  }
+  ol.steps li:last-child { border-bottom: 0; }
+  ol.steps li::before {
+    content: counter(s);
+    position: absolute; left: 0; top: 12px;
+    width: 30px; height: 30px;
+    display: grid; place-items: center;
+    background: var(--green); color: #fff;
+    font-family: var(--display); font-weight: 700; font-size: 13px;
+    border-radius: 9px;
+  }
+
+  .foot-note {
+    padding: 26px clamp(24px, 5vw, 64px) 60px;
+    font-size: 12.5px;
+    color: var(--ink-faint);
+  }
+  :focus-visible { outline: 2px solid var(--green); outline-offset: 2px; border-radius: 4px; }
+</style>
+
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <span class="mark">Q</span>
+      <div>
+        <b>Questly</b>
+        <span>Plano de ação</span>
+      </div>
+    </div>
+
+    <nav class="toc">
+      <a href="#contexto"><b>1</b> Contexto</a>
+      <a href="#abordagem"><b>2</b> Abordagem</a>
+      <a href="#stack"><b>3</b> Stack técnica</a>
+      <a href="#mvp"><b>4</b> Recorte do MVP</a>
+      <a href="#dados"><b>5</b> Modelo de dados</a>
+      <a href="#roadmap"><b>6</b> Roadmap</a>
+      <a href="#time"><b>7</b> Time e processo</a>
+      <a href="#riscos"><b>8</b> Riscos</a>
+      <a href="#reuniao"><b>9</b> Reunião de validação</a>
+    </nav>
+
+    <div class="foot">
+      <p><b>Fase:</b> Professor (1 de 2)</p>
+      <p><b>Meta:</b> MVP demonstrável</p>
+      <p style="margin-top: 8px;">Atualizado em 08/09/2026</p>
+    </div>
+  </aside>
+
+  <main>
+    <header class="band">
+      <p class="eyebrow">Projeto Integrador · Fase Professor</p>
+      <h1>Como vamos construir o MVP do Questly</h1>
+      <p class="lede">
+        Uma plataforma de acompanhamento pedagógico gamificado. Este plano define a
+        abordagem técnica, o recorte do MVP e o caminho até a reunião de validação com
+        professores.
+      </p>
+      <div class="meta">
+        <span class="chip"><b>Sistema web</b> + aplicativo</span>
+        <span class="chip">Stack <b>TypeScript / React</b></span>
+        <span class="chip">Backend <b>Supabase</b></span>
+        <span class="chip">Entrega: <b>MVP para validar</b></span>
+      </div>
+    </header>
+
+    <section class="section" id="contexto">
+      <h2><span class="n">1</span> Contexto</h2>
+      <p class="intro">
+        O Questly parte de uma dor concreta das escolas: acompanhar cada aluno
+        individualmente hoje exige registros dispersos, comparação manual de resultados e
+        tentativa e erro até entender qual formato de atividade funciona melhor para cada
+        estudante.
+      </p>
+
+      <h3 style="font-family: var(--display); font-size: 1.05rem; margin-bottom: 12px;">
+        O ciclo que o Questly organiza
+      </h3>
+      <div class="flow">
+        <div class="step"><span class="k">1 · Planeja</span><p>Professor organiza planejamento e objetivos pedagógicos.</p></div>
+        <div class="step"><span class="k">2 · Aplica</span><p>A atividade é aplicada à turma, em um formato escolhido.</p></div>
+        <div class="step"><span class="k">3 · Registra</span><p>Os resultados entram no Questly (no MVP, lançados pelo professor).</p></div>
+        <div class="step"><span class="k">4 · Mostra</span><p>Indicadores visuais por aluno, por formato e ao longo do tempo.</p></div>
+        <div class="step"><span class="k">5 · Adapta</span><p>Professor usa as referências para planejar as próximas atividades.</p></div>
+      </div>
+
+      <div class="callout" style="margin-top: 24px;">
+        <p>
+          Os indicadores <strong>não têm caráter diagnóstico</strong> e não determinam como o
+          aluno “deve” aprender. São referências adicionais para a decisão pedagógica do
+          professor — e essa mensagem fica visível na própria interface.
+        </p>
+      </div>
+    </section>
+
+    <section class="section" id="abordagem">
+      <h2><span class="n">2</span> Abordagem recomendada</h2>
+      <div class="prose">
+        <p>
+          O time domina JavaScript/TypeScript e React. A rota de menor atrito para um MVP
+          que seja <strong>sistema web e aplicativo</strong> é um <strong>monorepo
+          TypeScript</strong>, com web e app compartilhando a mesma lógica de domínio, apoiado
+          por um backend gerenciado (BaaS) em vez de infraestrutura própria.
+        </p>
+        <h3>Por que não construir backend do zero</h3>
+        <p>
+          O Supabase entrega autenticação, banco relacional, regras de acesso e
+          armazenamento em dias, não meses. E os dados pedagógicos — aluno, turma, atividade,
+          tentativa, resultado — são naturalmente relacionais.
+        </p>
+        <h3>Por que não Flutter</h3>
+        <p>
+          Flutter geraria web e app de um só código, mas custaria ao time aprender Dart e
+          abriria mão do reaproveitamento de lógica entre a web e o app. Com React nos dois
+          lados, as regras, tipos e validações são escritos uma única vez.
+        </p>
+      </div>
+      <div class="callout orange">
+        <p>
+          <strong>Sobre o aplicativo:</strong> no MVP o app roda em build interno (APK /
+          TestFlight) para a escola testar em sala. A publicação nas lojas — com taxas e
+          revisões — vem depois da validação.
+        </p>
+      </div>
+    </section>
+
+    <section class="section" id="stack">
+      <h2><span class="n">3</span> Stack técnica</h2>
+      <p class="intro">Cada camada escolhida pelo menor tempo até um MVP demonstrável.</p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Camada</th><th>Escolha</th><th>Papel no MVP</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Monorepo</td><td>pnpm workspaces + Turborepo</td><td>Web, app e código comum no mesmo repositório</td></tr>
+            <tr><td>Web</td><td>Next.js (React) · deploy Vercel</td><td>O “sistema online”: dashboard e gestão do professor</td></tr>
+            <tr><td>App</td><td>Expo (React Native)</td><td>Mesma linguagem e time; empacota como APK / IPA</td></tr>
+            <tr><td>Código comum</td><td>Pacote <code>@questly/core</code></td><td>Tipos, validações (Zod), regras de domínio, cliente de dados</td></tr>
+            <tr><td>Backend</td><td>Supabase — Postgres, Auth, RLS, Storage</td><td>Banco, login e isolamento de dados por escola / professor</td></tr>
+            <tr><td>Gráficos</td><td>Recharts (web) · Victory (app)</td><td>Indicadores de desempenho por aluno e por formato</td></tr>
+            <tr><td>Design</td><td>Figma</td><td>Wireframes das telas essenciais antes de codar</td></tr>
+            <tr><td>CI</td><td>GitHub Actions + GitHub Projects</td><td>Lint, type-check e build a cada PR; board de sprints</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section" id="mvp">
+      <h2><span class="n">4</span> Recorte do MVP</h2>
+      <p class="intro">
+        O módulo do aluno é o que gera resultados automaticamente — mas ele é a fase 2 do
+        produto. Para validar o coração da proposta já na próxima reunião, o professor
+        alimenta os resultados manualmente.
+      </p>
+      <div class="grid two">
+        <div class="card">
+          <h3 class="k-green">Entra no MVP</h3>
+          <p class="cap">construído agora</p>
+          <ul>
+            <li>Login do professor</li>
+            <li>Cadastro de turmas e alunos</li>
+            <li>Banco de formatos de atividade (associação visual, montagem, sequência, questão objetiva, completar lacunas)</li>
+            <li>Cadastro de atividade com objetivo pedagógico</li>
+            <li>Registro de resultados: manual ou colando de planilha</li>
+            <li>Painel: desempenho por aluno, por formato, evolução no tempo, tentativas, conclusão</li>
+            <li>Objetivos pedagógicos e marcos — gamificação leve</li>
+          </ul>
+        </div>
+        <div class="card muted">
+          <h3 class="k-faint">Fica para depois</h3>
+          <p class="cap">fora do escopo agora</p>
+          <ul>
+            <li>Módulo do aluno e atividades jogáveis</li>
+            <li>Correção automática das interações</li>
+            <li>Publicação nas lojas</li>
+            <li>Relatórios exportáveis em PDF</li>
+            <li>Painel administrativo da escola / multi-instituição</li>
+            <li>Notificações e integrações externas</li>
+            <li>Ranking entre alunos ou turmas</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="dados">
+      <h2><span class="n">5</span> Modelo de dados mínimo</h2>
+      <p class="intro">
+        Estrutura relacional enxuta para os indicadores do MVP e extensível para a fase do
+        aluno sem reescrita.
+      </p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Entidade</th><th>Campos principais</th><th>Relação</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Instituição</td><td>nome, contato</td><td>tem muitos Professores</td></tr>
+            <tr><td>Professor</td><td>nome, e-mail, disciplina</td><td>pertence a Instituição; tem muitas Turmas</td></tr>
+            <tr><td>Turma</td><td>nome, série, período</td><td>tem muitos Alunos</td></tr>
+            <tr><td>Aluno</td><td>nome, matrícula</td><td>pertence a Turma</td></tr>
+            <tr><td>FormatoAtividade</td><td>rótulo, descrição, tipo de interação</td><td>catálogo referenciado por Atividade</td></tr>
+            <tr><td>Atividade</td><td>título, disciplina, conteúdo (JSON), objetivo</td><td>usa um FormatoAtividade</td></tr>
+            <tr><td>Aplicação</td><td>data, turma</td><td>liga Atividade a Turma</td></tr>
+            <tr><td>Resultado</td><td>tentativas, % conclusão, % acerto, tempo</td><td>por Aluno, por Aplicação</td></tr>
+            <tr><td>Objetivo / Marco</td><td>descrição, meta, progresso</td><td>do Professor ou da Turma</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout" style="margin-top: 22px;">
+        <p>
+          O <strong>Row Level Security</strong> do Postgres garante que cada professor só
+          enxergue os dados da própria instituição — requisito de privacidade, já que
+          envolve dados de menores.
+        </p>
+      </div>
+    </section>
+
+    <section class="section" id="roadmap">
+      <h2><span class="n">6</span> Roadmap em fases</h2>
+      <p class="intro">Da descoberta à validação, e o que vem depois.</p>
+      <div class="roadmap">
+        <div class="phase">
+          <div class="top">
+            <span class="fase">Fase 0</span>
+            <span class="badge wip">em andamento</span>
+          </div>
+          <h3>Descoberta e fundação</h3>
+          <span class="dur">≈ 2 a 3 semanas</span>
+          <ul>
+            <li>Entrevistar 3–4 professores e mapear o fluxo atual</li>
+            <li>Fechar os formatos de atividade do MVP</li>
+            <li>Modelagem de dados e wireframes no Figma</li>
+            <li>Setup do monorepo, CI e ambientes Supabase</li>
+          </ul>
+        </div>
+        <div class="phase">
+          <div class="top">
+            <span class="fase">Fase 1</span>
+            <span class="badge">o MVP</span>
+          </div>
+          <h3>Núcleo do professor</h3>
+          <span class="dur">≈ 5 a 7 semanas</span>
+          <ul>
+            <li>Login + cadastro de turmas e alunos</li>
+            <li>Cadastro de atividade a partir do banco de formatos</li>
+            <li>Registro de resultados (manual e planilha)</li>
+            <li>Painel de indicadores por aluno, formato e tempo</li>
+            <li>Objetivos e marcos com gamificação leve</li>
+          </ul>
+        </div>
+        <div class="phase">
+          <div class="top">
+            <span class="fase">Fase 2</span>
+            <span class="badge">após validar</span>
+          </div>
+          <h3>Empacotar como aplicativo</h3>
+          <span class="dur">≈ 3 a 4 semanas</span>
+          <ul>
+            <li>Build Expo e ajustes de UX mobile</li>
+            <li>Cache offline básico de leitura</li>
+            <li>Distribuição interna para a escola usar em sala</li>
+          </ul>
+        </div>
+        <div class="phase">
+          <div class="top">
+            <span class="fase">Fase 3</span>
+            <span class="badge">futuro</span>
+          </div>
+          <h3>Módulo do aluno</h3>
+          <span class="dur">depende do retorno da escola</span>
+          <ul>
+            <li>Publicação nas lojas</li>
+            <li>Atividades gamificadas, começando por Matemática</li>
+            <li>Resultados do aluno alimentam os mesmos indicadores</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="time">
+      <h2><span class="n">7</span> Time e processo</h2>
+      <p class="intro">
+        Sprints de 2 semanas, board no GitHub Projects, branch <code>main</code> protegida
+        com revisão de PR.
+      </p>
+      <div class="grid four">
+        <div class="card"><h3>Web</h3><p class="cap">1–2 pessoas</p><p style="font-size:14px;color:var(--ink-soft)">Next.js, painel e telas de gestão.</p></div>
+        <div class="card"><h3>App</h3><p class="cap">1 pessoa</p><p style="font-size:14px;color:var(--ink-soft)">Expo, reaproveitando <code>@questly/core</code>.</p></div>
+        <div class="card"><h3>Dados</h3><p class="cap">1 pessoa</p><p style="font-size:14px;color:var(--ink-soft)">Modelagem Supabase, RLS, importação.</p></div>
+        <div class="card"><h3>Design / PO</h3><p class="cap">1 pessoa</p><p style="font-size:14px;color:var(--ink-soft)">Entrevistas, wireframes, priorização, contato com as escolas.</p></div>
+      </div>
+    </section>
+
+    <section class="section" id="riscos">
+      <h2><span class="n">8</span> Riscos e como conter</h2>
+      <div style="max-width: 80ch;">
+        <div class="risk">
+          <b>Escopo da gamificação inflar</b>
+          <span>Manter “leve” no MVP: metas, progresso e feedback visual. Ranking, medalhas e economia de pontos ficam documentados como fora de escopo.</span>
+        </div>
+        <div class="risk">
+          <b>LGPD e dados de menores</b>
+          <span>Termo de consentimento acordado com a escola; dados anonimizados em demonstrações; projeto Supabase em região adequada; acesso restrito por RLS.</span>
+        </div>
+        <div class="risk">
+          <b>Modelagem rígida dos formatos de atividade</b>
+          <span>Conteúdo da atividade em campo JSON, não em colunas fixas — novos formatos não exigem migração de banco.</span>
+        </div>
+        <div class="risk">
+          <b>Validação sem dados reais suficientes</b>
+          <span>Dados de exemplo realistas + importação de uma planilha real de notas para a demo mostrar os indicadores com volume convincente.</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="reuniao">
+      <h2><span class="n">9</span> O que levar para a reunião de validação</h2>
+      <ol class="steps">
+        <li>Protótipo navegável das telas centrais: login, turmas, cadastro de atividade, lançamento de resultados e painel do aluno.</li>
+        <li>Lista fechada dos formatos de atividade, validada com os professores.</li>
+        <li>Planilha modelo de importação de resultados, para a escola opinar sobre os campos.</li>
+        <li>Demonstração do painel com dados de exemplo — desempenho por formato e evolução no tempo.</li>
+        <li>Combinar o termo de consentimento e quais turmas participam do piloto.</li>
+      </ol>
+    </section>
+
+    <p class="foot-note">
+      Questly · Plano de ação do MVP · Fase Professor · atualizado em 08/09/2026
+    </p>
+  </main>
+</div>

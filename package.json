@@ -1,0 +1,26 @@
+{
+  "name": "modolume",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Modolume — ponte entre aluno e professor: identifica como cada aluno aprende para o professor adaptar aulas e provas",
+  "packageManager": "pnpm@11.17.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "web": "pnpm --filter @modolume/web dev",
+    "mobile": "pnpm --filter @modolume/mobile start",
+    "format": "prettier --write \"apps/mobile/src/**/*.{ts,tsx}\" \"packages/core/src/**/*.ts\" \"apps/web/{app,components,lib}/**/*.{ts,tsx}\"",
+    "format:check": "prettier --check \"apps/mobile/src/**/*.{ts,tsx}\" \"packages/core/src/**/*.ts\" \"apps/web/{app,components,lib}/**/*.{ts,tsx}\""
+  },
+  "devDependencies": {
+    "prettier": "^3.9.9",
+    "turbo": "^2.3.3",
+    "typescript": "^5.7.3"
+  }
+}
