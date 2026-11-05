@@ -3,6 +3,7 @@ import {
   ForbiddenException,
   Inject,
   Injectable,
+  SetMetadata,
   UnauthorizedException,
   createParamDecorator,
   type CanActivate,
@@ -11,6 +12,7 @@ import {
   type OnModuleInit,
 } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
+import { Reflector } from "@nestjs/core";
 import { PrismaClient } from "@prisma/client";
 import type { ZodTypeAny, output } from "zod";
 
@@ -65,12 +67,17 @@ export function validar<S extends ZodTypeAny>(esquema: S, dados: unknown): outpu
 
 type Requisicao = { headers: Record<string, string>; sessao?: Sessao; equipe?: Equipe };
 
+const PERMITE_SENHA_PROVISORIA = "modolume:permite-senha-provisoria";
+/** Exceção explícita para consultar a própria conta e trocar a senha. */
+export const PermiteSenhaProvisoria = () => SetMetadata(PERMITE_SENHA_PROVISORIA, true);
+
 function guardaDe(...papeis: Papel[]) {
   @Injectable()
   class Guarda implements CanActivate {
     constructor(
       @Inject(JwtService) private readonly jwt: JwtService,
       @Inject(Banco) private readonly banco: Banco,
+      @Inject(Reflector) private readonly reflector: Reflector,
     ) {}
 
     async canActivate(ctx: ExecutionContext) {
@@ -96,10 +103,12 @@ function guardaDe(...papeis: Papel[]) {
         // equipe: desativar a pessoa ou mudar o papel dela vale na hora, sem esperar o token vencer
         const pessoa = await this.banco.professor.findUnique({
           where: { id: sessao.sub },
-          select: { id: true, nome: true, papel: true, ativo: true, instituicaoId: true },
+          select: { id: true, nome: true, papel: true, ativo: true, instituicaoId: true, senhaProvisoria: true },
         });
         if (!pessoa || !pessoa.ativo || pessoa.papel !== sessao.papel)
           throw new UnauthorizedException("Seu acesso mudou. Entre de novo.");
+        if (pessoa.senhaProvisoria && !this.reflector.get<boolean>(PERMITE_SENHA_PROVISORIA, ctx.getHandler()))
+          throw new ForbiddenException("Troque sua senha provisória para continuar.");
         req.equipe = { id: pessoa.id, nome: pessoa.nome, papel: pessoa.papel, instituicaoId: pessoa.instituicaoId };
       }
       req.sessao = sessao;

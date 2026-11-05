@@ -15,7 +15,16 @@ import { Throttle } from "@nestjs/throttler";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { normalizarCodigo, pinFraco } from "./codigo-acesso.js";
-import { Banco, EquipeAtual, GuardaEquipe, registrar, validar, type Equipe, type Sessao } from "./infra.js";
+import {
+  Banco,
+  EquipeAtual,
+  GuardaEquipe,
+  PermiteSenhaProvisoria,
+  registrar,
+  validar,
+  type Equipe,
+  type Sessao,
+} from "./infra.js";
 
 const loginProfessor = z.object({
   email: z.string().trim().toLowerCase().email("Informe um e-mail válido.").max(160),
@@ -129,6 +138,7 @@ export class AcessoController {
   /** Quem está logado (cabeçalho do painel e página da conta). */
   @UseGuards(GuardaEquipe)
   @Get("auth/eu")
+  @PermiteSenhaProvisoria()
   async eu(@EquipeAtual() eu: Equipe) {
     const pessoa = await this.banco.professor.findUniqueOrThrow({
       where: { id: eu.id },
@@ -149,6 +159,7 @@ export class AcessoController {
   @Throttle({ default: { limit: 10, ttl: 60_000 } })
   @UseGuards(GuardaEquipe)
   @Post("auth/senha")
+  @PermiteSenhaProvisoria()
   async trocarSenha(@EquipeAtual() eu: Equipe, @Body() corpo: unknown) {
     const { atual, nova } = validar(trocaSenha, corpo);
     const pessoa = await this.banco.professor.findUniqueOrThrow({ where: { id: eu.id } });

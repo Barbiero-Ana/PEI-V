@@ -11,6 +11,7 @@
     "db:seed": "tsx --env-file=.env prisma/seed.ts",
     "db:generate": "prisma generate",
     "typecheck": "tsc --noEmit",
+    "test": "tsx --test src/*.test.ts",
     "lint": "tsc --noEmit",
     "db:migrar": "prisma migrate deploy",
     "db:nova-migracao": "prisma migrate dev --create-only"
