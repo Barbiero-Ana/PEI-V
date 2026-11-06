@@ -50,6 +50,25 @@ const periodoTexto = (p: "manha" | "tarde" | "integral") => (p === "manha" ? "ma
 export class ProfessorController {
   constructor(@Inject(Banco) private readonly banco: Banco) {}
 
+  private turmasAutorizadas(eu: Equipe) {
+    return {
+      ativa: true,
+      instituicaoId: eu.instituicaoId,
+      professores: { some: { professorId: eu.id } },
+    };
+  }
+
+  private incluirPlanoNaLeitura(eu: Equipe) {
+    return {
+      ...incluirPlano,
+      // Alunos transferidos não devem continuar identificáveis pelo plano antigo.
+      alunosFoco: {
+        where: { aluno: { turma: this.turmasAutorizadas(eu) } },
+        select: { alunoId: true },
+      },
+    };
+  }
+
   private async idsDasTurmas(professorId: string) {
     const vinculos = await this.banco.professorTurma.findMany({
       where: { professorId, turma: { ativa: true } },
@@ -296,15 +315,28 @@ export class ProfessorController {
 
   /** Quem já fez a atividade, com o acerto da última vez (MOD-ATI-010). */
   @Get("atividades/:id/situacao")
-  async situacao(@SessaoAtual() s: Sessao, @Param("id") id: string) {
+  async situacao(@SessaoAtual() s: Sessao, @EquipeAtual() eu: Equipe, @Param("id") id: string) {
     const a = await this.atividadeDoProfessor(s.sub, id);
+    const turmas = await this.banco.turma.findMany({
+      where: { ...this.turmasAutorizadas(eu), id: { in: a.turmas.map((t) => t.turmaId) } },
+      select: { id: true },
+    });
+    if (!turmas.length) throw new ForbiddenException("Você não tem acesso às turmas desta atividade.");
+    const escopoAluno = {
+      ativo: true,
+      turmaId: { in: turmas.map((t) => t.id) },
+      turma: this.turmasAutorizadas(eu),
+    };
     const [alunos, jogadas] = await Promise.all([
       this.banco.aluno.findMany({
-        where: { turmaId: { in: a.turmas.map((t) => t.turmaId) }, ativo: true },
+        where: escopoAluno,
         orderBy: { nome: "asc" },
         include: { avatar: { select: { svg: true } } },
       }),
-      this.banco.jogada.findMany({ where: { atividadeId: id }, orderBy: { data: "asc" } }),
+      this.banco.jogada.findMany({
+        where: { atividadeId: id, aluno: escopoAluno },
+        orderBy: { data: "asc" },
+      }),
     ]);
     const ultima = new Map(jogadas.map((j) => [j.alunoId, j]));
     return {
@@ -369,24 +401,35 @@ export class ProfessorController {
   }
 
   @Get("planos")
-  async planos(@SessaoAtual() s: Sessao, @Query("turmaId") turmaId?: string, @Query("status") status?: string) {
+  async planos(
+    @SessaoAtual() s: Sessao,
+    @EquipeAtual() eu: Equipe,
+    @Query("turmaId") turmaId?: string,
+    @Query("status") status?: string,
+  ) {
     const lista = await this.banco.planoAula.findMany({
       where: {
         professorId: s.sub,
+        turma: this.turmasAutorizadas(eu),
         ...(turmaId ? { turmaId } : {}),
         ...(status && (STATUS_PLANO as readonly string[]).includes(status)
           ? { status: status as (typeof STATUS_PLANO)[number] }
           : {}),
       },
-      include: incluirPlano,
+      include: this.incluirPlanoNaLeitura(eu),
       orderBy: [{ data: "asc" }, { horario: "asc" }],
     });
     return lista.map(planoDoBanco);
   }
 
   @Get("planos/:id")
-  async plano(@SessaoAtual() s: Sessao, @Param("id") id: string) {
-    return planoDoBanco(await this.planoDoProfessor(s.sub, id));
+  async plano(@SessaoAtual() s: Sessao, @EquipeAtual() eu: Equipe, @Param("id") id: string) {
+    const plano = await this.banco.planoAula.findFirst({
+      where: { id, professorId: s.sub, turma: this.turmasAutorizadas(eu) },
+      include: this.incluirPlanoNaLeitura(eu),
+    });
+    if (!plano) throw new NotFoundException("Plano de aula não encontrado.");
+    return planoDoBanco(plano);
   }
 
   @Post("planos")
