@@ -172,18 +172,20 @@ export class AdminController {
     const outro = await this.banco.professor.findUnique({ where: { email: d.email } });
     if (outro && outro.id !== id) throw new ConflictException("Já existe uma pessoa com esse e-mail.");
 
-    await this.banco.professor.update({
-      where: { id },
-      data: {
-        nome: d.nome,
-        email: d.email,
-        papel: d.papel,
-        disciplina: d.papel === "professor" ? d.disciplina! : (d.disciplina ?? null) || null,
-      },
+    await this.banco.$transaction(async (tx) => {
+      await tx.professor.update({
+        where: { id },
+        data: {
+          nome: d.nome,
+          email: d.email,
+          papel: d.papel,
+          disciplina: d.papel === "professor" ? d.disciplina! : (d.disciplina ?? null) || null,
+        },
+      });
+      // Papel e vínculos mudam juntos; atividades, planos e histórico são preservados.
+      if (atual.papel === "professor" && d.papel !== "professor")
+        await tx.professorTurma.deleteMany({ where: { professorId: id } });
     });
-    // quem deixa de ser professor perde os vínculos com turmas (o histórico das turmas fica)
-    if (atual.papel === "professor" && d.papel !== "professor")
-      await this.banco.professorTurma.deleteMany({ where: { professorId: id } });
 
     const mudancas: string[] = [];
     if (atual.papel !== d.papel) mudancas.push(`papel: ${NOME_PAPEL[atual.papel]} → ${NOME_PAPEL[d.papel]}`);

@@ -43,8 +43,11 @@ export default async function FichaPessoa({ params }: { params: Promise<{ id: st
           titulo="Dados e papel"
           descricao="Mudar o papel muda as permissões na hora: a pessoa precisa entrar de novo."
         >
-          <FormularioAcao acao={editarUsuario.bind(null, p.id)} botao="Salvar">
-            <div className="grid gap-4 md:grid-cols-2">
+          <FormularioAcao acao={editarUsuario.bind(null, p.id)} botao="Salvar" atualizarAoSalvar>
+            <div
+              key={JSON.stringify([p.id, p.nome, p.email, p.papel, p.disciplina])}
+              className="grid gap-4 md:grid-cols-2"
+            >
               <Campo nome="nome" rotulo="Nome" valor={p.nome} />
               <Campo nome="email" rotulo="E-mail" tipo="email" valor={p.email} />
               <Escolha nome="papel" rotulo="Papel" opcoes={OPCOES_PAPEL} valor={p.papel} />

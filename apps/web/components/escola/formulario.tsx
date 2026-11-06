@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, type ReactNode } from "react";
+import { useRouter } from "next/navigation";
 import type { ResultadoAcao } from "@/lib/escola/api";
 
 /** Classes dos campos das áreas da equipe (iguais às do login). */
@@ -25,6 +26,7 @@ export function FormularioAcao({
   variante = "primario",
   className = "",
   confirmar,
+  atualizarAoSalvar = false,
 }: {
   acao: (anterior: ResultadoAcao | null, form: FormData) => Promise<ResultadoAcao>;
   children?: ReactNode;
@@ -33,8 +35,15 @@ export function FormularioAcao({
   className?: string;
   /** Pergunta de confirmação antes de enviar (ações que tiram acesso). */
   confirmar?: string;
+  /** Recarrega os dados do servidor depois de uma edição bem-sucedida. */
+  atualizarAoSalvar?: boolean;
 }) {
-  const [estado, enviar, enviando] = useActionState(acao, null);
+  const router = useRouter();
+  const [estado, enviar, enviando] = useActionState(async (anterior: ResultadoAcao | null, form: FormData) => {
+    const resultado = await acao(anterior, form);
+    if (resultado.ok && atualizarAoSalvar) router.refresh();
+    return resultado;
+  }, null);
   return (
     <form
       action={enviar}
