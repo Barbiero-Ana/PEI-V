@@ -77,18 +77,27 @@ export class ProfessorController {
     return vinculos.map((v) => v.turmaId);
   }
 
-  private async conferirTurmas(professorId: string, turmas: string[]) {
-    const minhas = new Set(await this.idsDasTurmas(professorId));
+  private async conferirTurmas(eu: Equipe, turmas: string[]) {
+    const autorizadas = await this.banco.turma.findMany({
+      where: { ...this.turmasAutorizadas(eu), id: { in: turmas } },
+      select: { id: true },
+    });
+    const minhas = new Set(autorizadas.map((t) => t.id));
     if (turmas.some((t) => !minhas.has(t))) throw new ForbiddenException("Turma que não é sua.");
   }
 
   /** Habilidades e planos referenciados precisam existir (e o plano ser do professor). */
-  private async conferirReferencias(professorId: string, habilidades: string[], planoId?: string) {
+  private async conferirReferencias(eu: Equipe, habilidades: string[], planoId?: string) {
     if (habilidades.length) {
       const existem = await this.banco.habilidadeBncc.count({ where: { codigo: { in: habilidades } } });
       if (existem !== new Set(habilidades).size) throw new BadRequestException("Habilidade da BNCC não cadastrada.");
     }
-    if (planoId && !(await this.banco.planoAula.findFirst({ where: { id: planoId, professorId } })))
+    if (
+      planoId &&
+      !(await this.banco.planoAula.findFirst({
+        where: { id: planoId, professorId: eu.id, turma: this.turmasAutorizadas(eu) },
+      }))
+    )
       throw new BadRequestException("Plano de aula não encontrado.");
   }
 
@@ -214,6 +223,16 @@ export class ProfessorController {
     return a;
   }
 
+  private async atividadeParaEscrita(eu: Equipe, id: string) {
+    const atividade = await this.atividadeDoProfessor(eu.id, id);
+    await this.conferirTurmas(
+      eu,
+      atividade.turmas.map((t) => t.turmaId),
+    );
+    if (atividade.planoId) await this.planoDoProfessor(eu, atividade.planoId);
+    return atividade;
+  }
+
   /** Dados validados da atividade → colunas da tabela mãe. */
   private colunasDaAtividade(d: DadosAtividade) {
     return {
@@ -246,8 +265,8 @@ export class ProfessorController {
   @Post("atividades")
   async criar(@SessaoAtual() s: Sessao, @EquipeAtual() eu: Equipe, @Body() corpo: unknown) {
     const d = validar(atividadeSchema, corpo);
-    await this.conferirTurmas(s.sub, d.turmas);
-    await this.conferirReferencias(s.sub, d.habilidade ? [d.habilidade] : [], d.planoId || undefined);
+    await this.conferirTurmas(eu, d.turmas);
+    await this.conferirReferencias(eu, d.habilidade ? [d.habilidade] : [], d.planoId || undefined);
     const criada = await this.banco.atividadeProfessor.create({
       data: {
         id: novoId("atv"),
@@ -264,11 +283,11 @@ export class ProfessorController {
 
   /** Atualiza a mãe e troca as filhas (turmas e questões) na mesma transação. */
   @Put("atividades/:id")
-  async editar(@SessaoAtual() s: Sessao, @Param("id") id: string, @Body() corpo: unknown) {
+  async editar(@SessaoAtual() s: Sessao, @EquipeAtual() eu: Equipe, @Param("id") id: string, @Body() corpo: unknown) {
     const d = validar(atividadeSchema, corpo);
-    await this.atividadeDoProfessor(s.sub, id);
-    await this.conferirTurmas(s.sub, d.turmas);
-    await this.conferirReferencias(s.sub, d.habilidade ? [d.habilidade] : [], d.planoId || undefined);
+    await this.atividadeParaEscrita(eu, id);
+    await this.conferirTurmas(eu, d.turmas);
+    await this.conferirReferencias(eu, d.habilidade ? [d.habilidade] : [], d.planoId || undefined);
     const editada = await this.banco.atividadeProfessor.update({
       where: { id },
       data: {
@@ -290,7 +309,7 @@ export class ProfessorController {
     @Body() corpo: unknown,
   ) {
     const { enviar } = validar(envio, corpo);
-    await this.atividadeDoProfessor(s.sub, id);
+    await this.atividadeParaEscrita(eu, id);
     const a = await this.banco.atividadeProfessor.update({
       where: { id },
       data: { status: enviar ? "enviada" : "rascunho", enviadaEm: enviar ? new Date() : null },
@@ -307,7 +326,7 @@ export class ProfessorController {
   /** Exclui a atividade e as filhas; as jogadas dos alunos ficam no histórico (sem o vínculo). */
   @Delete("atividades/:id")
   async excluir(@SessaoAtual() s: Sessao, @EquipeAtual() eu: Equipe, @Param("id") id: string) {
-    const atividade = await this.atividadeDoProfessor(s.sub, id);
+    const atividade = await this.atividadeParaEscrita(eu, id);
     await this.banco.atividadeProfessor.delete({ where: { id } });
     await registrar(this.banco, eu, "atividade.excluida", { tipo: "atividade", id, detalhe: atividade.titulo });
     return { ok: true };
@@ -357,16 +376,20 @@ export class ProfessorController {
 
   // ─────────────────────────── planos de aula ───────────────────────────
 
-  private async planoDoProfessor(professorId: string, id: string) {
-    const p = await this.banco.planoAula.findFirst({ where: { id, professorId }, include: incluirPlano });
+  private async planoDoProfessor(eu: Equipe, id: string) {
+    const p = await this.banco.planoAula.findFirst({
+      where: { id, professorId: eu.id, turma: { instituicaoId: eu.instituicaoId } },
+      include: incluirPlano,
+    });
     if (!p) throw new NotFoundException("Plano de aula não encontrado.");
+    await this.conferirTurmas(eu, [p.turmaId]);
     return p;
   }
 
   /** Confere turma, habilidades e missões; alunos acompanhados só da turma do plano (RN-23). */
-  private async filhasDoPlano(professorId: string, d: DadosPlano) {
-    await this.conferirTurmas(professorId, [d.turmaId]);
-    await this.conferirReferencias(professorId, d.habilidades);
+  private async filhasDoPlano(eu: Equipe, d: DadosPlano) {
+    await this.conferirTurmas(eu, [d.turmaId]);
+    await this.conferirReferencias(eu, d.habilidades);
     const [missoes, alunos] = await Promise.all([
       this.banco.missao.findMany({ where: { id: { in: d.atividadesApp } }, select: { id: true } }),
       this.banco.aluno.findMany({ where: { id: { in: d.alunosFoco }, turmaId: d.turmaId }, select: { id: true } }),
@@ -435,7 +458,7 @@ export class ProfessorController {
   @Post("planos")
   async criarPlano(@SessaoAtual() s: Sessao, @EquipeAtual() eu: Equipe, @Body() corpo: unknown) {
     const d = validar(planoSchema, corpo);
-    const filhas = await this.filhasDoPlano(s.sub, d);
+    const filhas = await this.filhasDoPlano(eu, d);
     const criado = await this.banco.planoAula.create({
       data: {
         id: novoId("plano"),
@@ -453,10 +476,15 @@ export class ProfessorController {
   }
 
   @Put("planos/:id")
-  async editarPlano(@SessaoAtual() s: Sessao, @Param("id") id: string, @Body() corpo: unknown) {
+  async editarPlano(
+    @SessaoAtual() s: Sessao,
+    @EquipeAtual() eu: Equipe,
+    @Param("id") id: string,
+    @Body() corpo: unknown,
+  ) {
     const d = validar(planoSchema, corpo);
-    await this.planoDoProfessor(s.sub, id);
-    const filhas = await this.filhasDoPlano(s.sub, d);
+    await this.planoDoProfessor(eu, id);
+    const filhas = await this.filhasDoPlano(eu, d);
     const editado = await this.banco.planoAula.update({
       where: { id },
       data: {
@@ -474,7 +502,7 @@ export class ProfessorController {
   /** Exclui o plano e as filhas; as atividades ligadas a ele continuam, sem o vínculo. */
   @Delete("planos/:id")
   async excluirPlano(@SessaoAtual() s: Sessao, @EquipeAtual() eu: Equipe, @Param("id") id: string) {
-    const plano = await this.planoDoProfessor(s.sub, id);
+    const plano = await this.planoDoProfessor(eu, id);
     await this.banco.planoAula.delete({ where: { id } });
     await registrar(this.banco, eu, "plano.excluido", { tipo: "plano", id, detalhe: plano.tema });
     return { ok: true };
