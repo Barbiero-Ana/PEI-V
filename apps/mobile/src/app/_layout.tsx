@@ -11,6 +11,7 @@ import { Lexend_400Regular, Lexend_500Medium, Lexend_600SemiBold, Lexend_700Bold
 import { AcessibilidadeProvider, useAcessibilidade } from "@/estado/acessibilidade";
 import { JogadorProvider } from "@/estado/jogador";
 import { ContaProvider } from "@/estado/conta";
+import { IdentidadeProvider } from "@/estado/identidade";
 import { TransicaoNuvens } from "@/componentes/Nuvens";
 import { Simbolo } from "@/componentes/Simbolo";
 import { cor } from "@/tema";
@@ -47,16 +48,18 @@ export default function RaizLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <AcessibilidadeProvider>
-          <JogadorProvider>
-            <ContaProvider>
-              <ComTema>
-                <StatusBar style="dark" />
-                <TransicaoNuvens>
-                  <Telas />
-                </TransicaoNuvens>
-              </ComTema>
-            </ContaProvider>
-          </JogadorProvider>
+          <IdentidadeProvider>
+            <JogadorProvider>
+              <ContaProvider>
+                <ComTema>
+                  <StatusBar style="dark" />
+                  <TransicaoNuvens>
+                    <Telas />
+                  </TransicaoNuvens>
+                </ComTema>
+              </ContaProvider>
+            </JogadorProvider>
+          </IdentidadeProvider>
         </AcessibilidadeProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

@@ -1,6 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { Platform } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Haptics from "expo-haptics";
 import {
   NIVEIS,
@@ -17,6 +16,8 @@ import {
 } from "@modolume/core";
 import type { AvatarId } from "@/componentes/Avatar";
 import type { Rosto } from "@/componentes/Rosto";
+import { normalizar } from "@/componentes/Rosto";
+import { useIdentidade } from "./identidade";
 
 /**
  * Estado do aluno no aparelho: perfil, estrelas por missão, histórico de
@@ -58,6 +59,8 @@ export interface ProgressoServidor {
 
 interface Salvo {
   jogador: Jogador | null;
+  /** Perfil local editado ou recuperado da mesma identidade no servidor. */
+  perfilLocal: boolean;
   progresso: Record<string, ProgressoMissao>;
   resultados: ResultadoJogada[];
   preferencias: Preferencias;
@@ -92,6 +95,7 @@ const ALUNO_PADRAO: Jogador = {
 
 const VAZIO: Salvo = {
   jogador: ALUNO_PADRAO,
+  perfilLocal: false,
   progresso: {},
   resultados: [],
   // durante a validação, todos os níveis ficam abertos
@@ -103,8 +107,6 @@ const VAZIO: Salvo = {
   gastos: 0,
   compras: [],
 };
-
-const CHAVE = "modolume:aluno:v3";
 
 /** O que a jogada rendeu — mostrado na tela de resultado. */
 export interface Recompensa {
@@ -140,20 +142,34 @@ interface Estado extends Salvo {
    * fica o maior valor de cada missão e mapa e a união das conquistas.
    */
   importarProgresso: (p: ProgressoServidor) => void;
+  importarPerfil: (perfil: { nome: string; rosto?: object }) => void;
 }
 
 const Ctx = createContext<Estado | null>(null);
 
 export function JogadorProvider({ children }: { children: React.ReactNode }) {
+  const { conta, escopo, repositorio, selecionar, falhar } = useIdentidade();
   const [pronto, setPronto] = useState(false);
   const [salvo, setSalvo] = useState<Salvo>(VAZIO);
   const atual = useRef<Salvo>(VAZIO);
+  const montado = useRef(false);
 
   useEffect(() => {
-    AsyncStorage.getItem(CHAVE)
-      .then((bruto) => {
-        if (bruto) {
-          const lido = JSON.parse(bruto) as Partial<Salvo>;
+    montado.current = true;
+    repositorio
+      .dados<Salvo>("jogador", escopo.identidade, () => ({
+        ...VAZIO,
+        perfilLocal: !!conta && Object.hasOwn(conta.aluno, "avatar"),
+        jogador: conta
+          ? {
+              ...ALUNO_PADRAO,
+              nome: conta.aluno.nome.split(" ")[0]!,
+              ...(conta.aluno.avatar?.rosto ? { rosto: normalizar(conta.aluno.avatar.rosto) } : {}),
+            }
+          : ALUNO_PADRAO,
+      }))
+      .then((lido) => {
+        if (montado.current && escopo.ativa()) {
           const s = {
             ...VAZIO,
             ...lido,
@@ -169,26 +185,53 @@ export function JogadorProvider({ children }: { children: React.ReactNode }) {
           );
           atual.current = s;
           setSalvo(s);
+          setPronto(true);
         }
       })
-      .catch(() => {})
-      .finally(() => setPronto(true));
-  }, []);
+      .catch(() => {
+        if (montado.current && escopo.ativa()) falhar();
+      });
+    return () => {
+      montado.current = false;
+    };
+  }, [conta, escopo, repositorio, falhar]);
 
-  const gravar = useCallback((novo: Salvo) => {
-    atual.current = novo;
-    setSalvo(novo);
-    AsyncStorage.setItem(CHAVE, JSON.stringify(novo)).catch(() => {});
-  }, []);
+  const gravar = useCallback(
+    (novo: Salvo) => {
+      if (!montado.current || !escopo.ativa()) return;
+      atual.current = novo;
+      setSalvo(novo);
+      void repositorio.salvar("jogador", escopo.identidade, novo).catch(() => {
+        if (montado.current && escopo.ativa()) falhar();
+      });
+    },
+    [escopo, repositorio, falhar],
+  );
 
   const valor = useMemo<Estado>(
     () => ({
       ...salvo,
       pronto,
-      entrar: (jogador) => gravar({ ...atual.current, jogador }),
+      entrar: (jogador) => gravar({ ...atual.current, jogador, perfilLocal: true }),
       editarPerfil: (dados) =>
-        atual.current.jogador && gravar({ ...atual.current, jogador: { ...atual.current.jogador, ...dados } }),
-      sair: () => gravar(VAZIO),
+        atual.current.jogador &&
+        gravar({ ...atual.current, jogador: { ...atual.current.jogador, ...dados }, perfilLocal: true }),
+      importarPerfil: (perfil) => {
+        const s = atual.current;
+        if (s.perfilLocal) return;
+        gravar({
+          ...s,
+          perfilLocal: true,
+          jogador: {
+            ...(s.jogador ?? ALUNO_PADRAO),
+            nome: perfil.nome.split(" ")[0]!,
+            ...(perfil.rosto ? { rosto: normalizar(perfil.rosto) } : {}),
+          },
+        });
+      },
+      sair: () => {
+        if (escopo.ativa()) void selecionar(null).catch(() => {});
+      },
       luzes: Object.values(salvo.pontosPorNivel).reduce((a, b) => a + b, 0) - salvo.gastos,
       comprar: (id, preco) => {
         const s = atual.current;
@@ -224,7 +267,12 @@ export function JogadorProvider({ children }: { children: React.ReactNode }) {
         });
       },
       apagarProgresso: () =>
-        gravar({ ...VAZIO, jogador: atual.current.jogador, preferencias: atual.current.preferencias }),
+        gravar({
+          ...VAZIO,
+          jogador: atual.current.jogador,
+          perfilLocal: atual.current.perfilLocal,
+          preferencias: atual.current.preferencias,
+        }),
       // (apagar progresso também zera luzes e compras)
       mudarPreferencia: (k, v) => gravar({ ...atual.current, preferencias: { ...atual.current.preferencias, [k]: v } }),
       salvarResultado: (r) => {
@@ -250,7 +298,7 @@ export function JogadorProvider({ children }: { children: React.ReactNode }) {
         const anterior = s.progresso[r.missaoId];
         gravar({
           ...s,
-          resultados: [...s.resultados, r].slice(-150),
+          resultados: [...s.resultados, r],
           progresso: {
             ...s.progresso,
             [r.missaoId]: {
@@ -289,7 +337,7 @@ export function JogadorProvider({ children }: { children: React.ReactNode }) {
         p.catch(() => {});
       },
     }),
-    [salvo, pronto, gravar],
+    [salvo, pronto, gravar, selecionar, escopo],
   );
 
   return <Ctx.Provider value={valor}>{children}</Ctx.Provider>;

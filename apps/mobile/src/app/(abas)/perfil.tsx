@@ -8,6 +8,7 @@ import { CONSTELACOES, MISSOES, NIVEIS, estrelasAcesas, mapaConcluido } from "@m
 import { useFalarAoAbrir } from "@/estado/acessibilidade";
 import { useJogador, useResumo } from "@/estado/jogador";
 import { useConta } from "@/estado/conta";
+import { useIdentidade } from "@/estado/identidade";
 import { Avatar } from "@/componentes/Avatar";
 import { ESTAGIOS, Lilo, estagioDe, useEstrelasAcesas } from "@/componentes/Lilo";
 import { Ceu } from "@/componentes/Ceu";
@@ -36,6 +37,7 @@ import { EsqueletoTela, useMontagemAdiada } from "@/componentes/Esqueleto";
  * jornada e, no fim, as configurações.
  */
 export default function Perfil() {
+  const { legadoPreservado } = useIdentidade();
   const insets = useSafeAreaInsets();
   const {
     jogador,
@@ -82,6 +84,12 @@ export default function Perfil() {
 
   return (
     <ScrollView style={{ flex: 1, backgroundColor: cor.fundo }} contentContainerStyle={{ paddingBottom: 32 }}>
+      {legadoPreservado ? (
+        <Texto style={{ padding: 16 }}>
+          Os dados da versão anterior continuam guardados neste aparelho. O progresso sem identificação de conta não foi
+          misturado à sua conta atual. Peça ajuda à equipe para recuperar esses dados com segurança.
+        </Texto>
+      ) : null}
       <View style={[p.faixa, { height: 150 + insets.top }]}>
         <Capa indice={jogador.capa ?? 0} />
         <Pressable
