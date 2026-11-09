@@ -13,7 +13,7 @@ import {
 } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { Reflector } from "@nestjs/core";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, type Prisma } from "@prisma/client";
 import type { ZodTypeAny, output } from "zod";
 
 /**
@@ -104,9 +104,23 @@ function guardaDe(...papeis: Papel[]) {
         // equipe: desativar a pessoa ou mudar o papel dela vale na hora, sem esperar o token vencer
         const pessoa = await this.banco.professor.findUnique({
           where: { id: sessao.sub },
-          select: { id: true, nome: true, papel: true, ativo: true, instituicaoId: true, senhaProvisoria: true },
+          select: {
+            id: true,
+            nome: true,
+            papel: true,
+            ativo: true,
+            instituicaoId: true,
+            senhaProvisoria: true,
+            versaoAcesso: true,
+          },
         });
-        if (!pessoa || !pessoa.ativo || pessoa.papel !== sessao.papel)
+        if (
+          !pessoa ||
+          !pessoa.ativo ||
+          pessoa.papel !== sessao.papel ||
+          !Number.isInteger(sessao.v) ||
+          pessoa.versaoAcesso !== sessao.v
+        )
           throw new UnauthorizedException("Seu acesso mudou. Entre de novo.");
         if (pessoa.senhaProvisoria && !this.reflector.get<boolean>(PERMITE_SENHA_PROVISORIA, ctx.getHandler()))
           throw new ForbiddenException("Troque sua senha provisória para continuar.");
@@ -136,31 +150,27 @@ export const EquipeAtual = createParamDecorator(
 );
 
 /**
- * Grava uma linha no registro de atividades (auditoria). Nunca derruba a
- * operação principal: se a gravação falhar, só avisa no log do servidor.
+ * Grava auditoria. Em mutações sensíveis, recebe a mesma transação da escrita.
+ * A falha é propagada para impedir confirmação de uma operação sem registro.
  */
 export async function registrar(
-  banco: Banco,
+  banco: Pick<Prisma.TransactionClient, "registro">,
   quem: { id?: string | null; nome?: string | null; papel?: string | null; instituicaoId?: string | null },
   acao: string,
   alvo: { tipo?: string; id?: string; detalhe?: string } = {},
 ) {
-  try {
-    await banco.registro.create({
-      data: {
-        instituicaoId: quem.instituicaoId ?? null,
-        usuarioId: quem.id ?? null,
-        usuarioNome: quem.nome ?? null,
-        papel: quem.papel ?? null,
-        acao,
-        alvoTipo: alvo.tipo ?? null,
-        alvoId: alvo.id ?? null,
-        detalhe: alvo.detalhe ? alvo.detalhe.slice(0, 300) : null,
-      },
-    });
-  } catch (e) {
-    console.warn("registro de atividades não gravado:", acao, (e as Error).message);
-  }
+  await banco.registro.create({
+    data: {
+      instituicaoId: quem.instituicaoId ?? null,
+      usuarioId: quem.id ?? null,
+      usuarioNome: quem.nome ?? null,
+      papel: quem.papel ?? null,
+      acao,
+      alvoTipo: alvo.tipo ?? null,
+      alvoId: alvo.id ?? null,
+      detalhe: alvo.detalhe ? alvo.detalhe.slice(0, 300) : null,
+    },
+  });
 }
 
 /** A sessão (quem está chamando), já verificada pela guarda. */

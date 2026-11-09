@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Animated, Easing, Pressable, StyleSheet, View } from "react-native";
+import { Animated, Easing, Pressable, StyleSheet, View, type ViewInstance } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Svg, { Circle, G, Line, Path } from "react-native-svg";
 import { semCollapsable } from "../Ceu";
@@ -129,8 +129,8 @@ export function JogoPares({ rodada, onErro, onAcerto, bloqueado, dica = false }:
   const [larguraBandeja, setLarguraBandeja] = useState(180);
   const tObjeto = Math.max(18, Math.min(30, Math.floor((larguraBandeja - 28) / 5) - 3));
 
-  const caixa = useRef<View>(null);
-  const refs = useRef(new Map<string, View | null>());
+  const caixa = useRef<ViewInstance>(null);
+  const refs = useRef(new Map<string, ViewInstance | null>());
   const rets = useRef(new Map<string, Ret>());
   const origem = useRef({ x: 0, y: 0 });
   // diferença entre as coordenadas do dedo e as de measureInWindow (no Android,
@@ -410,7 +410,14 @@ export function JogoPares({ rodada, onErro, onAcerto, bloqueado, dica = false }:
       {/* altura fixa de duas linhas: o texto muda de tamanho e não pode empurrar o jogo (tela estável) */}
       <Texto
         numberOfLines={2}
-        style={{ fontSize: 13, lineHeight: 19, minHeight: 38, color: cor.textoSuave, textAlign: "center", marginTop: 16 }}
+        style={{
+          fontSize: 13,
+          lineHeight: 19,
+          minHeight: 38,
+          color: cor.textoSuave,
+          textAlign: "center",
+          marginTop: 16,
+        }}
       >
         {selecionado !== null
           ? "Agora toque na etiqueta com o número certo."

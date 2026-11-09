@@ -25,7 +25,7 @@ export function BotaoLink({
   variante = "primario",
   className = "",
   ...props
-}: ComponentProps<typeof Link> & { variante?: Variante }) {
+}: Omit<ComponentProps<typeof Link>, "key"> & { variante?: Variante }) {
   return <Link {...props} className={`${BASE} ${VARIANTES[variante]} ${className}`} />;
 }
 

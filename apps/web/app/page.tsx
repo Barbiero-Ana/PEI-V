@@ -3,7 +3,7 @@ import type { CSSProperties, ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Simbolo } from "@/components/simbolo";
-import { Wordmark } from "@/components/logo";
+import { NomeMarca } from "@/components/logo";
 import { BotaoLink } from "@/components/ui";
 import { Planos } from "@/components/site/planos";
 import { EfeitosRolagem } from "@/components/site/efeitos";
@@ -88,7 +88,7 @@ export default function Inicio() {
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4 sm:px-8">
           <Link href="/" className="inline-flex items-end gap-2" aria-label="Modolume, início">
             <Simbolo tamanho={38} rotulo="" />
-            <Wordmark className="text-[1.5rem] leading-none" />
+            <NomeMarca className="text-[1.5rem] leading-none" />
           </Link>
           <nav className="flex items-center gap-1 sm:gap-2" aria-label="Seções">
             {[

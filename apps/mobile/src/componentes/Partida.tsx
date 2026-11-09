@@ -60,7 +60,7 @@ export function Partida({ missao, atividadeId }: { missao: Missao; atividadeId?:
   const [resultado, setResultado] = useState<ResultadoJogada | null>(null);
   const [recompensa, setRecompensa] = useState<Recompensa | null>(null);
   const [dicaAberta, setDicaAberta] = useState(false);
-  const [dicas, setDicas] = useState(0);
+  const [fasesComDica, definirFasesComDica] = useState<number[]>([]);
   const inicio = useRef(0);
   const [balanco] = useState(() => new Animated.Value(0));
   const [brilhoLampada] = useState(() => new Animated.Value(0));
@@ -119,7 +119,7 @@ export function Partida({ missao, atividadeId }: { missao: Missao; atividadeId?:
 
   function pedirDica() {
     if (!dicaAberta) {
-      setDicas((d) => d + 1);
+      definirFasesComDica((fases) => (fases.includes(indice) ? fases : [...fases, indice]));
       falar(`Dica do Lilo: ${rodada.dica}`);
     }
     setDicaAberta((v) => !v);
@@ -138,7 +138,7 @@ export function Partida({ missao, atividadeId }: { missao: Missao; atividadeId?:
       missao,
       errosPorRodada: erros,
       tempoSegundos: (Date.now() - inicio.current) / 1000,
-      dicas,
+      dicas: fasesComDica.length,
     });
     setRecompensa(salvarResultado(r));
     // vai para o professor: missão do mapa (mapeamento) ou atividade pronta enviada por ele
@@ -154,7 +154,7 @@ export function Partida({ missao, atividadeId }: { missao: Missao; atividadeId?:
     setMensagem("");
     setResultado(null);
     setRecompensa(null);
-    setDicas(0);
+    definirFasesComDica([]);
     setDicaAberta(false);
     setRodadaJogo((n) => n + 1);
     inicio.current = Date.now();

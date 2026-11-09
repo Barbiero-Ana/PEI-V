@@ -72,6 +72,16 @@ export class RepositorioIdentidades {
     if (!s) await this.gravar(SESSAO, { conta });
     return conta;
   }
+  async encerrarSessao() {
+    const visitante = identidadeDa(null);
+    const envelope = await this.ler<{ identidade: string; dados: { semTurma?: boolean } }>(
+      chaveDados("conta", visitante),
+    );
+    if (envelope?.identidade === visitante && envelope.dados?.semTurma) {
+      await this.salvar("conta", visitante, { ...envelope.dados, semTurma: false });
+    }
+    await this.gravar(SESSAO, { conta: null });
+  }
   dados<T>(tipo: "jogador" | "conta", identidade: string, criar: () => T | Promise<T>): Promise<T> {
     const chave = chaveDados(tipo, identidade);
     const emCurso = this.aberturas.get(chave);
@@ -121,16 +131,17 @@ export async function receberNoEscopo<T>(
 export async function sincronizarFila<T extends { id: string; alunoId: string }>(
   sessao: OperacaoAluno,
   fila: T[],
-  enviar: (token: string, lote: Omit<T, "alunoId">[]) => Promise<{ recebidas: string[] }>,
-  confirmar: (ids: Set<string>) => void,
+  enviar: (token: string, lote: Omit<T, "alunoId">[]) => Promise<{ recebidas: string[]; recusadas?: string[] }>,
+  confirmar: (ids: Set<string>, rejeicoes: Set<string>) => void,
 ) {
   const minhas = fila.filter((j) => j.alunoId === sessao.alunoId);
   for (let i = 0; i < minhas.length; i += 100) {
     if (!sessao.ativa()) return;
     const lote = minhas.slice(i, i + 100).map(({ alunoId: _alunoId, ...j }) => j);
-    const { recebidas } = await enviar(sessao.token, lote);
+    const { recebidas, recusadas = [] } = await enviar(sessao.token, lote);
     if (!sessao.ativa()) return;
     const enviados = new Set(lote.map((j) => j.id));
-    confirmar(new Set(recebidas.filter((id) => enviados.has(id))));
+    const aceitas = new Set(recebidas.filter((id) => enviados.has(id)));
+    confirmar(aceitas, new Set(recusadas.filter((id) => enviados.has(id) && !aceitas.has(id))));
   }
 }

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { esquemaAtividadeParaEnvio } from "@modolume/core";
 import { Avatar, LIMITE_ATENCAO, dataCompleta, dataCurta, isoLocal } from "@/components/painel/blocos";
 import { IconeVoltar } from "@/components/painel/icones";
 import { CelularPrevia, PreviaQuestao } from "@/components/painel/previa-atividade";
@@ -70,6 +71,7 @@ export default async function Atividade({ params }: { params: Promise<{ id: stri
   const faltam = situacao?.alunos.filter((a) => !a.concluiu) ?? [];
   const missao = missaoDa(atividade);
   const enviada = atividade.status === "enviada";
+  const podeEnviar = esquemaAtividadeParaEnvio.safeParse(atividade).success;
   const hoje = isoLocal(new Date());
   const botao = "h-11 w-full rounded-full text-sm font-semibold";
 
@@ -187,6 +189,11 @@ export default async function Atividade({ params }: { params: Promise<{ id: stri
                     <span className="text-xs font-semibold text-texto-suave">Questão {i + 1}</span>
                     <div>
                       <Gabarito q={q} />
+                      {q.feedbackErro ? (
+                        <p className="mt-2 text-texto">
+                          <strong className="text-tinta">Feedback se errar</strong> · {q.feedbackErro}
+                        </p>
+                      ) : null}
                     </div>
                   </li>
                 ))}
@@ -244,12 +251,14 @@ export default async function Atividade({ params }: { params: Promise<{ id: stri
                     Tirar do app (voltar a rascunho)
                   </button>
                 </form>
-              ) : (
+              ) : podeEnviar ? (
                 <form action={enviarAtividade.bind(null, atividade.id)}>
                   <button type="submit" className={`${botao} bg-roxo-escuro text-white`}>
                     Enviar para o app
                   </button>
                 </form>
+              ) : (
+                <p className="text-sm text-alerta">Edite as questões e preencha o feedback antes de enviar.</p>
               )}
               <Link
                 href={`/professor/atividades/${atividade.id}/editar`}

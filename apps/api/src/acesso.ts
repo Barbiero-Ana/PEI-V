@@ -14,7 +14,17 @@ import { JwtService } from "@nestjs/jwt";
 import { Throttle } from "@nestjs/throttler";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
-import { normalizarCodigo, pinFraco } from "./codigo-acesso.js";
+import { codigoAcessoValido, normalizarCodigoAcesso } from "@modolume/core";
+import { pinFraco } from "./codigo-acesso.js";
+import {
+  senhaNova,
+  gerarSegredo,
+  resumoDoSegredo,
+  entregarRedefinicao,
+  MENSAGEM_RECUPERACAO,
+  configuracaoRecuperacao,
+} from "./credencial.js";
+export { senhaNova } from "./credencial.js";
 import {
   Banco,
   EquipeAtual,
@@ -32,18 +42,13 @@ const loginProfessor = z.object({
 });
 
 /** Senha da equipe: pelo menos 8 caracteres, com letra e número. */
-export const senhaNova = z
-  .string()
-  .min(8, "A senha precisa de pelo menos 8 caracteres.")
-  .max(72, "A senha pode ter até 72 caracteres.")
-  .refine((s) => /[A-Za-z]/.test(s) && /\d/.test(s), "Use letras e números na senha.");
 const trocaSenha = z.object({ atual: z.string().min(1, "Informe a senha atual.").max(200), nova: senhaNova });
 
 const codigoAluno = z
   .string()
   .max(20)
-  .transform(normalizarCodigo)
-  .refine((c) => c.length === 8, "O código tem 8 letras e números.");
+  .transform(normalizarCodigoAcesso)
+  .refine(codigoAcessoValido, "Confira o código. O formato novo é BDFH-2468.");
 const identificarAluno = z.object({ codigo: codigoAluno });
 const entradaAluno = z.object({
   codigo: codigoAluno,
@@ -85,7 +90,7 @@ const HASH_FALSO = bcrypt.hashSync("modolume-senha-inexistente", 10);
  * tentativas por minuto, e o PIN tem bloqueio por aluno.
  */
 @Controller()
-export class AcessoController {
+export class ControladorAcesso {
   constructor(
     @Inject(Banco) private readonly banco: Banco,
     @Inject(JwtService) private readonly jwt: JwtService,
@@ -118,9 +123,11 @@ export class AcessoController {
       }
       throw new UnauthorizedException("E-mail ou senha incorretos.");
     }
-    const sessao: Sessao = { sub: pessoa.id, papel: pessoa.papel };
-    await this.banco.professor.update({ where: { id: pessoa.id }, data: { ultimoAcesso: new Date() } });
-    await registrar(this.banco, pessoa, "login", { tipo: "usuario", id: pessoa.id });
+    const sessao: Sessao = { sub: pessoa.id, papel: pessoa.papel, v: pessoa.versaoAcesso };
+    await this.banco.$transaction(async (transacao) => {
+      await transacao.professor.update({ where: { id: pessoa.id }, data: { ultimoAcesso: new Date() } });
+      await registrar(transacao, pessoa, "login", { tipo: "usuario", id: pessoa.id });
+    });
     return {
       token: await this.jwt.signAsync(sessao, { expiresIn: "8h" }),
       professor: {
@@ -165,11 +172,80 @@ export class AcessoController {
     const pessoa = await this.banco.professor.findUniqueOrThrow({ where: { id: eu.id } });
     if (!(await bcrypt.compare(atual, pessoa.senhaHash))) throw new BadRequestException("A senha atual não confere.");
     if (atual === nova) throw new BadRequestException("A nova senha precisa ser diferente da atual.");
-    await this.banco.professor.update({
-      where: { id: eu.id },
-      data: { senhaHash: await bcrypt.hash(nova, 12), senhaProvisoria: false },
+    const senhaHash = await bcrypt.hash(nova, 12);
+    await this.banco.$transaction(async (transacao) => {
+      const alterados = await transacao.professor.updateMany({
+        where: { id: eu.id, senhaHash: pessoa.senhaHash, ativo: true },
+        data: {
+          senhaHash,
+          senhaProvisoria: false,
+          versaoAcesso: { increment: 1 },
+          redefinicaoHash: null,
+          redefinicaoExpiraEm: null,
+        },
+      });
+      if (alterados.count !== 1) throw new UnauthorizedException("Seu acesso mudou. Entre de novo.");
+      await registrar(transacao, eu, "senha.trocada", { tipo: "usuario", id: eu.id });
     });
-    await registrar(this.banco, eu, "senha.trocada", { tipo: "usuario", id: eu.id });
+    return { ok: true };
+  }
+
+  @Throttle({ default: { limit: 3, ttl: 60_000 } })
+  @Post("auth/recuperar-senha")
+  async recuperarSenha(@Body() corpo: unknown) {
+    const { minutos } = configuracaoRecuperacao();
+    const { email } = validar(z.object({ email: z.string().trim().toLowerCase().email().max(160) }), corpo);
+    const pessoa = await this.banco.professor.findUnique({ where: { email } });
+    if (pessoa?.ativo) {
+      const segredo = gerarSegredo();
+      const resumo = resumoDoSegredo(segredo);
+      const alterados = await this.banco.professor.updateMany({
+        where: { id: pessoa.id, email, ativo: true, versaoAcesso: pessoa.versaoAcesso },
+        data: {
+          redefinicaoHash: resumo,
+          redefinicaoExpiraEm: new Date(Date.now() + minutos * 60_000),
+        },
+      });
+      if (alterados.count !== 1) return { mensagem: MENSAGEM_RECUPERACAO };
+      try {
+        await entregarRedefinicao(pessoa.email, segredo);
+      } catch {
+        // Não revela existência da conta nem invalida um pedido posterior concorrente.
+        await this.banco.professor.updateMany({
+          where: { id: pessoa.id, redefinicaoHash: resumo },
+          data: { redefinicaoHash: null, redefinicaoExpiraEm: null },
+        });
+        console.warn("Entrega de recuperação indisponível.");
+      }
+    }
+    return { mensagem: MENSAGEM_RECUPERACAO };
+  }
+
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  @Post("auth/redefinir-senha")
+  async redefinirSenha(@Body() corpo: unknown) {
+    const { token, nova } = validar(z.object({ token: z.string().regex(/^[a-f0-9]{64}$/), nova: senhaNova }), corpo);
+    const resumo = resumoDoSegredo(token);
+    const senhaHash = await bcrypt.hash(nova, 12);
+    await this.banco.$transaction(async (transacao) => {
+      const pessoa = await transacao.professor.findUnique({ where: { redefinicaoHash: resumo } });
+      const alterados = await transacao.professor.updateMany({
+        where: {
+          redefinicaoHash: resumo,
+          redefinicaoExpiraEm: { gt: new Date() },
+          ativo: true,
+        },
+        data: {
+          senhaHash,
+          senhaProvisoria: false,
+          redefinicaoHash: null,
+          redefinicaoExpiraEm: null,
+          versaoAcesso: { increment: 1 },
+        },
+      });
+      if (!pessoa || alterados.count !== 1) throw new BadRequestException("Link inválido ou expirado. Solicite outro.");
+      await registrar(transacao, pessoa, "senha.redefinida", { tipo: "usuario", id: pessoa.id });
+    });
     return { ok: true };
   }
 

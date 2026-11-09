@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Simbolo } from "@/components/simbolo";
-import { Wordmark } from "@/components/logo";
+import { NomeMarca } from "@/components/logo";
 import { INICIO_DO_PAPEL, papelDa } from "@/lib/painel/sessao";
 import { sessaoDaEquipe } from "@/lib/escola/api";
 import { FormularioSenha } from "./formulario";
@@ -21,7 +21,7 @@ export default async function TrocarSenha() {
         <div className="mb-6 flex items-center justify-between">
           <span className="inline-flex items-end gap-2">
             <Simbolo tamanho={30} rotulo="" />
-            <Wordmark className="text-[1.3rem] leading-none" />
+            <NomeMarca className="text-[1.3rem] leading-none" />
           </span>
           {!obrigatoria && sessao ? (
             <Link

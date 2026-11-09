@@ -93,7 +93,7 @@ model Mapa {
   titulo       String                   @db.VarChar(80)
   constelacao  String                   @unique @db.VarChar(40)
   missoes      Missao[]
-  pontosAlunos PontosMapa[]
+  pontosAlunos PontoMapa[]
   constelacoes ConstelacaoConquistada[]
 
   @@map("mapa")
@@ -159,6 +159,9 @@ model Professor {
   email           String      @unique @db.VarChar(160)
   /// Senha com bcrypt (MOD-SEG-001); nunca sai da API.
   senhaHash       String      @map("senha_hash") @db.VarChar(100)
+  versaoAcesso    Int         @default(1) @map("versao_acesso")
+  redefinicaoHash String?     @unique @map("redefinicao_hash") @db.Char(64)
+  redefinicaoExpiraEm DateTime? @map("redefinicao_expira_em") @db.Timestamptz(3)
   /// Só o professor tem disciplina (CHECK na migração).
   disciplina      String?     @db.VarChar(60)
   /// professor | coordenacao | admin: define o que a pessoa vê e faz (PRD-01, PRD-02).
@@ -240,7 +243,7 @@ model Aluno {
 
   avatar       AvatarAluno?
   progressos   ProgressoMissao[]
-  pontosMapas  PontosMapa[]
+  pontosMapas  PontoMapa[]
   constelacoes ConstelacaoConquistada[]
   desafios     DesafioConcluido[]
   compras      CompraLoja[]
@@ -288,7 +291,7 @@ model ProgressoMissao {
 }
 
 /// Pontos de luz acumulados pelo aluno em cada mapa (RN-02, RN-03).
-model PontosMapa {
+model PontoMapa {
   alunoId    String @map("aluno_id") @db.VarChar(40)
   aluno      Aluno  @relation(fields: [alunoId], references: [id], onDelete: Cascade)
   mapaNumero Int    @map("mapa_numero") @db.SmallInt
@@ -296,7 +299,7 @@ model PontosMapa {
   pontos     Int
 
   @@id([alunoId, mapaNumero])
-  @@map("pontos_mapa")
+  @@map("ponto_mapa")
 }
 
 /// Constelações completas (RN-04): vão para o álbum do aluno.
@@ -421,6 +424,8 @@ model QuestaoAtividade {
   tipo        TipoQuestao
   /// Comando próprio da questão (vazio usa a instrução da atividade).
   comando     String             @default("") @db.VarChar(200)
+  /// Orientação do professor exibida após uma resposta incorreta.
+  feedbackErro String            @default("") @map("feedback_erro") @db.VarChar(300)
   /// Objetiva: o enunciado.
   enunciado   String?            @db.VarChar(1000)
   /// Completar: o texto com as respostas entre colchetes.

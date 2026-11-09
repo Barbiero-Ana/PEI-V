@@ -1,7 +1,7 @@
 import "reflect-metadata";
 import assert from "node:assert/strict";
 import { beforeEach, describe, it } from "node:test";
-import { AdminController } from "./admin.js";
+import { ControladorAdministracao } from "./admin.js";
 import { Banco, type Equipe, type PapelEquipe } from "./infra.js";
 
 // Teste do controller com armazenamento transacional em memória: não instancia
@@ -14,6 +14,7 @@ function estadoInicial() {
       instituicaoId: "escola",
       nome: "Professor",
       email: "professor@teste.example",
+      senhaProvisoria: true,
       papel: "professor" as PapelEquipe,
       disciplina: "Matemática" as string | null,
     },
@@ -29,6 +30,7 @@ function estadoInicial() {
 }
 type Estado = ReturnType<typeof estadoInicial>;
 type Transacao = {
+  registro: { create(evento: unknown): Promise<unknown> };
   professor: { update(args: { where: { id: string }; data: Partial<Estado["pessoa"]> }): Promise<unknown> };
   professorTurma: { deleteMany(args: { where: { professorId: string } }): Promise<unknown> };
 };
@@ -65,6 +67,7 @@ const banco = {
     transacoes++;
     const rascunho = structuredClone(estado);
     const resultado = await executar({
+      registro: banco.registro,
       professor: {
         update: async ({ where, data }) => {
           assert.equal(where.id, rascunho.pessoa.id);
@@ -87,7 +90,7 @@ const banco = {
     return resultado;
   },
 };
-const controller = new AdminController(banco as unknown as Banco);
+const controller = new ControladorAdministracao(banco as unknown as Banco);
 const dados = (papel: PapelEquipe) => ({
   nome: "Nome editado",
   email: "editado@teste.example",
@@ -102,6 +105,13 @@ describe("Alteração de papel da equipe (controller com transação simulada)",
     transacoes = 0;
     eventos = [];
     outrosAdmins = 1;
+  });
+
+  it("não permite redirecionar a recuperação de uma conta com senha definida", async () => {
+    estado.pessoa.senhaProvisoria = false;
+    await assert.rejects(controller.editarUsuario(eu, "professor", dados("professor")), /senha definida/);
+    assert.equal(estado.pessoa.email, "professor@teste.example");
+    assert.equal(transacoes, 0);
   });
 
   for (const papel of ["coordenacao", "admin"] as const) {

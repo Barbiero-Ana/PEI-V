@@ -1,4 +1,4 @@
-import type { FormatoId } from "./formats";
+import type { FormatoId } from "./formato";
 
 /**
  * Missões do aluno: cada missão é um minijogo de Matemática com manipulação

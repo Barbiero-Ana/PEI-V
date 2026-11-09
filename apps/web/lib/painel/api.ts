@@ -9,7 +9,11 @@ import "server-only";
  */
 
 export const API_URL = process.env.API_URL?.replace(/\/$/, "") ?? "";
-export const usandoApi = () => API_URL !== "";
+export const usandoApi = () => {
+  if (!API_URL && process.env.NODE_ENV === "production")
+    throw new Error("Defina API_URL: demonstração não é permitida em produção.");
+  return API_URL !== "";
+};
 
 export class ErroApi extends Error {
   constructor(
@@ -35,6 +39,7 @@ export async function chamarApi<T>(
       },
       body: opcoes.corpo !== undefined ? JSON.stringify(opcoes.corpo) : undefined,
       cache: "no-store",
+      signal: AbortSignal.timeout(15_000),
     });
   } catch {
     throw new ErroApi(503, "Não foi possível falar com o servidor do Modolume. Tente de novo em instantes.");

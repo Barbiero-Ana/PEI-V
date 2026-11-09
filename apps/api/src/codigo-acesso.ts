@@ -1,21 +1,14 @@
 import { randomInt } from "node:crypto";
+import { DIGITOS_CODIGO_ALUNO, LETRAS_CODIGO_ALUNO } from "@modolume/core";
 
-/**
- * Código pessoal de acesso do aluno (ADR 0017): 8 caracteres de um alfabeto sem
- * O, 0, I, 1 e L, que se confundem quando o professor dita ou imprime o código.
- * 31^8 ≈ 850 bilhões de combinações: inviável de adivinhar com o limite de
- * tentativas da API. Mostrado como "ABCD-EFGH"; guardado sem o traço.
- */
-export const ALFABETO_CODIGO = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+/** Alfabeto do identificador legado de turma. */
+export const ALFABETO_CODIGO_TURMA = LETRAS_CODIGO_ALUNO + DIGITOS_CODIGO_ALUNO;
 
+/** Código pessoal novo: quatro letras e quatro dígitos, sem hífen no banco (ADR 0020). */
 export function gerarCodigoAcesso() {
-  let codigo = "";
-  for (let i = 0; i < 8; i++) codigo += ALFABETO_CODIGO[randomInt(ALFABETO_CODIGO.length)];
-  return codigo;
+  const grupo = (alfabeto: string) => Array.from({ length: 4 }, () => alfabeto[randomInt(alfabeto.length)]).join("");
+  return grupo(LETRAS_CODIGO_ALUNO) + grupo(DIGITOS_CODIGO_ALUNO);
 }
-
-/** "abcd-efgh", "ABCD EFGH" → "ABCDEFGH" (aceita o código como o aluno digitar). */
-export const normalizarCodigo = (texto: string) => texto.toUpperCase().replace(/[^A-Z0-9]/g, "");
 
 /** PIN fácil demais de adivinhar: todos iguais (0000) ou em sequência (1234, 9876). */
 export function pinFraco(pin: string) {

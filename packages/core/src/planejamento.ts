@@ -1,5 +1,6 @@
 import { z } from "zod";
-import { FORMATO_IDS, type FormatoId } from "./formats";
+import { esquemaData } from "./validacao";
+import { FORMATO_IDS, type FormatoId } from "./formato";
 
 /**
  * Planejamento de aulas do professor (ADR 0010). Contrato comum ao painel e à
@@ -7,10 +8,10 @@ import { FORMATO_IDS, type FormatoId } from "./formats";
  * plano e a validação (RN-22 e RN-23).
  */
 
-export const STATUS_PLANO = ["rascunho", "planejada", "realizada"] as const;
-export type StatusPlano = (typeof STATUS_PLANO)[number];
+export const SITUACOES_PLANO = ["rascunho", "planejada", "realizada"] as const;
+export type SituacaoPlano = (typeof SITUACOES_PLANO)[number];
 
-export const ROTULO_STATUS: Record<StatusPlano, string> = {
+export const ROTULO_SITUACAO: Record<SituacaoPlano, string> = {
   rascunho: "Rascunho",
   planejada: "Planejada",
   realizada: "Realizada",
@@ -61,7 +62,7 @@ export interface PlanoAula {
   /** Alunos que terão acompanhamento mais próximo nesta aula. */
   alunosFoco: string[];
   observacoes: string;
-  status: StatusPlano;
+  status: SituacaoPlano;
   /** Registro depois da aula: o que aconteceu e o que ajustar. */
   registro: string;
   atualizadoEm: string;
@@ -181,11 +182,11 @@ export const formatoValido = (f: string): f is FormatoId => (FORMATO_IDS as read
 
 const texto = z.string().trim();
 /** Validação do plano no servidor (as mesmas regras do formulário do painel, RN-22). */
-export const planoSchema = z
+export const esquemaPlano = z
   .object({
     turmaId: texto.min(1, "Escolha a turma."),
-    data: texto.regex(/^\d{4}-\d{2}-\d{2}$/, "Informe a data da aula."),
-    horario: texto.regex(/^(\d{2}:\d{2})?$/, "Horário no formato HH:MM."),
+    data: esquemaData,
+    horario: texto.regex(/^([01]\d|2[0-3]):[0-5]\d$|^$/, "Horário no formato HH:MM."),
     aulas: z.number().int().min(1, "Entre 1 e 10 aulas.").max(10, "Entre 1 e 10 aulas."),
     tema: texto.min(1, "Dê um tema para a aula.").max(200),
     unidade: z.enum(UNIDADES_TEMATICAS),
@@ -199,7 +200,7 @@ export const planoSchema = z
     avaliacao: texto.max(4000),
     alunosFoco: z.array(texto).max(60),
     observacoes: texto.max(4000),
-    status: z.enum(STATUS_PLANO),
+    status: z.enum(SITUACOES_PLANO),
     registro: texto.max(4000),
   })
   .refine((p) => p.status === "rascunho" || p.objetivos.length > 0, {

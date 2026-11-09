@@ -7,7 +7,7 @@ import { BotaoLink, Cabecalho, corDaTurma, diaDaSemana, isoLocal, nomeDoMes } fr
 import { IconeCalendario, IconeMais } from "@/components/painel/icones";
 import { SituacaoPlano } from "@/components/painel/situacao-plano";
 import { listaDeTurmas, opcoesDePlanejamento, professorLogado } from "@/lib/painel/dados";
-import { ROTULO_STATUS, STATUS_PLANO, listarPlanos, type PlanoAula } from "@/lib/painel/planejamento";
+import { ROTULO_SITUACAO, SITUACOES_PLANO, listarPlanos, type PlanoAula } from "@/lib/painel/planejamento";
 
 export const metadata: Metadata = { title: "Planos de aula · Painel do professor · Modolume" };
 
@@ -62,9 +62,9 @@ export default async function Planejamento({
             rotulo="Situação"
             atual={status}
             href={(s) => filtro({ status: s })}
-            opcoes={["", ...STATUS_PLANO].map((s) => ({
+            opcoes={["", ...SITUACOES_PLANO].map((s) => ({
               valor: s,
-              nome: s ? ROTULO_STATUS[s as keyof typeof ROTULO_STATUS] : "Todas",
+              nome: s ? ROTULO_SITUACAO[s as keyof typeof ROTULO_SITUACAO] : "Todas",
               n: todos.filter((p) => (!turma || p.turmaId === turma) && (!s || p.status === s)).length,
             }))}
           />

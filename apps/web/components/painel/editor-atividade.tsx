@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { startTransition, useActionState, useState, type ReactNode } from "react";
-import { FORMATOS_ATIVIDADE } from "@modolume/core";
+import { FORMATOS_ATIVIDADE, LIMITE_FEEDBACK_QUESTAO } from "@modolume/core";
 import { gravarAtividade, type EstadoAtividade } from "@/app/professor/(painel)/atividades/acoes";
 import type { DadosAtividade, FormatoEditavel, Questao } from "@/lib/painel/atividades";
 import type { OpcoesPlanejamento } from "@/lib/painel/dados";
@@ -56,6 +56,7 @@ function rotuloDaQuestao(q: Questao, i: number) {
 
 /** A questão está completa o suficiente para ir ao app? (mesmas regras do servidor) */
 function completa(q: Questao) {
+  if (!q.feedbackErro?.trim()) return false;
   switch (q.tipo) {
     case "objetiva":
       return (
@@ -113,7 +114,11 @@ export function EditorAtividade({ inicial, id, turmas, planos, habilidades, miss
     setTentativaVista(estado.tentativa);
     setMexidos([]);
     const primeiro = Object.keys(estado.erros)[0];
-    if (primeiro !== undefined) setEtapa(etapaDoErro(primeiro));
+    if (primeiro !== undefined) {
+      setEtapa(etapaDoErro(primeiro));
+      const questaoComErro = /^questoes\.(\d+)\b/.exec(primeiro);
+      if (questaoComErro) setAtual(Number(questaoComErro[1]));
+    }
   }
   const e = Object.fromEntries(
     Object.entries(estado.erros).filter(([k]) => !mexidos.some((m) => k === m || k.startsWith(`${m}.`))),
@@ -646,6 +651,19 @@ export function EditorAtividade({ inicial, id, turmas, planos, habilidades, miss
                       </button>
                     </fieldset>
                   ) : null}
+                  <Campo
+                    rotulo="Feedback se o aluno errar"
+                    ajuda="Obrigatório para enviar. Indique um próximo passo em linguagem simples, sem revelar a resposta."
+                  >
+                    <textarea
+                      value={questao.feedbackErro ?? ""}
+                      onChange={(ev) => mudarQuestao({ ...questao, feedbackErro: ev.target.value })}
+                      maxLength={LIMITE_FEEDBACK_QUESTAO}
+                      rows={3}
+                      placeholder="Ex.: Divida o preço em quatro partes iguais e use apenas uma."
+                      className={`${ENTRADA} py-2.5 font-normal`}
+                    />
+                  </Campo>
                   <Erro msg={erroDaQuestao(indice)} />
                 </div>
               </section>

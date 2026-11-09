@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { INDICADORES_SMART, indicadoresSmart, somarDias, statusDaMeta } from "./indicadores-smart";
-import { criarSeed } from "./seed";
+import { INDICADORES_SMART, indicadoresSmart, somarDias, situacaoDaMeta } from "./indicadores-smart";
+import { criarDadosDemonstracao } from "./dados-demonstracao";
 
-const dados = criarSeed();
+const dados = criarDadosDemonstracao();
 
 describe("indicadores SMART", () => {
   it("todo indicador tem as cinco partes SMART e uma meta", () => {
@@ -49,13 +49,13 @@ describe("indicadores SMART", () => {
 
   it("a situação respeita o sentido e a tolerância da meta", () => {
     const minimo = { valor: 70, sentido: "minimo", unidade: "%", tolerancia: 5 } as const;
-    expect(statusDaMeta(72, minimo)).toBe("atingida");
-    expect(statusDaMeta(66, minimo)).toBe("perto");
-    expect(statusDaMeta(50, minimo)).toBe("abaixo");
+    expect(situacaoDaMeta(72, minimo)).toBe("atingida");
+    expect(situacaoDaMeta(66, minimo)).toBe("perto");
+    expect(situacaoDaMeta(50, minimo)).toBe("abaixo");
     const maximo = { valor: 1.8, sentido: "maximo", unidade: "tentativas", tolerancia: 0.3 } as const;
-    expect(statusDaMeta(1.5, maximo)).toBe("atingida");
-    expect(statusDaMeta(2, maximo)).toBe("perto");
-    expect(statusDaMeta(2.5, maximo)).toBe("abaixo");
-    expect(statusDaMeta(null, maximo)).toBe("sem-dados");
+    expect(situacaoDaMeta(1.5, maximo)).toBe("atingida");
+    expect(situacaoDaMeta(2, maximo)).toBe("perto");
+    expect(situacaoDaMeta(2.5, maximo)).toBe("abaixo");
+    expect(situacaoDaMeta(null, maximo)).toBe("sem-dados");
   });
 });

@@ -1,4 +1,4 @@
-import { FORMATOS_ATIVIDADE, type FormatoId } from "./formats";
+import { FORMATOS_ATIVIDADE, type FormatoId } from "./formato";
 import { MISSOES, type ResultadoJogada } from "./missoes";
 
 /**

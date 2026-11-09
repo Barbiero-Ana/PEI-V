@@ -6,7 +6,7 @@ Base: scripts, configuração e código da branch `feat/backend-guilherme`, até
 
 O projeto é um monorepo: `apps/api` contém NestJS + Prisma, `apps/web` contém Next.js e `packages/core` contém as regras compartilhadas. Não é necessário instalar Nest CLI, Next CLI ou PostgreSQL globalmente: o caminho local implementado usa dependências do repositório e PostgreSQL embutido.
 
-O `package.json` da raiz declara Node `>=20` e pnpm `11.17.0`. Na máquina da revisão, os comandos abaixo retornaram Node `v24.22.2` e pnpm `11.17.0`; isso não comprova compatibilidade com toda versão abrangida por `>=20`.
+O projeto usa pnpm `11.17.0` e adota Node 24 em `.nvmrc`. O Expo SDK 58 exige Node 22 a partir de 22.13, Node 24 a partir de 24.3 ou Node 26 ou superior. Use uma versão compatível no terminal que executa o app.
 
 Se Node/npm ainda não estiverem disponíveis, instale-os pelo procedimento Windows aprovado pela equipe. O repositório não fornece instalador de Node nem uma matriz de versões homologadas. Depois, abra um novo PowerShell. Para instalar a versão de pnpm declarada pelo projeto, use:
 
@@ -37,7 +37,7 @@ Antes de iniciar os processos, configure manualmente `apps/api/.env` e `apps/web
 
 Para este guia, ambas as conexões de banco devem apontar ao banco local `modolume` em `localhost:5433`. O script de banco define usuário e senha locais no próprio código; consulte esses parâmetros em `apps/api/scripts/banco-local.ts` e configure-os privadamente, sem publicar a URL. Ele não lê usuário/senha de `.env` nem cria o papel restrito `modolume_api`.
 
-Para o banco embutido isolado, as duas URLs podem usar a conta local provisionada pelo script. Isso não reproduz os privilégios mínimos de produção. O SQL `apps/api/prisma/sql/papel-da-api.sql` contém o nome `railway` fixo e não é uma receita pronta para este banco local.
+Para o banco embutido isolado, as duas URLs podem usar a conta local provisionada pelo script. Isso não reproduz os privilégios mínimos de produção. O SQL `apps/api/prisma/sql/papel-da-api.sql` provisiona o papel restrito no banco da conexão atual.
 
 ## 3. Iniciar PostgreSQL — terminal A
 
@@ -72,7 +72,7 @@ pnpm.cmd --filter @modolume/api db:migrar
 pnpm.cmd --filter @modolume/api exec prisma migrate status
 ```
 
-Resultado esperado: aplicação das migrações pendentes e estado atualizado. Estão versionadas `20261104120000_modelo_relacional`, `20261105120000_acesso_individual_aluno` e `20261105150000_equipe_papeis_e_registros`.
+Resultado esperado: aplicação das migrações pendentes e estado atualizado. A lista vigente está em [`apps/api/prisma/migrations`](../../apps/api/prisma/migrations), incluindo a proteção de `registro`, a recuperação de senha e a renomeação para `ponto_mapa`.
 
 ### Dados e conta inicial
 

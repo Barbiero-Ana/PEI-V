@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Simbolo } from "@/components/simbolo";
-import { Wordmark } from "@/components/logo";
+import { NomeMarca } from "@/components/logo";
 import { OndasFaixa } from "@/components/site/ondas";
 import { FormularioEntrar } from "./formulario";
 
@@ -20,7 +20,7 @@ export default function EntrarProfessor() {
         {/* só a logo, grande e centralizada */}
         <Link href="/" className="relative flex flex-col items-center gap-5" aria-label="Modolume, página inicial">
           <Simbolo tamanho={150} rotulo="" />
-          <Wordmark className="text-[4.5rem] leading-none !text-white xl:text-[5.25rem]" />
+          <NomeMarca className="text-[4.5rem] leading-none !text-white xl:text-[5.25rem]" />
         </Link>
       </section>
 
@@ -38,7 +38,7 @@ export default function EntrarProfessor() {
         <div className="relative flex items-center justify-between gap-4">
           <Link href="/" className="inline-flex items-end gap-2 lg:invisible" aria-label="Modolume, página inicial">
             <Simbolo tamanho={30} rotulo="" />
-            <Wordmark className="text-[1.3rem] leading-none" />
+            <NomeMarca className="text-[1.3rem] leading-none" />
           </Link>
           <Link
             href="/"
@@ -57,19 +57,21 @@ export default function EntrarProfessor() {
             <div className="mt-8">
               <FormularioEntrar />
             </div>
-            <div className="mt-7 rounded-2xl bg-suave px-4 py-3 text-sm text-texto">
-              <p className="font-semibold text-tinta">Acesso de demonstração (senha modolume2026)</p>
-              <ul className="mt-1 flex flex-col gap-0.5 break-words">
-                <li>Professora: marina.alves@escola.example</li>
-                <li>Coordenação: coordenacao@escola.example</li>
-                <li>Administração: admin@escola.example</li>
-              </ul>
-            </div>
+            {process.env.NODE_ENV !== "production" && (
+              <div className="mt-7 rounded-2xl bg-suave px-4 py-3 text-sm text-texto">
+                <p className="font-semibold text-tinta">Acesso de demonstração (senha modolume2026)</p>
+                <ul className="mt-1 flex flex-col gap-0.5 break-words">
+                  <li>Professora: marina.alves@escola.example</li>
+                  <li>Coordenação: coordenacao@escola.example</li>
+                  <li>Administração: admin@escola.example</li>
+                </ul>
+              </div>
+            )}
           </div>
         </div>
 
         <p className="relative text-center text-sm text-texto-fraco">
-          Esqueceu a senha? Fale com a coordenação da sua escola.
+          <Link href="/redefinir-senha">Primeiro acesso ou esqueceu a senha? Recuperar acesso</Link>
         </p>
       </section>
     </main>

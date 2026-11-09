@@ -1,13 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { formatarCodigoAcesso } from "@modolume/core";
 import { Cabecalho, Painel } from "@/components/painel/blocos";
 import { quando } from "@/components/escola/estrutura";
 import { Campo, Escolha, FormularioAcao } from "@/components/escola/formulario";
 import { apiDaEquipe } from "@/lib/escola/api";
 import { OPCOES_PERIODO, type AlunoAdmin, type TurmaAdmin } from "@/lib/escola/tipos";
 import { alternarAluno, alternarTurma, criarAluno, editarAluno, editarTurma } from "../../acoes";
-
-const codigoBonito = (c: string) => `${c.slice(0, 4)}-${c.slice(4)}`;
 
 export default async function TurmaAdmin({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -83,7 +82,7 @@ export default async function TurmaAdmin({ params }: { params: Promise<{ id: str
                       <span className="block text-xs font-normal text-texto-suave">Matrícula {a.matricula}</span>
                     </span>
                     <span className="font-mono text-sm font-semibold tracking-wider text-tinta">
-                      {codigoBonito(a.codigoAcesso)}
+                      {formatarCodigoAcesso(a.codigoAcesso)}
                     </span>
                     <span className="w-36 text-sm text-texto-suave">
                       {a.pinCriado ? "PIN criado" : "Sem PIN ainda"}

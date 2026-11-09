@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { Animated, Easing, Platform, Pressable, View } from "react-native";
+import { Animated, Easing, Platform, Pressable, View, type ViewInstance } from "react-native";
 import Svg, { Circle, Path, Rect } from "react-native-svg";
 import type { RodadaRepartir } from "@modolume/core";
 import { CABELOS, DesenhoRosto, ROSTO_PADRAO } from "../Rosto";
@@ -82,9 +82,9 @@ export function JogoRepartir({ rodada, onErro, onAcerto, bloqueado }: PropsJogo<
   const [recebidos, setRecebidos] = useState<number[]>(() => Array.from({ length: grupos }, () => 0));
   const [voos, setVoos] = useState<Voo[]>([]);
   const contador = useRef(0);
-  const caixa = useRef<View>(null);
-  const refMonte = useRef<View>(null);
-  const refs = useRef<(View | null)[]>([]);
+  const caixa = useRef<ViewInstance>(null);
+  const refMonte = useRef<ViewInstance>(null);
+  const refs = useRef<(ViewInstance | null)[]>([]);
 
   /** Faz itens voarem do monte até os escolhidos (e só então conta). */
   function voar(alvos: number[]) {

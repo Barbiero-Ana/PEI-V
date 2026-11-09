@@ -25,7 +25,7 @@ function falarAgora(texto: string) {
   Speech.speak(texto, { language: "pt-BR", rate: 0.95 });
 }
 
-export function AcessibilidadeProvider({ children }: { children: ReactNode }) {
+export function ProvedorAcessibilidade({ children }: { children: ReactNode }) {
   const [prefs, setPrefs] = useState(lerPrefs);
   const [sistemaReduz, setSistemaReduz] = useState(false);
 
@@ -64,7 +64,7 @@ export function AcessibilidadeProvider({ children }: { children: ReactNode }) {
 
 export function useAcessibilidade() {
   const c = useContext(Contexto);
-  if (!c) throw new Error("useAcessibilidade fora do AcessibilidadeProvider");
+  if (!c) throw new Error("useAcessibilidade fora do ProvedorAcessibilidade");
   return c;
 }
 

@@ -33,7 +33,7 @@ export default async function VisaoAdmin() {
               [
                 "/admin/usuarios",
                 "Cadastrar professor, coordenação ou administrador",
-                "Cada pessoa recebe uma senha provisória e troca no primeiro acesso.",
+                "Cada pessoa define sua senha pelo link de recuperação no e-mail cadastrado.",
               ],
               [
                 "/admin/turmas",

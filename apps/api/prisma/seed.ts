@@ -8,7 +8,7 @@ import {
   NIVEIS,
   PLANOS_EXEMPLO,
   UNIDADES_TEMATICAS,
-  criarSeed,
+  criarDadosDemonstracao,
 } from "@modolume/core";
 import { gerarCodigoAcesso } from "../src/codigo-acesso.js";
 import { dataDoBanco, questoesParaBanco } from "../src/conversao.js";
@@ -62,7 +62,7 @@ async function apagarTudo() {
     prisma.planoAula.deleteMany(),
     prisma.avatarAluno.deleteMany(),
     prisma.progressoMissao.deleteMany(),
-    prisma.pontosMapa.deleteMany(),
+    prisma.pontoMapa.deleteMany(),
     prisma.constelacaoConquistada.deleteMany(),
     prisma.desafioConcluido.deleteMany(),
     prisma.compraLoja.deleteMany(),
@@ -102,7 +102,7 @@ async function main() {
     return;
   }
 
-  const d = criarSeed();
+  const d = criarDadosDemonstracao();
   const senhaHash = await bcrypt.hash(process.env.SENHA_DEMO ?? "modolume2026", 10);
 
   await prisma.instituicao.createMany({ data: d.instituicoes.map((i) => ({ id: i.id, nome: i.nome })) });

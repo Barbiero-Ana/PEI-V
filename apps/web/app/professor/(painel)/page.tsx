@@ -25,7 +25,7 @@ import {
   avataresDosAlunos,
 } from "@/lib/painel/dados";
 import { listarAtividades } from "@/lib/painel/atividades";
-import { ROTULO_STATUS, listarPlanos } from "@/lib/painel/planejamento";
+import { ROTULO_SITUACAO, listarPlanos } from "@/lib/painel/planejamento";
 
 export const metadata: Metadata = { title: "Visão geral · Painel do professor · Modolume" };
 
@@ -140,7 +140,7 @@ export default async function VisaoGeral({ searchParams }: { searchParams: Promi
                                 {p.tema}
                               </span>
                               {p.status !== "planejada" ? (
-                                <span className="text-xs text-texto-suave">{ROTULO_STATUS[p.status]}</span>
+                                <span className="text-xs text-texto-suave">{ROTULO_SITUACAO[p.status]}</span>
                               ) : null}
                             </Link>
                           </li>

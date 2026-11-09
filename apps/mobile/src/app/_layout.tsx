@@ -8,10 +8,10 @@ import { useFonts } from "expo-font";
 import { Poppins_600SemiBold, Poppins_700Bold } from "@expo-google-fonts/poppins";
 import { Inter_400Regular, Inter_500Medium, Inter_600SemiBold } from "@expo-google-fonts/inter";
 import { Lexend_400Regular, Lexend_500Medium, Lexend_600SemiBold, Lexend_700Bold } from "@expo-google-fonts/lexend";
-import { AcessibilidadeProvider, useAcessibilidade } from "@/estado/acessibilidade";
-import { JogadorProvider } from "@/estado/jogador";
-import { ContaProvider } from "@/estado/conta";
-import { IdentidadeProvider } from "@/estado/identidade";
+import { ProvedorAcessibilidade, useAcessibilidade } from "@/estado/acessibilidade";
+import { ProvedorJogador } from "@/estado/jogador";
+import { ProvedorConta } from "@/estado/conta";
+import { ProvedorIdentidade } from "@/estado/identidade";
 import { TransicaoNuvens } from "@/componentes/Nuvens";
 import { Simbolo } from "@/componentes/Simbolo";
 import { cor } from "@/tema";
@@ -47,20 +47,20 @@ export default function RaizLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-        <AcessibilidadeProvider>
-          <IdentidadeProvider>
-            <JogadorProvider>
-              <ContaProvider>
+        <ProvedorAcessibilidade>
+          <ProvedorIdentidade>
+            <ProvedorJogador>
+              <ProvedorConta>
                 <ComTema>
                   <StatusBar style="dark" />
                   <TransicaoNuvens>
                     <Telas />
                   </TransicaoNuvens>
                 </ComTema>
-              </ContaProvider>
-            </JogadorProvider>
-          </IdentidadeProvider>
-        </AcessibilidadeProvider>
+              </ProvedorConta>
+            </ProvedorJogador>
+          </ProvedorIdentidade>
+        </ProvedorAcessibilidade>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

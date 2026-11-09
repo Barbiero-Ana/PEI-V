@@ -147,7 +147,7 @@ interface Estado extends Salvo {
 
 const Ctx = createContext<Estado | null>(null);
 
-export function JogadorProvider({ children }: { children: React.ReactNode }) {
+export function ProvedorJogador({ children }: { children: React.ReactNode }) {
   const { conta, escopo, repositorio, selecionar, falhar } = useIdentidade();
   const [pronto, setPronto] = useState(false);
   const [salvo, setSalvo] = useState<Salvo>(VAZIO);
@@ -345,7 +345,7 @@ export function JogadorProvider({ children }: { children: React.ReactNode }) {
 
 export function useJogador(): Estado {
   const ctx = useContext(Ctx);
-  if (!ctx) throw new Error("useJogador precisa estar dentro de <JogadorProvider>.");
+  if (!ctx) throw new Error("useJogador precisa estar dentro de <ProvedorJogador>.");
   return ctx;
 }
 

@@ -1,0 +1,29 @@
+# MOD-CON-004
+
+Dados salvos por versões anteriores do aplicativo continuam legíveis após atualizações.
+
+Origem: [PRD-17 — Qualidade, segurança e restrições](../../02-modulos/PRD-17%20%E2%80%94%20Qualidade%2C%20seguran%C3%A7a%20e%20restri%C3%A7%C3%B5es.md), seção 5. Prioridade **I**, método **T**. Situação declarada na origem **Parcial**.
+
+[Módulo, fluxo, perfis e entidades](README.md). [Requisitos transversais](../prd-17/README.md).
+
+## Regras, histórias e critérios de aceite
+
+- HU-QUA-04 Como **aluno**, quero não perder meu progresso se a internet cair ou o app atualizar.
+
+- **HU-QUA-04** CA-01: Sem internet, o app continua funcionando e salva as jogadas.
+- **HU-QUA-04** CA-02: O mesmo resultado enviado duas vezes é gravado uma única vez.
+
+Consulte as regras transversais no PRD-17.
+
+## Implementação e evidência
+
+- [apps/api/src/infra.ts](../../../apps/api/src/infra.ts)
+- [apps/api/prisma/schema.prisma](../../../apps/api/prisma/schema.prisma)
+- [apps/api/scripts/verificar-banco.ts](../../../apps/api/scripts/verificar-banco.ts)
+- [apps/web/middleware.ts](../../../apps/web/middleware.ts)
+- [apps/mobile/src/estado/isolamento.ts](../../../apps/mobile/src/estado/isolamento.ts)
+- [packages/core](../../../packages/core)
+
+**Aceite nesta auditoria** Pendente.
+
+Aceite individual pendente de verificação nesta auditoria. Consulte os cenários e as evidências do módulo.

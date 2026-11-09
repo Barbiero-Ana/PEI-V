@@ -5,9 +5,9 @@ import { Module, type INestApplication } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
 import { JwtModule, JwtService } from "@nestjs/jwt";
 import bcrypt from "bcryptjs";
-import { AdminController } from "./admin.js";
-import { AlunoController } from "./aluno.js";
-import { AcessoController } from "./acesso.js";
+import { ControladorAdministracao } from "./admin.js";
+import { ControladorAluno } from "./aluno.js";
+import { ControladorAcesso } from "./acesso.js";
 import { Banco, type PapelEquipe } from "./infra.js";
 
 // Fixtures e armazenamento exclusivos do processo. Nunca instancia PrismaClient ou lê .env.
@@ -46,7 +46,7 @@ function comTurma() {
   return { ...aluno, turma: { ...turmas.find((t) => t.id === aluno.turmaId)! } };
 }
 const banco = {
-  $transaction: async (operacoes: Promise<unknown>[]) => Promise.all(operacoes),
+  $transaction: async (executar: (transacao: unknown) => Promise<unknown>) => executar(banco),
   professor: {
     findUnique: async ({ where }: { where: { id: PapelEquipe } }) => ({
       id: where.id,
@@ -55,6 +55,7 @@ const banco = {
       ativo: true,
       instituicaoId: "escola",
       senhaProvisoria: false,
+      versaoAcesso: 1,
     }),
   },
   turma: {
@@ -122,7 +123,7 @@ const banco = {
 
 @Module({
   imports: [JwtModule.register({ global: true, secret: "exclusivo-ciclo-aluno-testes" })],
-  controllers: [AdminController, AlunoController, AcessoController],
+  controllers: [ControladorAdministracao, ControladorAluno, ControladorAcesso],
   providers: [{ provide: Banco, useValue: banco }],
 })
 class ModuloTeste {}
@@ -153,7 +154,7 @@ describe("Ciclo do aluno (HTTP com banco simulado)", () => {
     return jwt.sign({ sub: aluno.id, papel: "aluno", turmaId: aluno.turmaId, v: aluno.versaoAcesso, ...campos });
   }
   function tokenEquipe(papel: PapelEquipe = "admin") {
-    return jwt.sign({ sub: papel, papel });
+    return jwt.sign({ sub: papel, papel, v: 1 });
   }
   async function chamar(metodo: string, caminho: string, token?: string, corpo?: unknown) {
     return fetch(`${url}${caminho}`, {

@@ -11,7 +11,13 @@ import { cor, criarEstilos, fonte } from "@/tema";
 
 const PILULA = 56;
 
-export function BarraAbas({ state, descriptors, navigation, insets }: BottomTabBarProps) {
+export function BarraAbas({
+  state,
+  descriptors,
+  emitter: emissor,
+  navigateToTab: abrirAba,
+  insets,
+}: BottomTabBarProps) {
   const { vibrar } = useJogador();
   const [largura, setLargura] = useState(0);
   const [posicao] = useState(() => new Animated.Value(state.index));
@@ -68,10 +74,10 @@ export function BarraAbas({ state, descriptors, navigation, insets }: BottomTabB
         });
 
         function tocar() {
-          const evento = navigation.emit({ type: "tabPress", target: rota.key, canPreventDefault: true });
+          const evento = emissor.emit({ type: "tabPress", target: rota.key, canPreventDefault: true });
           if (!ativo && !evento.defaultPrevented) {
             vibrar("toque");
-            navigation.navigate(rota.name, rota.params);
+            abrirAba(rota.key);
           }
         }
 
@@ -79,7 +85,7 @@ export function BarraAbas({ state, descriptors, navigation, insets }: BottomTabB
           <Pressable
             key={rota.key}
             onPress={tocar}
-            onLongPress={() => navigation.emit({ type: "tabLongPress", target: rota.key })}
+            onLongPress={() => emissor.emit({ type: "tabLongPress", target: rota.key })}
             accessibilityRole="tab"
             accessibilityState={{ selected: ativo }}
             accessibilityLabel={options.title}

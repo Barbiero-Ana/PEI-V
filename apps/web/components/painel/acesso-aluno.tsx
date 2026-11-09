@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { formatarCodigoAcesso } from "@modolume/core";
 import { novoCodigoDoAluno, zerarPinDoAluno, type ResultadoAcesso } from "@/app/professor/(painel)/alunos/acoes";
 import type { AcessoDoAluno } from "@/lib/painel/dados";
 
@@ -25,7 +26,6 @@ const SOBRE: Record<Acao, { botao: string; pergunta: string; confirmar: string }
   },
 };
 
-const formatar = (c: string) => `${c.slice(0, 4)}-${c.slice(4)}`;
 const hora = (iso: string) =>
   new Date(iso).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: "America/Cuiaba" });
 
@@ -60,7 +60,7 @@ export function AcessoAluno({ alunoId, acesso }: { alunoId: string; acesso: Aces
 
   async function copiar() {
     try {
-      await navigator.clipboard.writeText(formatar(acesso!.codigo));
+      await navigator.clipboard.writeText(formatarCodigoAcesso(acesso!.codigo));
       setCopiado(true);
       setTimeout(() => setCopiado(false), 2000);
     } catch {
@@ -80,7 +80,7 @@ export function AcessoAluno({ alunoId, acesso }: { alunoId: string; acesso: Aces
           className="tnum font-display text-xl font-semibold tracking-[0.12em] text-tinta"
           aria-label="Código de acesso"
         >
-          {formatar(acesso.codigo)}
+          {formatarCodigoAcesso(acesso.codigo)}
         </span>
         <button
           type="button"

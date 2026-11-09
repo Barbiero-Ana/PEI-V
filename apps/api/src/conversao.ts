@@ -19,7 +19,7 @@ const paraTipoBanco = (t: Questao["tipo"]): TipoBanco => (t === "associacao-visu
 /** Questões do núcleo → linhas de questao_atividade e opcao_questao. */
 export function questoesParaBanco(questoes: Questao[]): Prisma.QuestaoAtividadeCreateWithoutAtividadeInput[] {
   return questoes.map((q, ordem) => {
-    const base = { ordem, tipo: paraTipoBanco(q.tipo) };
+    const base = { ordem, tipo: paraTipoBanco(q.tipo), feedbackErro: q.feedbackErro ?? "" };
     switch (q.tipo) {
       case "objetiva":
         return {
@@ -54,10 +54,12 @@ type AtividadeDoBanco = Prisma.AtividadeProfessorGetPayload<{ include: typeof in
 /** Linhas de questão e opções → questões do núcleo. */
 export function questoesDoBanco(linhas: AtividadeDoBanco["questoes"]): Questao[] {
   return linhas.map((q) => {
+    const feedbackErro = q.feedbackErro || undefined;
     switch (q.tipo) {
       case "objetiva":
         return {
           tipo: "objetiva",
+          feedbackErro,
           enunciado: q.enunciado ?? "",
           alternativas: q.opcoes.map((o) => o.texto),
           correta: Math.max(
@@ -66,15 +68,16 @@ export function questoesDoBanco(linhas: AtividadeDoBanco["questoes"]): Questao[]
           ),
         };
       case "completar":
-        return { tipo: "completar", comando: q.comando, texto: q.texto ?? "" };
+        return { tipo: "completar", comando: q.comando, texto: q.texto ?? "", feedbackErro };
       case "associacao_visual":
         return {
           tipo: "associacao-visual",
+          feedbackErro,
           comando: q.comando,
           pares: q.opcoes.map((o) => ({ a: o.texto, b: o.par ?? "" })),
         };
       case "sequencia":
-        return { tipo: "sequencia", comando: q.comando, itens: q.opcoes.map((o) => o.texto) };
+        return { tipo: "sequencia", comando: q.comando, itens: q.opcoes.map((o) => o.texto), feedbackErro };
     }
   });
 }

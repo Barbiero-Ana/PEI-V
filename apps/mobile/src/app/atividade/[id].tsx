@@ -1,17 +1,25 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { Pressable, ScrollView, TextInput, View } from "react-native";
+import { useEffect, useImperativeHandle, useMemo, useRef, useState, type Ref } from "react";
+import { Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, TextInput, View } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { calcularResultado, respostasDeCompletar, type Questao, type ResultadoJogada } from "@modolume/core";
+import {
+  calcularResultado,
+  esquemaQuestao,
+  respostasDeCompletar,
+  type Questao,
+  type ResultadoJogada,
+} from "@modolume/core";
 import { voltar } from "@/lib/navegacao";
 import { embaralhar, sementeDe } from "@/lib/embaralhar";
 import { useAcessibilidade, useFalarAoAbrir } from "@/estado/acessibilidade";
-import { useConta } from "@/estado/conta";
+import { useConta, type AtividadeDoProfessor } from "@/estado/conta";
 import { useJogador } from "@/estado/jogador";
 import { Estrelas } from "@/componentes/blocos";
 import { Fechar } from "@/componentes/Icones";
 import { Acoes } from "@/componentes/jogos/Acoes";
 import { Lilo, type HumorLilo } from "@/componentes/Lilo";
+import { Retorno as PainelLilo } from "@/componentes/Retorno";
+import { EsqueletoTela } from "@/componentes/Esqueleto";
 import { Botao, Texto, Titulo } from "@/componentes/ui";
 import { cor, criarEstilos, fonte, raio } from "@/tema";
 
@@ -35,19 +43,20 @@ const igual = (a: string, b: string) => {
   return n(a) === n(b);
 };
 
-type Retorno = { tipo: "acerto" | "erro"; texto: string } | null;
-type Conferir = () => { certo: boolean; dica?: string };
+type Retorno = { tipo: "acerto" | "incompleta" | "erro"; texto: string };
+type Conferir = () => Retorno;
+const ACERTO: Retorno = { tipo: "acerto", texto: "Isso mesmo!" };
 
 /* ---------------------------------- objetiva ---------------------------------- */
-function Objetiva({ q, registrar }: { q: Extract<Questao, { tipo: "objetiva" }>; registrar: (c: Conferir) => void }) {
+function Objetiva({ q, conferencia }: { q: Extract<Questao, { tipo: "objetiva" }>; conferencia: Ref<Conferir> }) {
   const [escolha, setEscolha] = useState<number | null>(null);
   const [erradas, setErradas] = useState<number[]>([]);
-  registrar(() => {
-    if (escolha === null) return { certo: false, dica: "Escolha uma alternativa." };
-    if (escolha === q.correta) return { certo: true };
+  useImperativeHandle(conferencia, () => () => {
+    if (escolha === null) return { tipo: "incompleta", texto: "Escolha uma alternativa." };
+    if (escolha === q.correta) return ACERTO;
     setErradas((e) => [...e, escolha]);
     setEscolha(null);
-    return { certo: false, dica: "Essa não é a resposta. Leia de novo e escolha outra." };
+    return { tipo: "erro", texto: "Essa não é a resposta. Leia de novo e escolha outra." };
   });
   return (
     <View style={{ gap: 10 }} accessibilityRole="radiogroup">
@@ -76,20 +85,20 @@ function Objetiva({ q, registrar }: { q: Extract<Questao, { tipo: "objetiva" }>;
 }
 
 /* ---------------------------------- completar ---------------------------------- */
-function Completar({ q, registrar }: { q: Extract<Questao, { tipo: "completar" }>; registrar: (c: Conferir) => void }) {
+function Completar({ q, conferencia }: { q: Extract<Questao, { tipo: "completar" }>; conferencia: Ref<Conferir> }) {
   const respostas = respostasDeCompletar(q.texto);
   const partes = q.texto.split(/\[[^\]]+\]/);
   const [valores, setValores] = useState<string[]>(() => respostas.map(() => ""));
   const [erradas, setErradas] = useState<number[]>([]);
-  registrar(() => {
-    if (valores.some((v) => !v.trim())) return { certo: false, dica: "Preencha todos os espaços." };
+  useImperativeHandle(conferencia, () => () => {
+    if (valores.some((v) => !v.trim())) return { tipo: "incompleta", texto: "Preencha todos os espaços." };
     const err = respostas.map((r, i) => (igual(r, valores[i]!) ? -1 : i)).filter((i) => i >= 0);
     setErradas(err);
     return err.length === 0
-      ? { certo: true }
+      ? ACERTO
       : {
-          certo: false,
-          dica: err.length === 1 ? "Um espaço ainda não está certo." : "Alguns espaços ainda não estão certos.",
+          tipo: "erro",
+          texto: err.length === 1 ? "Um espaço ainda não está certo." : "Alguns espaços ainda não estão certos.",
         };
   });
   return (
@@ -120,11 +129,11 @@ function Completar({ q, registrar }: { q: Extract<Questao, { tipo: "completar" }
 function Associacao({
   q,
   semente,
-  registrar,
+  conferencia,
 }: {
   q: Extract<Questao, { tipo: "associacao-visual" }>;
   semente: number;
-  registrar: (c: Conferir) => void;
+  conferencia: Ref<Conferir>;
 }) {
   const direita = useMemo(
     () =>
@@ -136,15 +145,15 @@ function Associacao({
   );
   const [ligacoes, setLigacoes] = useState<Record<number, number>>({});
   const [aberto, setAberto] = useState<number | null>(null);
-  registrar(() => {
-    if (Object.keys(ligacoes).length < q.pares.length) return { certo: false, dica: "Ligue todos os pares." };
+  useImperativeHandle(conferencia, () => () => {
+    if (Object.keys(ligacoes).length < q.pares.length) return { tipo: "incompleta", texto: "Ligue todos os pares." };
     const erradas = Object.entries(ligacoes).filter(([a, b]) => Number(a) !== b);
-    if (erradas.length === 0) return { certo: true };
+    if (erradas.length === 0) return ACERTO;
     // desfaz só as ligações erradas
     setLigacoes((l) => Object.fromEntries(Object.entries(l).filter(([a, b]) => Number(a) === b)));
     return {
-      certo: false,
-      dica: `${erradas.length === 1 ? "Um par não combina" : "Alguns pares não combinam"}. Tente de novo.`,
+      tipo: "erro",
+      texto: `${erradas.length === 1 ? "Um par não combina" : "Alguns pares não combinam"}. Tente de novo.`,
     };
   });
   const numeroDe = (a: number) => Object.keys(ligacoes).map(Number).sort().indexOf(a) + 1;
@@ -201,11 +210,11 @@ function Associacao({
 function Sequencia({
   q,
   semente,
-  registrar,
+  conferencia,
 }: {
   q: Extract<Questao, { tipo: "sequencia" }>;
   semente: number;
-  registrar: (c: Conferir) => void;
+  conferencia: Ref<Conferir>;
 }) {
   const soltos = useMemo(
     () =>
@@ -216,12 +225,12 @@ function Sequencia({
     [q, semente],
   );
   const [ordem, setOrdem] = useState<number[]>([]);
-  registrar(() => {
-    if (ordem.length < q.itens.length) return { certo: false, dica: "Coloque todos os itens na ordem." };
+  useImperativeHandle(conferencia, () => () => {
+    if (ordem.length < q.itens.length) return { tipo: "incompleta", texto: "Coloque todos os itens na ordem." };
     const primeiraErrada = ordem.findIndex((v, i) => v !== i);
-    if (primeiraErrada < 0) return { certo: true };
+    if (primeiraErrada < 0) return ACERTO;
     setOrdem(ordem.slice(0, primeiraErrada));
-    return { certo: false, dica: `A posição ${primeiraErrada + 1} não está certa. Continue dali.` };
+    return { tipo: "erro", texto: `A posição ${primeiraErrada + 1} não está certa. Continue dali.` };
   });
   return (
     <View style={{ gap: 12 }}>
@@ -262,67 +271,91 @@ function Sequencia({
 
 /* ---------------------------------- tela ---------------------------------- */
 export default function Atividade() {
-  const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { atividades, registrarJogada, online } = useConta();
+  return <AbrirAtividade key={id} id={id} />;
+}
+
+function AbrirAtividade({ id }: { id: string }) {
+  const insets = useSafeAreaInsets();
+  const { atividades, pronto, carregandoAtividades } = useConta();
+  const encontrada = atividades.find((a) => a.id === id);
+  const [copia, guardarCopia] = useState<AtividadeDoProfessor | null>(null);
+  const atividade = copia ?? encontrada;
+  const questoes = useMemo(() => {
+    const lidas = esquemaQuestao.array().safeParse(atividade?.questoes);
+    if (!lidas.success || lidas.data.length === 0) return null;
+    return lidas.data.every(
+      (q) => q.tipo === atividade?.formato && (q.tipo !== "objetiva" || q.correta < q.alternativas.length),
+    )
+      ? lidas.data
+      : null;
+  }, [atividade]);
+  // Uma atualização da lista não altera as perguntas de uma partida em andamento.
+  if (atividade && questoes && !copia) guardarCopia(atividade);
+  if (atividade && questoes) return <ResponderAtividade atividade={atividade} questoes={questoes} />;
+  if (!pronto || carregandoAtividades) return <EsqueletoTela formato="jogo" />;
+
+  return (
+    <View style={[e.centro, { paddingTop: insets.top + 40 }]}>
+      <Lilo humor="triste" tamanho={110} />
+      <Titulo tamanho={20} style={{ textAlign: "center" }}>
+        Não foi possível abrir esta atividade
+      </Titulo>
+      <Texto style={{ textAlign: "center", color: cor.textoSuave }}>Volte e atualize a lista do professor.</Texto>
+      <Botao titulo="Voltar" onPress={voltar} style={{ alignSelf: "stretch" }} />
+    </View>
+  );
+}
+
+function ResponderAtividade({ atividade, questoes }: { atividade: AtividadeDoProfessor; questoes: Questao[] }) {
+  const insets = useSafeAreaInsets();
+  const { registrarJogada, online } = useConta();
   const { vibrar } = useJogador();
   const { falar } = useAcessibilidade();
-  const atividade = atividades.find((a) => a.id === id);
-  useFalarAoAbrir(atividade ? `${atividade.titulo}. ${atividade.instrucao}` : "Atividade não encontrada.");
+  useFalarAoAbrir(`${atividade.titulo}. ${atividade.instrucao}`);
 
   const [indice, setIndice] = useState(0);
-  const [erros, setErros] = useState<number[]>(() => atividade?.questoes.map(() => 0) ?? []);
-  const [retorno, setRetorno] = useState<Retorno>(null);
+  const [erros, setErros] = useState<number[]>(() => questoes.map(() => 0));
+  const [retorno, setRetorno] = useState<Retorno | null>(null);
   const [resultado, setResultado] = useState<ResultadoJogada | null>(null);
   const inicio = useRef(0);
+  const concluiu = useRef(false);
+  const conferirAtual = useRef<Conferir>(null);
   useEffect(() => {
     inicio.current = Date.now();
   }, []);
-  const conferirAtual = useRef<Conferir>(() => ({ certo: false }));
 
-  if (!atividade || atividade.formato === "pronta" || atividade.questoes.length === 0) {
-    return (
-      <View style={[e.centro, { paddingTop: insets.top + 40 }]}>
-        <Lilo humor="triste" tamanho={110} />
-        <Titulo tamanho={20} style={{ textAlign: "center" }}>
-          Atividade não encontrada
-        </Titulo>
-        <Texto style={{ textAlign: "center", color: cor.textoSuave }}>Volte e atualize a lista do professor.</Texto>
-        <Botao titulo="Voltar" onPress={voltar} style={{ alignSelf: "stretch" }} />
-      </View>
-    );
-  }
-
-  const total = atividade.questoes.length;
-  const q = atividade.questoes[indice]!;
+  const total = questoes.length;
+  const q = questoes[indice]!;
   const comando = ("comando" in q && q.comando) || atividade.instrucao;
 
   function conferir() {
-    const r = conferirAtual.current();
-    if (r.certo) {
+    if (retorno?.tipo === "acerto") return;
+    const r = conferirAtual.current?.();
+    if (!r) return;
+    const texto = r.tipo === "erro" ? q.feedbackErro || r.texto : r.texto;
+    if (r.tipo === "acerto") {
+      Keyboard.dismiss();
       vibrar("acerto");
-      falar("Isso mesmo!");
-      setRetorno({ tipo: "acerto", texto: "Isso mesmo!" });
-    } else {
+    } else if (r.tipo === "erro") {
       vibrar("erro");
-      const texto = r.dica ?? "Ainda não. Confira e tente de novo.";
-      falar(texto);
-      // pedir para completar algo não conta como erro; resposta errada conta
-      if (!/^(Escolha|Preencha|Ligue|Coloque)/.test(texto))
-        setErros((x) => x.map((v, i) => (i === indice ? v + 1 : v)));
-      setRetorno({ tipo: "erro", texto });
+      setErros((x) => x.map((v, i) => (i === indice ? v + 1 : v)));
     }
+    falar(texto);
+    setRetorno({ tipo: r.tipo, texto });
   }
 
   function continuar() {
     setRetorno(null);
-    if (indice + 1 < total) return setIndice((i) => i + 1);
+    if (indice + 1 < total) return setIndice(indice + 1);
+    if (concluiu.current) return;
+    concluiu.current = true;
     const r = calcularResultado({
-      missao: { id: atividade!.id, formato: atividade!.formato as ResultadoJogada["formato"] },
+      missao: { id: atividade.id, formato: q.tipo },
       errosPorRodada: erros,
       tempoSegundos: (Date.now() - inicio.current) / 1000,
     });
-    registrarJogada(r, { origem: "professor", titulo: atividade!.titulo, atividadeId: atividade!.id });
+    registrarJogada(r, { origem: "professor", titulo: atividade.titulo, atividadeId: atividade.id });
     setResultado(r);
   }
 
@@ -342,7 +375,7 @@ export default function Atividade() {
         <Texto style={{ textAlign: "center", color: cor.textoSuave }}>
           {online === false
             ? "Sem internet agora: o resultado vai para o professor quando a conexão voltar."
-            : "O seu resultado foi para o professor."}
+            : "Resultado concluído. Acompanhe o envio na aba Professor."}
         </Texto>
         <Botao titulo="Voltar às atividades" onPress={voltar} style={{ alignSelf: "stretch", marginTop: "auto" }} />
       </View>
@@ -350,12 +383,13 @@ export default function Atividade() {
   }
 
   const semente = sementeDe([indice + 1, atividade.titulo.length, total]);
-  const registrar = (c: Conferir) => {
-    conferirAtual.current = c;
-  };
+  const acertou = retorno?.tipo === "acerto";
 
   return (
-    <View style={{ flex: 1, backgroundColor: cor.fundo, paddingTop: insets.top }}>
+    <KeyboardAvoidingView
+      style={{ flex: 1, backgroundColor: cor.fundo, paddingTop: insets.top }}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+    >
       <View style={e.cabecalho}>
         <Pressable onPress={voltar} style={e.fechar} hitSlop={8} accessibilityLabel="Sair da atividade">
           <Fechar tamanho={20} />
@@ -368,7 +402,7 @@ export default function Atividade() {
         </Texto>
       </View>
       <View style={e.fases}>
-        {atividade.questoes.map((_, i) => (
+        {questoes.map((_, i) => (
           <View
             key={i}
             style={[e.fase, { backgroundColor: i < indice ? cor.roxo : i === indice ? cor.lilas : cor.trilho }]}
@@ -376,41 +410,50 @@ export default function Atividade() {
         ))}
       </View>
 
-      <ScrollView contentContainerStyle={{ padding: 20, gap: 14 }} keyboardShouldPersistTaps="handled">
+      <ScrollView
+        key={indice}
+        pointerEvents={acertou ? "none" : "auto"}
+        contentContainerStyle={{ padding: 20, gap: 14 }}
+        keyboardShouldPersistTaps="handled"
+      >
         {comando ? <Texto style={e.comando}>{comando}</Texto> : null}
         {q.tipo === "objetiva" ? (
-          <Objetiva key={indice} q={q} registrar={registrar} />
+          <Objetiva q={q} conferencia={conferirAtual} />
         ) : q.tipo === "completar" ? (
-          <Completar key={indice} q={q} registrar={registrar} />
+          <Completar q={q} conferencia={conferirAtual} />
         ) : q.tipo === "associacao-visual" ? (
-          <Associacao key={indice} q={q} semente={semente} registrar={registrar} />
+          <Associacao q={q} semente={semente} conferencia={conferirAtual} />
         ) : (
-          <Sequencia key={indice} q={q} semente={semente} registrar={registrar} />
+          <Sequencia q={q} semente={semente} conferencia={conferirAtual} />
         )}
       </ScrollView>
 
-      <View style={{ paddingHorizontal: 20, paddingBottom: insets.bottom + 16, gap: 8 }}>
-        {retorno ? (
-          <View
-            accessibilityLiveRegion="polite"
-            style={[e.retorno, { backgroundColor: retorno.tipo === "acerto" ? cor.roxoClaro : cor.pessegoClaro }]}
-          >
-            <Texto style={{ fontFamily: fonte.textoForte, color: cor.tinta }}>{retorno.texto}</Texto>
-          </View>
-        ) : null}
-        <Acoes>
-          {retorno?.tipo === "acerto" ? (
-            <Botao
-              titulo={indice + 1 < total ? "Continuar" : "Ver resultado"}
-              onPress={continuar}
-              style={{ flex: 1 }}
-            />
-          ) : (
+      {acertou ? (
+        <PainelLilo
+          status="acerto"
+          titulo={retorno.texto}
+          mensagem=""
+          humor="animado"
+          ultima={indice === total - 1}
+          onContinuar={continuar}
+          insetBaixo={insets.bottom + 16}
+        />
+      ) : (
+        <View style={{ paddingHorizontal: 20, paddingBottom: insets.bottom + 16, gap: 8 }}>
+          {retorno ? (
+            <View accessibilityLiveRegion="polite" style={e.retorno}>
+              {retorno.tipo === "erro" && q.feedbackErro ? (
+                <Texto style={{ color: cor.textoSuave }}>Dica do professor</Texto>
+              ) : null}
+              <Texto style={{ fontFamily: fonte.textoForte, color: cor.tinta }}>{retorno.texto}</Texto>
+            </View>
+          ) : null}
+          <Acoes>
             <Botao titulo="Conferir" onPress={conferir} style={{ flex: 1 }} />
-          )}
-        </Acoes>
-      </View>
-    </View>
+          </Acoes>
+        </View>
+      )}
+    </KeyboardAvoidingView>
   );
 }
 
@@ -512,5 +555,5 @@ const e = criarEstilos(() => ({
     borderColor: cor.bordaForte,
     backgroundColor: cor.superficie,
   },
-  retorno: { borderRadius: raio.m, padding: 12 },
+  retorno: { borderRadius: raio.m, padding: 12, backgroundColor: cor.pessegoClaro },
 }));

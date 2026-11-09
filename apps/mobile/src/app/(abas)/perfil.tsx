@@ -328,9 +328,8 @@ export default function Perfil() {
         textoConfirmar="Sair"
         onCancelar={() => setSairTurma(false)}
         onConfirmar={() => {
-          sairDaTurma();
           setSairTurma(false);
-          router.replace("/entrar");
+          sairDaTurma();
         }}
       />
       <Confirmar

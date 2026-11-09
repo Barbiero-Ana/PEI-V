@@ -46,6 +46,24 @@ function adiada<T>() {
   return { promessa, resolver, rejeitar };
 }
 describe("Isolamento de identidades e sincronização mobile", () => {
+  it("logout pede login de novo mesmo quando o visitante já usava o app sem turma", async () => {
+    const storage = new Memoria();
+    const repo = new RepositorioIdentidades(storage);
+    const aluno = conta("a");
+    const fila = [{ id: "pendente", alunoId: "a" }];
+    await repo.gravar(SESSAO, { conta: aluno });
+    await repo.salvar("conta", identidadeDa(null), { semTurma: true, feitas: { exemplo: 1 } });
+    await repo.salvar("conta", identidadeDa(aluno), { fila });
+    await repo.encerrarSessao();
+
+    const reaberto = new RepositorioIdentidades(storage);
+    assert.equal(await reaberto.sessao(), null);
+    assert.deepEqual(await reaberto.dados("conta", identidadeDa(null), () => ({})), {
+      semTurma: false,
+      feitas: { exemplo: 1 },
+    });
+    assert.deepEqual(await reaberto.dados("conta", identidadeDa(aluno), () => ({})), { fila });
+  });
   it("A, B e visitante têm progresso, histórico, compras, avatar e conclusões independentes", async () => {
     const storage = new Memoria();
     const repo = new RepositorioIdentidades(storage);
@@ -150,6 +168,19 @@ describe("Isolamento de identidades e sincronização mobile", () => {
       },
     );
     assert.deepEqual(confirmadas, ["b-1"]);
+  });
+  it("separa recusas explícitas de confirmações e ignora respostas de IDs alheios ao lote", async () => {
+    const sessao = new EscopoIdentidade(identidadeDa(conta("a"))).capturar(conta("a"))!;
+    const fila = ["aceita", "recusada", "pendente"].map((id) => ({ id, alunoId: "a" }));
+    await sincronizarFila(
+      sessao,
+      fila,
+      async () => ({ recebidas: ["aceita"], recusadas: ["recusada", "aceita", "alheia"] }),
+      (aceitas, recusadas) => {
+        assert.deepEqual([...aceitas], ["aceita"]);
+        assert.deepEqual([...recusadas], ["recusada"]);
+      },
+    );
   });
   it("troca de conta durante lote não confirma resposta antiga nem envia lotes seguintes", async () => {
     const escopo = new EscopoIdentidade(identidadeDa(conta("a")));

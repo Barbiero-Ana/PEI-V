@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, TextInput, View } from "react-native";
 import { Redirect, router } from "expo-router";
+import { codigoAcessoValido, formatarCodigoAcesso, normalizarCodigoAcesso } from "@modolume/core";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useFalarAoAbrir } from "@/estado/acessibilidade";
 import { useConta, type IdentificacaoAluno } from "@/estado/conta";
@@ -10,7 +11,7 @@ import { cor, criarEstilos, fonte, raio } from "@/tema";
 
 /**
  * Entrada do aluno na própria conta (MOD-AUT-009, ADR 0017), sem e-mail:
- * 1. o código pessoal que o professor ou a coordenação passou (ex.: ABCD-2345);
+ * 1. o código pessoal que o professor ou a coordenação passou (ex.: BDFH-2468);
  * 2. o PIN de 4 números. No primeiro acesso (ou depois que o professor zera),
  *    o aluno cria o PIN e confirma digitando de novo.
  * Ninguém escolhe nome numa lista: cada código abre só a conta daquele aluno.
@@ -19,15 +20,12 @@ import { cor, criarEstilos, fonte, raio } from "@/tema";
 type Etapa = "codigo" | "pin" | "criar" | "confirmar";
 
 const TAMANHO_PIN = 4;
-/** Só os caracteres que existem nos códigos (sem O, 0, I, 1 e L). */
-const limparCodigo = (t: string) => t.toUpperCase().replace(/[^A-HJKMNP-Z2-9]/g, "").slice(0, 8);
-const mostrarCodigo = (c: string) => (c.length > 4 ? `${c.slice(0, 4)}-${c.slice(4)}` : c);
-
 export default function Entrar() {
   const insets = useSafeAreaInsets();
   const { temServidor, conta, identificar, entrar, continuarSemTurma } = useConta();
   const [etapa, setEtapa] = useState<Etapa>("codigo");
-  const [codigo, setCodigo] = useState("");
+  const [codigoDigitado, definirCodigoDigitado] = useState("");
+  const codigo = normalizarCodigoAcesso(codigoDigitado);
   const [quem, setQuem] = useState<IdentificacaoAluno | null>(null);
   const [pin, setPin] = useState("");
   const [primeiroPin, setPrimeiroPin] = useState("");
@@ -38,7 +36,8 @@ export default function Entrar() {
   if (!temServidor || conta) return <Redirect href="/" />;
 
   async function continuar() {
-    if (codigo.length !== 8) return setErro("O código tem 8 letras e números.");
+    if (esperando) return;
+    if (!codigoAcessoValido(codigo)) return setErro("Confira o código. O formato novo é BDFH-2468.");
     setErro(null);
     setEsperando(true);
     try {
@@ -57,7 +56,6 @@ export default function Entrar() {
     setEsperando(true);
     try {
       await entrar(codigo, pinFinal);
-      router.replace("/");
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Não deu para entrar.");
       setPin("");
@@ -117,11 +115,7 @@ export default function Entrar() {
             {titulo}
           </Titulo>
           <Texto style={e.centro}>{apoio}</Texto>
-          <View
-            style={e.pontos}
-            accessible
-            accessibilityLabel={`${pin.length} de ${TAMANHO_PIN} números digitados`}
-          >
+          <View style={e.pontos} accessible accessibilityLabel={`${pin.length} de ${TAMANHO_PIN} números digitados`}>
             {Array.from({ length: TAMANHO_PIN }, (_, i) => (
               <View key={i} style={[e.ponto, i < pin.length && e.pontoCheio]} />
             ))}
@@ -168,22 +162,26 @@ export default function Entrar() {
         <Titulo tamanho={26} style={{ textAlign: "center" }}>
           Entre na sua conta
         </Titulo>
-        <Texto style={e.centro}>Digite o seu código de acesso. Quem passa é o professor ou a coordenação.</Texto>
+        <Texto style={e.centro}>
+          Digite o código que o professor ou a coordenação passou. Os novos têm quatro letras e quatro números.
+        </Texto>
         <TextInput
-          value={mostrarCodigo(codigo)}
-          onChangeText={(t) => {
-            setCodigo(limparCodigo(t));
+          value={codigoDigitado}
+          onChangeText={(texto) => {
+            const normalizado = normalizarCodigoAcesso(texto);
+            definirCodigoDigitado(codigoAcessoValido(normalizado) ? formatarCodigoAcesso(normalizado) : texto);
             setErro(null);
           }}
           onSubmitEditing={continuar}
-          placeholder="ABCD-2345"
+          placeholder="BDFH-2468"
           placeholderTextColor={cor.textoFraco}
           autoCapitalize="characters"
           autoCorrect={false}
           autoComplete="off"
-          maxLength={9}
+          maxLength={20}
           returnKeyType="next"
           accessibilityLabel="Código de acesso"
+          accessibilityHint="Os códigos novos têm quatro letras, um hífen e quatro números. O hífen é opcional."
           style={e.codigo}
         />
         <Texto style={e.erro} accessibilityLiveRegion="polite" numberOfLines={2}>
@@ -193,7 +191,7 @@ export default function Entrar() {
           titulo="Continuar"
           onPress={continuar}
           carregando={esperando}
-          disabled={codigo.length !== 8}
+          disabled={codigo.length === 0}
           style={e.largo}
         />
         <Botao

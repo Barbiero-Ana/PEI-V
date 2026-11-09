@@ -3,7 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { listaDeTurmas, professorLogado } from "@/lib/painel/dados";
-import { atividadeSchema, excluirAtividade, mudarEnvio, salvarAtividade } from "@/lib/painel/atividades";
+import { esquemaAtividade, esquemaAtividadeParaEnvio } from "@modolume/core";
+import { buscarAtividade, excluirAtividade, mudarEnvio, salvarAtividade } from "@/lib/painel/atividades";
+import { ErroApi } from "@/lib/painel/api";
 import { buscarPlano } from "@/lib/painel/planejamento";
 
 export interface EstadoAtividade {
@@ -28,7 +30,8 @@ export async function gravarAtividade(anterior: EstadoAtividade, form: FormData)
   } catch {
     return { erros: { geral: "Não foi possível ler a atividade. Tente de novo." }, tentativa: anterior.tentativa + 1 };
   }
-  const lido = atividadeSchema.safeParse(bruto);
+  const publicada = id && !enviar && (await buscarAtividade(professor, id))?.status === "enviada";
+  const lido = (enviar || publicada ? esquemaAtividadeParaEnvio : esquemaAtividade).safeParse(bruto);
   const erros: Record<string, string> = {};
   if (!lido.success) for (const e of lido.error.issues) erros[e.path.join(".") || "geral"] ??= e.message;
 
@@ -41,16 +44,32 @@ export async function gravarAtividade(anterior: EstadoAtividade, form: FormData)
   }
   if (!lido.success || Object.keys(erros).length > 0) return { erros, tentativa: anterior.tentativa + 1 };
 
-  const atividade = await salvarAtividade(professor, lido.data, id);
+  let atividade;
+  try {
+    atividade = await salvarAtividade(professor, lido.data, id);
+    if (atividade && enviar) await mudarEnvio(professor, atividade.id, true);
+  } catch (erro) {
+    if (!(erro instanceof ErroApi)) throw erro;
+    for (const campo of erro.erros) erros[campo.campo] ??= campo.mensagem;
+    if (Object.keys(erros).length === 0) erros.geral = erro.message;
+    return { erros, tentativa: anterior.tentativa + 1 };
+  }
   if (!atividade) redirect("/professor/atividades");
-  if (enviar) await mudarEnvio(professor, atividade.id, true);
   revalidatePath("/professor", "layout");
   redirect(`/professor/atividades/${atividade.id}`);
 }
 
 export async function enviarAtividade(id: string) {
   const professor = await professorLogado();
-  await mudarEnvio(professor, id, true);
+  const atividade = await buscarAtividade(professor, id);
+  if (!atividade) redirect("/professor/atividades");
+  if (!esquemaAtividadeParaEnvio.safeParse(atividade).success) redirect(`/professor/atividades/${id}/editar`);
+  try {
+    await mudarEnvio(professor, id, true);
+  } catch (erro) {
+    if (erro instanceof ErroApi && erro.status === 400) redirect(`/professor/atividades/${id}/editar`);
+    throw erro;
+  }
   revalidatePath("/professor", "layout");
 }
 

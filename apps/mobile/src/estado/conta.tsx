@@ -42,6 +42,7 @@ export interface JogadaParaEnviar extends ResultadoJogada {
 interface Guardado {
   conta: ContaAluno | null;
   fila: JogadaParaEnviar[];
+  recusadas: JogadaParaEnviar[];
   atividades: AtividadeDoProfessor[];
   /** Atividades feitas neste aparelho (aparecem como feitas mesmo antes de enviar). */
   feitas: Record<string, { percentualAcerto: number; estrelas: number; data: string }>;
@@ -56,6 +57,7 @@ interface Guardado {
 const VAZIO: Guardado = {
   conta: null,
   fila: [],
+  recusadas: [],
   atividades: [],
   feitas: {},
   avatarEnviado: "",
@@ -80,6 +82,7 @@ interface Estado {
   continuarSemTurma: () => void;
   /** Jogadas ainda não enviadas ao servidor. */
   pendentes: number;
+  recusadas: number;
   /** Resultado da última tentativa de falar com o servidor. */
   online: boolean | null;
   atividades: AtividadeDoProfessor[];
@@ -102,7 +105,7 @@ const Ctx = createContext<Estado | null>(null);
 
 const novoId = () => `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
 
-export function ContaProvider({ children }: { children: ReactNode }) {
+export function ProvedorConta({ children }: { children: ReactNode }) {
   const { conta: contaDaIdentidade, escopo, repositorio, selecionar, falhar } = useIdentidade();
   const {
     jogador,
@@ -203,12 +206,17 @@ export function ContaProvider({ children }: { children: ReactNode }) {
         sessao,
         s.fila,
         (token, lote) =>
-          chamarApi<{ recebidas: string[] }>("/aluno/jogadas", {
+          chamarApi<{ recebidas: string[]; recusadas?: string[] }>("/aluno/jogadas", {
             token,
             metodo: "POST",
             corpo: { jogadas: lote },
           }),
-        (ok) => gravar((x) => ({ ...x, fila: x.fila.filter((j) => !ok.has(j.id)) })),
+        (ok, rejeitadas) =>
+          gravar((x) => ({
+            ...x,
+            fila: x.fila.filter((j) => !ok.has(j.id) && !rejeitadas.has(j.id)),
+            recusadas: [...x.recusadas, ...x.fila.filter((j) => rejeitadas.has(j.id))],
+          })),
       );
       if (!sessao.ativa()) return;
       // Sessões antigas não trazem avatar: não enviar o padrão sobre o remoto.
@@ -318,6 +326,7 @@ export function ContaProvider({ children }: { children: ReactNode }) {
       semTurma: g.semTurma,
       continuarSemTurma: () => gravar((x) => ({ ...x, semTurma: true })),
       pendentes: g.conta ? g.fila.filter((j) => j.alunoId === g.conta!.aluno.id).length : 0,
+      recusadas: g.recusadas.length,
       online,
       carregandoAtividades,
       atividades: g.atividades.map((a) => ({ ...a, feita: g.feitas[a.id] ?? a.feita })),
@@ -384,6 +393,6 @@ export function ContaProvider({ children }: { children: ReactNode }) {
 
 export function useConta(): Estado {
   const ctx = useContext(Ctx);
-  if (!ctx) throw new Error("useConta precisa estar dentro de <ContaProvider>.");
+  if (!ctx) throw new Error("useConta precisa estar dentro de <ProvedorConta>.");
   return ctx;
 }

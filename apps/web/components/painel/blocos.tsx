@@ -223,7 +223,7 @@ export function Avatar({
 }) {
   if (svg)
     return (
-      // eslint-disable-next-line @next/next/no-img-element -- SVG gerado no app, em data URI (img não executa scripts)
+      // SVG gerado no app, em data URI. O elemento img não executa scripts do SVG.
       <img
         src={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`}
         alt=""

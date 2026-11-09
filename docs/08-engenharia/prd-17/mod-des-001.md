@@ -1,0 +1,29 @@
+# MOD-DES-001
+
+App: tela inicial em até 3 segundos após a abertura, em aparelho intermediário.
+
+Origem: [PRD-17 — Qualidade, segurança e restrições](../../02-modulos/PRD-17%20%E2%80%94%20Qualidade%2C%20seguran%C3%A7a%20e%20restri%C3%A7%C3%B5es.md), seção 5. Prioridade **I**, método **T**. Situação declarada na origem **A medir**.
+
+[Módulo, fluxo, perfis e entidades](README.md). [Requisitos transversais](../prd-17/README.md).
+
+## Regras, histórias e critérios de aceite
+
+- HU-QUA-02 Como **aluno**, quero que o app abra e responda rápido, mesmo num celular simples.
+
+- **HU-QUA-02** CA-01: Medido em aparelho intermediário, o Início aparece em até 3 segundos.
+- **HU-QUA-02** CA-02: Jogos 3D mantêm 30 quadros por segundo ou mais.
+
+Consulte as regras transversais no PRD-17.
+
+## Implementação e evidência
+
+- [apps/api/src/infra.ts](../../../apps/api/src/infra.ts)
+- [apps/api/prisma/schema.prisma](../../../apps/api/prisma/schema.prisma)
+- [apps/api/scripts/verificar-banco.ts](../../../apps/api/scripts/verificar-banco.ts)
+- [apps/web/middleware.ts](../../../apps/web/middleware.ts)
+- [apps/mobile/src/estado/isolamento.ts](../../../apps/mobile/src/estado/isolamento.ts)
+- [packages/core](../../../packages/core)
+
+**Aceite nesta auditoria** Pendente.
+
+Aceite individual pendente de verificação nesta auditoria. Consulte os cenários e as evidências do módulo.

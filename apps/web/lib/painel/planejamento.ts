@@ -12,13 +12,13 @@ import { tokenDaApi } from "./dados";
  */
 export {
   HABILIDADES_BNCC,
-  ROTULO_STATUS,
-  STATUS_PLANO,
+  ROTULO_SITUACAO,
+  SITUACOES_PLANO,
   UNIDADES_TEMATICAS,
   formatoValido,
   type DadosPlano,
   type PlanoAula,
-  type StatusPlano,
+  type SituacaoPlano,
 } from "@modolume/core";
 
 // guardado no objeto global para sobreviver ao recarregamento do servidor de desenvolvimento

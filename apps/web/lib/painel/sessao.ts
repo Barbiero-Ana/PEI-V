@@ -82,7 +82,14 @@ export async function lerSessao(token: string | undefined): Promise<Sessao | nul
     );
     if (!valida) return null;
     const sessao = JSON.parse(new TextDecoder().decode(deBase64url(corpo))) as Sessao;
-    if (typeof sessao.professorId !== "string" || sessao.exp * 1000 < Date.now()) return null;
+    if (
+      typeof sessao.professorId !== "string" ||
+      !sessao.professorId ||
+      !Number.isFinite(sessao.exp) ||
+      sessao.exp * 1000 <= Date.now()
+    )
+      return null;
+    if (sessao.papel !== undefined && !["professor", "coordenacao", "admin"].includes(sessao.papel)) return null;
     return sessao;
   } catch {
     return null;

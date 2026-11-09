@@ -4,12 +4,12 @@ import { APP_GUARD, NestFactory } from "@nestjs/core";
 import { JwtModule } from "@nestjs/jwt";
 import type { NestExpressApplication } from "@nestjs/platform-express";
 import { ThrottlerGuard, ThrottlerModule } from "@nestjs/throttler";
-import { AcessoController } from "./acesso.js";
-import { AlunoController } from "./aluno.js";
+import { ControladorAcesso } from "./acesso.js";
+import { ControladorAluno } from "./aluno.js";
 import { Banco } from "./infra.js";
-import { AdminController } from "./admin.js";
-import { CoordenacaoController } from "./coordenacao.js";
-import { ProfessorController } from "./professor.js";
+import { ControladorAdministracao } from "./admin.js";
+import { ControladorCoordenacao } from "./coordenacao.js";
+import { ControladorProfessor } from "./professor.js";
 
 /**
  * API do Modolume (ADR 0007 e 0015): liga o app do aluno ao painel do
@@ -26,7 +26,13 @@ if (!segredo && process.env.NODE_ENV === "production") throw new Error("Defina J
     // limite geral de requisições por minuto (as rotas de entrada têm limite menor)
     ThrottlerModule.forRoot([{ name: "default", ttl: 60_000, limit: 240 }]),
   ],
-  controllers: [AcessoController, AlunoController, ProfessorController, CoordenacaoController, AdminController],
+  controllers: [
+    ControladorAcesso,
+    ControladorAluno,
+    ControladorProfessor,
+    ControladorCoordenacao,
+    ControladorAdministracao,
+  ],
   providers: [Banco, { provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
 class ModuloApi {}

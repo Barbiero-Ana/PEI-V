@@ -1,7 +1,7 @@
 ---
 modulo: ATI
 prd: PRD-14
-atualizado: 2026-11-04
+atualizado: 2026-11-09
 status: para revisão
 ---
 
@@ -54,7 +54,7 @@ Testes de validação do conteúdo (`atividadeSchema`), demonstração do envio 
 | MOD-ATI-009 | Exibir a situação da atividade: rascunho, publicada ou encerrada. | E | D | Parcial |
 | MOD-ATI-010 | O professor vê, por atividade, os alunos que concluíram, que estão em andamento e que não iniciaram. | E | D | Implementado |
 | MOD-ATI-011 | O professor pode liberar todos os mapas de uma turma, dispensando a ordem de desbloqueio. | D | T | Pendente |
-| MOD-ATI-012 | O conteúdo de cada questão segue o formato fixo da RN-26, validado no servidor. | E | T | Implementado |
+| MOD-ATI-012 | O servidor valida o conteúdo de cada questão e exige uma orientação para resposta errada antes de publicar atividades com questões próprias. | E | T | Implementado |
 | MOD-ATI-013 | O professor pré-visualiza a atividade como o aluno vai vê-la. | I | D | Implementado |
 | MOD-ATI-014 | A atividade pode ser vinculada a um plano de aula. | I | T | Implementado |
 | MOD-ATI-015 | A exclusão de uma atividade pede confirmação. | E | T | Implementado |
@@ -71,7 +71,7 @@ Testes de validação do conteúdo (`atividadeSchema`), demonstração do envio 
 
 | Regra | Síntese |
 | --- | --- |
-| RN-26 | Conteúdo por formato: **objetiva** (enunciado, alternativas e índice da correta); **completar** (texto com as respostas entre colchetes, como `25% de 80 é [20]`); **associação** (pares lado A e lado B); **sequência** (itens na ordem certa, que o app embaralha). Toda questão é do mesmo formato da atividade. |
+| RN-26 | Conteúdo por formato: **objetiva** (enunciado, alternativas e índice da correta); **completar** (texto com as respostas entre colchetes, como `25% de 80 é [20]`); **associação** (pares lado A e lado B); **sequência** (itens na ordem certa, que o app embaralha). Toda questão é do mesmo formato da atividade. Cada questão própria precisa de uma orientação de até 300 caracteres para publicação. Atividades já publicadas sem orientação exibem o retorno padrão do app. |
 | RN-27 | A atividade fica em rascunho até ser enviada; só atividades enviadas aparecem no app e na agenda do professor. |
 
 ### Fora do escopo atual
@@ -104,6 +104,8 @@ Critérios marcados com [x] já são atendidos pelo painel atual.
 - [x] CA-03: Dada uma questão de completar, então as respostas são as palavras entre colchetes (RN-26).
 - [x] CA-04: Toda atividade exige título com pelo menos 3 caracteres ("Dê um título à atividade."); a habilidade da BNCC é opcional.
 - [x] CA-05: Uma atividade com questões próprias exige ao menos uma questão ("Adicione ao menos uma questão.").
+- [x] CA-06: O professor pode salvar um rascunho sem a orientação. Ao tentar publicar, o painel indica a primeira questão que precisa de feedback.
+- [ ] CA-07: Quando o aluno confere uma resposta completa e errada, o app mostra a orientação daquela questão. Uma tentativa incompleta pede os dados que faltam. Ao acertar, o aluno vê o Lilo no rodapé e pode avançar ou ver o resultado.
 
 ### HU-ATI-02 — Atividade pronta
 

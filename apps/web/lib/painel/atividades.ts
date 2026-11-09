@@ -12,9 +12,9 @@ import { tokenDaApi } from "./dados";
 export {
   FORMATOS_EDITAVEIS,
   SOBRE_FORMATOS,
-  atividadeSchema,
+  esquemaAtividade,
   missaoDa,
-  questaoSchema,
+  esquemaQuestao,
   type AtividadeProfessor,
   type DadosAtividade,
   type FormatoEditavel,

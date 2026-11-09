@@ -13,7 +13,14 @@ import {
   Query,
   UseGuards,
 } from "@nestjs/common";
-import { STATUS_PLANO, atividadeSchema, planoSchema, type DadosAtividade, type DadosPlano } from "@modolume/core";
+import {
+  SITUACOES_PLANO,
+  esquemaAtividade,
+  esquemaAtividadeParaEnvio,
+  esquemaPlano,
+  type DadosAtividade,
+  type DadosPlano,
+} from "@modolume/core";
 import { z } from "zod";
 import {
   atividadeDoBanco,
@@ -31,6 +38,7 @@ import {
   GuardaProfessor,
   SessaoAtual,
   registrar,
+  hojeBrasil,
   validar,
   type Equipe,
   type Sessao,
@@ -47,7 +55,7 @@ const periodoTexto = (p: "manha" | "tarde" | "integral") => (p === "manha" ? "ma
  */
 @Controller("professor")
 @UseGuards(GuardaProfessor)
-export class ProfessorController {
+export class ControladorProfessor {
   constructor(@Inject(Banco) private readonly banco: Banco) {}
 
   private turmasAutorizadas(eu: Equipe) {
@@ -113,11 +121,13 @@ export class ProfessorController {
   @Post("alunos/:id/zerar-pin")
   async zerarPin(@SessaoAtual() s: Sessao, @EquipeAtual() eu: Equipe, @Param("id") id: string) {
     const aluno = await this.meuAluno(s.sub, id);
-    await this.banco.aluno.update({
-      where: { id: aluno.id },
-      data: { pinHash: null, pinFalhas: 0, bloqueadoAte: null },
+    await this.banco.$transaction(async (transacao) => {
+      await transacao.aluno.update({
+        where: { id: aluno.id },
+        data: { pinHash: null, pinFalhas: 0, bloqueadoAte: null },
+      });
+      await registrar(transacao, eu, "aluno.pin_zerado", { tipo: "aluno", id: aluno.id, detalhe: aluno.nome });
     });
-    await registrar(this.banco, eu, "aluno.pin_zerado", { tipo: "aluno", id: aluno.id, detalhe: aluno.nome });
     return { ok: true };
   }
 
@@ -131,12 +141,14 @@ export class ProfessorController {
     for (let tentativa = 0; tentativa < 5; tentativa++) {
       const codigoAcesso = gerarCodigoAcesso();
       if (await this.banco.aluno.findUnique({ where: { codigoAcesso } })) continue;
-      await this.banco.aluno.update({
-        where: { id: aluno.id },
-        data: { codigoAcesso, versaoAcesso: { increment: 1 }, pinFalhas: 0, bloqueadoAte: null },
+      return this.banco.$transaction(async (transacao) => {
+        await transacao.aluno.update({
+          where: { id: aluno.id },
+          data: { codigoAcesso, versaoAcesso: { increment: 1 }, pinFalhas: 0, bloqueadoAte: null },
+        });
+        await registrar(transacao, eu, "aluno.novo_codigo", { tipo: "aluno", id: aluno.id, detalhe: aluno.nome });
+        return { codigoAcesso };
       });
-      await registrar(this.banco, eu, "aluno.novo_codigo", { tipo: "aluno", id: aluno.id, detalhe: aluno.nome });
-      return { codigoAcesso };
     }
     throw new BadRequestException("Não deu para gerar o código agora. Tente de novo.");
   }
@@ -264,40 +276,45 @@ export class ProfessorController {
   /** Cria a atividade com as filhas (turmas, questões, opções) numa só operação. */
   @Post("atividades")
   async criar(@SessaoAtual() s: Sessao, @EquipeAtual() eu: Equipe, @Body() corpo: unknown) {
-    const d = validar(atividadeSchema, corpo);
+    const d = validar(esquemaAtividade, corpo);
     await this.conferirTurmas(eu, d.turmas);
     await this.conferirReferencias(eu, d.habilidade ? [d.habilidade] : [], d.planoId || undefined);
-    const criada = await this.banco.atividadeProfessor.create({
-      data: {
-        id: novoId("atv"),
-        professorId: s.sub,
-        ...this.colunasDaAtividade(d),
-        turmas: { create: d.turmas.map((turmaId) => ({ turmaId })) },
-        questoes: { create: questoesParaBanco(d.formato === "pronta" ? [] : d.questoes) },
-      },
-      include: incluirAtividade,
+    return this.banco.$transaction(async (transacao) => {
+      const criada = await transacao.atividadeProfessor.create({
+        data: {
+          id: novoId("atv"),
+          professorId: s.sub,
+          ...this.colunasDaAtividade(d),
+          turmas: { create: d.turmas.map((turmaId) => ({ turmaId })) },
+          questoes: { create: questoesParaBanco(d.formato === "pronta" ? [] : d.questoes) },
+        },
+        include: incluirAtividade,
+      });
+      await registrar(transacao, eu, "atividade.criada", { tipo: "atividade", id: criada.id, detalhe: criada.titulo });
+      return atividadeDoBanco(criada);
     });
-    await registrar(this.banco, eu, "atividade.criada", { tipo: "atividade", id: criada.id, detalhe: criada.titulo });
-    return atividadeDoBanco(criada);
   }
 
   /** Atualiza a mãe e troca as filhas (turmas e questões) na mesma transação. */
   @Put("atividades/:id")
   async editar(@SessaoAtual() s: Sessao, @EquipeAtual() eu: Equipe, @Param("id") id: string, @Body() corpo: unknown) {
-    const d = validar(atividadeSchema, corpo);
+    const d = validar(esquemaAtividade, corpo);
     await this.atividadeParaEscrita(eu, id);
     await this.conferirTurmas(eu, d.turmas);
     await this.conferirReferencias(eu, d.habilidade ? [d.habilidade] : [], d.planoId || undefined);
-    const editada = await this.banco.atividadeProfessor.update({
-      where: { id },
-      data: {
-        ...this.colunasDaAtividade(d),
-        turmas: { deleteMany: {}, create: d.turmas.map((turmaId) => ({ turmaId })) },
-        questoes: { deleteMany: {}, create: questoesParaBanco(d.formato === "pronta" ? [] : d.questoes) },
-      },
-      include: incluirAtividade,
+    return this.banco.$transaction(async (transacao) => {
+      const editada = await transacao.atividadeProfessor.update({
+        where: { id },
+        data: {
+          ...this.colunasDaAtividade(d),
+          turmas: { deleteMany: {}, create: d.turmas.map((turmaId) => ({ turmaId })) },
+          questoes: { deleteMany: {}, create: questoesParaBanco(d.formato === "pronta" ? [] : d.questoes) },
+        },
+        include: incluirAtividade,
+      });
+      if (editada.status === "enviada") validar(esquemaAtividadeParaEnvio, d);
+      return atividadeDoBanco(editada);
     });
-    return atividadeDoBanco(editada);
   }
 
   /** Envia para o app (ou volta para rascunho). */
@@ -310,25 +327,31 @@ export class ProfessorController {
   ) {
     const { enviar } = validar(envio, corpo);
     await this.atividadeParaEscrita(eu, id);
-    const a = await this.banco.atividadeProfessor.update({
-      where: { id },
-      data: { status: enviar ? "enviada" : "rascunho", enviadaEm: enviar ? new Date() : null },
-      include: incluirAtividade,
+    return this.banco.$transaction(async (transacao) => {
+      const a = await transacao.atividadeProfessor.update({
+        where: { id },
+        data: { status: enviar ? "enviada" : "rascunho", enviadaEm: enviar ? new Date() : null },
+        include: incluirAtividade,
+      });
+      const dados = atividadeDoBanco(a);
+      if (enviar) validar(esquemaAtividadeParaEnvio, dados);
+      await registrar(transacao, eu, enviar ? "atividade.enviada" : "atividade.recolhida", {
+        tipo: "atividade",
+        id,
+        detalhe: a.titulo,
+      });
+      return dados;
     });
-    await registrar(this.banco, eu, enviar ? "atividade.enviada" : "atividade.recolhida", {
-      tipo: "atividade",
-      id,
-      detalhe: a.titulo,
-    });
-    return atividadeDoBanco(a);
   }
 
   /** Exclui a atividade e as filhas; as jogadas dos alunos ficam no histórico (sem o vínculo). */
   @Delete("atividades/:id")
   async excluir(@SessaoAtual() s: Sessao, @EquipeAtual() eu: Equipe, @Param("id") id: string) {
     const atividade = await this.atividadeParaEscrita(eu, id);
-    await this.banco.atividadeProfessor.delete({ where: { id } });
-    await registrar(this.banco, eu, "atividade.excluida", { tipo: "atividade", id, detalhe: atividade.titulo });
+    await this.banco.$transaction(async (transacao) => {
+      await transacao.atividadeProfessor.delete({ where: { id } });
+      await registrar(transacao, eu, "atividade.excluida", { tipo: "atividade", id, detalhe: atividade.titulo });
+    });
     return { ok: true };
   }
 
@@ -405,6 +428,8 @@ export class ProfessorController {
   }
 
   private colunasDoPlano(d: DadosPlano) {
+    if ((d.registro.trim() || d.status === "realizada") && d.data > hojeBrasil())
+      throw new BadRequestException("O registro só pode ser feito a partir da data da aula.");
     return {
       turmaId: d.turmaId,
       data: dataDoBanco(d.data),
@@ -418,7 +443,7 @@ export class ProfessorController {
       recursos: d.recursos,
       avaliacao: d.avaliacao,
       observacoes: d.observacoes,
-      status: d.status,
+      status: d.registro.trim() ? ("realizada" as const) : d.status,
       registro: d.registro,
     };
   }
@@ -435,8 +460,8 @@ export class ProfessorController {
         professorId: s.sub,
         turma: this.turmasAutorizadas(eu),
         ...(turmaId ? { turmaId } : {}),
-        ...(status && (STATUS_PLANO as readonly string[]).includes(status)
-          ? { status: status as (typeof STATUS_PLANO)[number] }
+        ...(status && (SITUACOES_PLANO as readonly string[]).includes(status)
+          ? { status: status as (typeof SITUACOES_PLANO)[number] }
           : {}),
       },
       include: this.incluirPlanoNaLeitura(eu),
@@ -457,22 +482,24 @@ export class ProfessorController {
 
   @Post("planos")
   async criarPlano(@SessaoAtual() s: Sessao, @EquipeAtual() eu: Equipe, @Body() corpo: unknown) {
-    const d = validar(planoSchema, corpo);
+    const d = validar(esquemaPlano, corpo);
     const filhas = await this.filhasDoPlano(eu, d);
-    const criado = await this.banco.planoAula.create({
-      data: {
-        id: novoId("plano"),
-        professorId: s.sub,
-        ...this.colunasDoPlano(d),
-        habilidades: { create: filhas.habilidades },
-        formatos: { create: filhas.formatos },
-        missoes: { create: filhas.missoes },
-        alunosFoco: { create: filhas.alunosFoco },
-      },
-      include: incluirPlano,
+    return this.banco.$transaction(async (transacao) => {
+      const criado = await transacao.planoAula.create({
+        data: {
+          id: novoId("plano"),
+          professorId: s.sub,
+          ...this.colunasDoPlano(d),
+          habilidades: { create: filhas.habilidades },
+          formatos: { create: filhas.formatos },
+          missoes: { create: filhas.missoes },
+          alunosFoco: { create: filhas.alunosFoco },
+        },
+        include: incluirPlano,
+      });
+      await registrar(transacao, eu, "plano.criado", { tipo: "plano", id: criado.id, detalhe: criado.tema });
+      return planoDoBanco(criado);
     });
-    await registrar(this.banco, eu, "plano.criado", { tipo: "plano", id: criado.id, detalhe: criado.tema });
-    return planoDoBanco(criado);
   }
 
   @Put("planos/:id")
@@ -482,7 +509,7 @@ export class ProfessorController {
     @Param("id") id: string,
     @Body() corpo: unknown,
   ) {
-    const d = validar(planoSchema, corpo);
+    const d = validar(esquemaPlano, corpo);
     await this.planoDoProfessor(eu, id);
     const filhas = await this.filhasDoPlano(eu, d);
     const editado = await this.banco.planoAula.update({
@@ -503,8 +530,10 @@ export class ProfessorController {
   @Delete("planos/:id")
   async excluirPlano(@SessaoAtual() s: Sessao, @EquipeAtual() eu: Equipe, @Param("id") id: string) {
     const plano = await this.planoDoProfessor(eu, id);
-    await this.banco.planoAula.delete({ where: { id } });
-    await registrar(this.banco, eu, "plano.excluido", { tipo: "plano", id, detalhe: plano.tema });
+    await this.banco.$transaction(async (transacao) => {
+      await transacao.planoAula.delete({ where: { id } });
+      await registrar(transacao, eu, "plano.excluido", { tipo: "plano", id, detalhe: plano.tema });
+    });
     return { ok: true };
   }
 }

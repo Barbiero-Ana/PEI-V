@@ -47,17 +47,21 @@ export const SOBRE_FORMATOS: Record<FormatoEditavel, { nome: string; descricao: 
 const texto = z.string().trim();
 /** Comando próprio de cada questão ("Ligue as frações aos decimais"); vazio usa a instrução geral. */
 const comando = z.string().trim().max(200).default("");
-export const questaoSchema = z.discriminatedUnion("tipo", [
+export const LIMITE_FEEDBACK_QUESTAO = 300;
+const feedbackErro = texto.max(LIMITE_FEEDBACK_QUESTAO, "Use até 300 caracteres no feedback.").optional();
+export const esquemaQuestao = z.discriminatedUnion("tipo", [
   z.object({
     tipo: z.literal("objetiva"),
     enunciado: texto.min(3, "Escreva o enunciado."),
     alternativas: z.array(texto.min(1, "Preencha todas as alternativas.")).min(2).max(5),
     correta: z.number().int().min(0),
+    feedbackErro,
   }),
   z.object({
     tipo: z.literal("completar"),
     comando,
     texto: texto.regex(/\[[^\]]+\]/, "Marque ao menos uma resposta entre colchetes, como [1/4]."),
+    feedbackErro,
   }),
   z.object({
     tipo: z.literal("associacao-visual"),
@@ -65,23 +69,25 @@ export const questaoSchema = z.discriminatedUnion("tipo", [
     pares: z
       .array(z.object({ a: texto.min(1, "Preencha os dois lados."), b: texto.min(1, "Preencha os dois lados.") }))
       .min(2, "Use pelo menos dois pares."),
+    feedbackErro,
   }),
   z.object({
     tipo: z.literal("sequencia"),
     comando,
     itens: z.array(texto.min(1, "Preencha todos os itens.")).min(3, "Use pelo menos três itens."),
+    feedbackErro,
   }),
 ]);
-export type Questao = z.infer<typeof questaoSchema>;
+export type Questao = z.infer<typeof esquemaQuestao>;
 
-export const atividadeSchema = z
+export const esquemaAtividade = z
   .object({
     titulo: texto.min(3, "Dê um título à atividade."),
     formato: z.enum(FORMATOS_EDITAVEIS),
     instrucao: texto,
     habilidade: texto,
     missaoId: texto,
-    questoes: z.array(questaoSchema),
+    questoes: z.array(esquemaQuestao),
     turmas: z.array(z.string()).min(1, "Escolha ao menos uma turma."),
     liberarEm: texto.regex(/^\d{4}-\d{2}-\d{2}$/, "Escolha a data de liberação."),
     planoId: texto,
@@ -98,7 +104,19 @@ export const atividadeSchema = z
         ctx.addIssue({ code: "custom", path: ["questoes", i], message: "Marque a alternativa correta." });
     });
   });
-export type DadosAtividade = z.infer<typeof atividadeSchema>;
+export type DadosAtividade = z.infer<typeof esquemaAtividade>;
+
+export const esquemaAtividadeParaEnvio = esquemaAtividade.superRefine((a, ctx) => {
+  for (const [i, q] of a.questoes.entries()) {
+    if (!q.feedbackErro) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["questoes", i, "feedbackErro"],
+        message: "Escreva uma orientação para quando o aluno errar esta questão.",
+      });
+    }
+  }
+});
 
 export interface AtividadeProfessor extends DadosAtividade {
   id: string;
@@ -124,14 +142,22 @@ export const ATIVIDADES_EXEMPLO: AtividadeProfessor[] = [
         enunciado: "Uma camiseta custa R$ 80 e está com 25% de desconto. Quanto é o desconto?",
         alternativas: ["R$ 20", "R$ 25", "R$ 40", "R$ 60"],
         correta: 0,
+        feedbackErro: "25% é um quarto do preço. Divida R$ 80 em quatro partes iguais para achar o desconto.",
       },
       {
         tipo: "objetiva",
         enunciado: "Quanto é 10% de 150?",
         alternativas: ["R$ 1,50", "R$ 10", "R$ 15", "R$ 50"],
         correta: 2,
+        feedbackErro: "10% é uma parte de dez. Divida 150 por 10.",
       },
-      { tipo: "objetiva", enunciado: "50% de 36 é igual a:", alternativas: ["12", "18", "24", "72"], correta: 1 },
+      {
+        tipo: "objetiva",
+        enunciado: "50% de 36 é igual a:",
+        alternativas: ["12", "18", "24", "72"],
+        correta: 1,
+        feedbackErro: "50% significa metade. Separe 36 em dois grupos do mesmo tamanho.",
+      },
     ],
     turmas: ["turma-6a"],
     liberarEm: "2026-10-28",
@@ -152,6 +178,7 @@ export const ATIVIDADES_EXEMPLO: AtividadeProfessor[] = [
       {
         tipo: "associacao-visual",
         comando: "Ligue cada fração ao decimal igual a ela.",
+        feedbackErro: "Divida o número de cima pelo de baixo e procure o resultado na coluna da direita.",
         pares: [
           { a: "1/2", b: "0,5" },
           { a: "1/4", b: "0,25" },

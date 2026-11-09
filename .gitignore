@@ -32,3 +32,7 @@ Thumbs.db
 *.log
 npm-debug.*
 pnpm-debug.*
+
+# banco isolado da suíte de integração
+/tmp/auditoria-banco-*/
+/tmp/auditoria-mobile-*/

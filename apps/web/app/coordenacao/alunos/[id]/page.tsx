@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { formatarCodigoAcesso } from "@modolume/core";
 import { Avatar, Cabecalho, Campos, Painel, TABELA } from "@/components/painel/blocos";
 import { BarraValor, quando } from "@/components/escola/estrutura";
 import { apiDaEquipe } from "@/lib/escola/api";
@@ -53,10 +54,8 @@ export default async function AlunoCoordenacao({ params }: { params: Promise<{ i
             <p className="font-semibold text-tinta">Acesso ao app</p>
             <p className="mt-0.5">
               Código{" "}
-              <span className="font-mono font-semibold tracking-wider">
-                {a.codigoAcesso.slice(0, 4)}-{a.codigoAcesso.slice(4)}
-              </span>{" "}
-              · {a.pinCriado ? "PIN criado" : "aguardando o primeiro acesso"}
+              <span className="font-mono font-semibold tracking-wider">{formatarCodigoAcesso(a.codigoAcesso)}</span> ·{" "}
+              {a.pinCriado ? "PIN criado" : "aguardando o primeiro acesso"}
             </p>
             <p className="mt-1 text-xs text-texto-suave">
               Para zerar o PIN ou trocar o código, fale com o professor da turma.

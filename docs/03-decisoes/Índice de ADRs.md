@@ -26,6 +26,7 @@ alternativas consideradas e as consequências. Juntos, contam como o projeto che
 | [0017](0017-acesso-individual-do-aluno.md) | Acesso individual do aluno: código pessoal e PIN | Aceita | 05/11/2026 |
 | [0018](0018-site-com-planos-e-app-so-no-celular.md) | Site com planos e app só no celular | Aceita | 05/11/2026 |
 | [0019](0019-papeis-coordenacao-e-administrador.md) | Papéis da equipe: professor, coordenação e administrador | Aceita | 05/11/2026 |
+| [0020](0020-codigo-do-aluno-com-letras-e-numeros.md) | Quatro letras e quatro números no código do aluno | Aceita | 09/11/2026 |
 
 Os ADRs dizem **como** e **por que** o sistema foi construído assim. O **que** o sistema faz está nos PRDs de módulo
 (`docs/02-modulos/`).

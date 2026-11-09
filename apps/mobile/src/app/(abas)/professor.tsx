@@ -39,7 +39,7 @@ function Cartao({ a }: { a: AtividadeDoProfessor }) {
       </View>
       <View style={{ flex: 1, gap: 2 }}>
         <Texto style={e.tipo}>
-          {SOBRE_FORMATOS[a.formato].nome} · desde {dataCurta(a.liberarEm)}
+          {SOBRE_FORMATOS[a.formato]?.nome ?? "Atividade"} · desde {dataCurta(a.liberarEm)}
         </Texto>
         <Texto style={e.titulo}>{a.titulo}</Texto>
         {a.instrucao ? (
@@ -58,7 +58,8 @@ function Cartao({ a }: { a: AtividadeDoProfessor }) {
 
 export default function Professor() {
   const insets = useSafeAreaInsets();
-  const { temServidor, conta, atividades, carregandoAtividades, atualizarAtividades, pendentes, online } = useConta();
+  const { temServidor, conta, atividades, carregandoAtividades, atualizarAtividades, pendentes, recusadas, online } =
+    useConta();
   useFalarAoAbrir("Atividades do professor.");
 
   // ao abrir a aba, busca a lista mais nova
@@ -90,12 +91,23 @@ export default function Professor() {
             Entre na sua turma
           </Titulo>
           <Texto style={e.centro}>
-            Com o código da turma, as atividades que o seu professor mandar aparecem aqui. As missões dos mapas
+            Com seu código pessoal, as atividades que o seu professor mandar aparecem aqui. As missões dos mapas
             continuam valendo do mesmo jeito.
           </Texto>
           {temServidor ? (
             <Botao titulo="Entrar na turma" onPress={() => router.push("/entrar")} style={{ alignSelf: "stretch" }} />
           ) : null}
+          {recusadas > 0 && (
+            <View style={e.aviso} accessibilityLiveRegion="polite">
+              <Texto style={e.avisoTexto}>
+                {recusadas}{" "}
+                {recusadas === 1
+                  ? "resultado não pôde ser enviado e ficou guardado"
+                  : "resultados não puderam ser enviados e ficaram guardados"}{" "}
+                neste aparelho. Fale com seu professor.
+              </Texto>
+            </View>
+          )}
         </View>
       ) : (
         <>

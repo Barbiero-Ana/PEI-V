@@ -5,7 +5,7 @@ import { Controller, Get, Module, Post, UseGuards, type INestApplication } from 
 import { NestFactory } from "@nestjs/core";
 import { JwtModule, JwtService } from "@nestjs/jwt";
 import bcrypt from "bcryptjs";
-import { AcessoController } from "./acesso.js";
+import { ControladorAcesso } from "./acesso.js";
 import {
   Banco,
   EquipeAtual,
@@ -41,17 +41,30 @@ function novaPessoa(papel: PapelEquipe = "admin") {
     instituicao: escola,
     disciplina: null,
     senhaProvisoria: true,
+    versaoAcesso: 1,
     senhaHash: hashInicial,
   };
 }
 
 const banco = {
+  $transaction: async (executar: (transacao: unknown) => Promise<unknown>) => executar(banco),
   professor: {
     findUnique: async () => {
       consultasEquipe++;
       return { ...pessoa };
     },
     findUniqueOrThrow: async () => ({ ...pessoa }),
+    updateMany: async ({
+      data,
+    }: {
+      data: { senhaHash: string; senhaProvisoria: boolean; versaoAcesso: { increment: number } };
+    }) => {
+      escritas++;
+      pessoa.senhaHash = data.senhaHash;
+      pessoa.senhaProvisoria = data.senhaProvisoria;
+      pessoa.versaoAcesso += data.versaoAcesso.increment;
+      return { count: 1 };
+    },
     update: async ({ data }: { data: Partial<typeof pessoa> }) => {
       escritas++;
       Object.assign(pessoa, data);
@@ -112,7 +125,7 @@ class OperacoesController {
 
 @Module({
   imports: [JwtModule.register({ global: true, secret: "segredo-exclusivo-dos-testes-sem-ambiente" })],
-  controllers: [AcessoController, OperacoesController],
+  controllers: [ControladorAcesso, OperacoesController],
   providers: [{ provide: Banco, useValue: banco }],
 })
 class ModuloTeste {}
@@ -141,7 +154,12 @@ describe("Autorização com senha provisória (HTTP, sem banco persistente)", ()
   });
 
   function token(papel: PapelEquipe | "aluno" = pessoa.papel) {
-    return jwt.sign({ sub: pessoa.id, papel, ...(papel === "aluno" ? { v: 1, turmaId: "turma-teste" } : {}) });
+    return jwt.sign({
+      sub: pessoa.id,
+      papel,
+      v: pessoa.versaoAcesso,
+      ...(papel === "aluno" ? { v: 1, turmaId: "turma-teste" } : {}),
+    });
   }
   async function chamar(caminho: string, bearer: string | null, corpo?: unknown) {
     return fetch(`${url}${caminho}`, {
@@ -170,7 +188,7 @@ describe("Autorização com senha provisória (HTTP, sem banco persistente)", ()
       assert.equal(pessoa.senhaProvisoria, true);
     });
 
-    it(`${papel}: permite consultar a própria conta e trocar a senha com o mesmo token`, async () => {
+    it(`${papel}: troca senha e exige uma sessão nova`, async () => {
       pessoa = novaPessoa(papel);
       const bearer = token();
       const eu = await chamar("/auth/eu", bearer);
@@ -180,9 +198,10 @@ describe("Autorização com senha provisória (HTTP, sem banco persistente)", ()
       assert.equal(troca.status, 201);
       assert.equal(pessoa.senhaProvisoria, false);
       assert.ok(await bcrypt.compare("Definitiva456-teste", pessoa.senhaHash));
-      assert.equal((await chamar(`/teste/${papel}`, bearer, {})).status, 201);
+      assert.equal((await chamar(`/teste/${papel}`, bearer, {})).status, 401);
+      assert.equal((await chamar(`/teste/${papel}`, token(), {})).status, 201);
       assert.equal(operacoes, 1);
-      const equipe = await chamar("/teste/equipe", bearer);
+      const equipe = await chamar("/teste/equipe", token());
       assert.equal(equipe.status, 200);
       assert.equal(((await equipe.json()) as Equipe).instituicaoId, escola.id);
     });

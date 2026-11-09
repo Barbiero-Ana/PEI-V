@@ -14,7 +14,7 @@ interface Identidade {
 }
 const Ctx = createContext<Identidade | null>(null);
 
-export function IdentidadeProvider({ children }: { children: ReactNode }) {
+export function ProvedorIdentidade({ children }: { children: ReactNode }) {
   const [estado, setEstado] = useState<{ conta: ContaAluno | null; escopo: EscopoIdentidade; versao: number } | null>(
     null,
   );
@@ -46,7 +46,8 @@ export function IdentidadeProvider({ children }: { children: ReactNode }) {
       setTrocando(true);
       try {
         await repositorio.aguardarEscritas();
-        await repositorio.gravar(SESSAO, { conta });
+        if (conta) await repositorio.gravar(SESSAO, { conta });
+        else await repositorio.encerrarSessao();
         if (versao !== revisao.current) return;
         setEstado({ conta, escopo: new EscopoIdentidade(identidadeDa(conta)), versao });
         setTrocando(false);
@@ -76,6 +77,6 @@ export function IdentidadeProvider({ children }: { children: ReactNode }) {
 
 export function useIdentidade() {
   const valor = useContext(Ctx);
-  if (!valor) throw new Error("IdentidadeProvider ausente.");
+  if (!valor) throw new Error("ProvedorIdentidade ausente.");
   return valor;
 }

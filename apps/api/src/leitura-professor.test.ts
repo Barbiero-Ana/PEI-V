@@ -4,7 +4,7 @@ import { after, before, beforeEach, describe, it } from "node:test";
 import { Module, type INestApplication } from "@nestjs/common";
 import { JwtModule, JwtService } from "@nestjs/jwt";
 import { NestFactory } from "@nestjs/core";
-import { ProfessorController } from "./professor.js";
+import { ControladorProfessor } from "./professor.js";
 import { Banco } from "./infra.js";
 
 // HTTP real, armazenamento somente em memória. Não instancia PrismaClient ou lê .env.
@@ -109,6 +109,7 @@ const banco = {
       ativo: true,
       instituicaoId: "escola",
       senhaProvisoria: false,
+      versaoAcesso: 1,
     }),
   },
   atividadeProfessor: {
@@ -147,7 +148,7 @@ const banco = {
 };
 @Module({
   imports: [JwtModule.register({ global: true, secret: "somente-testes-leitura-professor" })],
-  controllers: [ProfessorController],
+  controllers: [ControladorProfessor],
   providers: [{ provide: Banco, useValue: banco }],
 })
 class ModuloTeste {}
@@ -162,7 +163,7 @@ describe("Leitura do professor após desvinculação (HTTP, banco simulado)", ()
     await app.listen(0, "127.0.0.1");
     url = await app.getUrl();
     jwt = app.get(JwtService);
-    token = jwt.sign({ sub: "professor", papel: "professor" });
+    token = jwt.sign({ sub: "professor", papel: "professor", v: 1 });
   });
   after(async () => {
     await app?.close();
@@ -253,7 +254,7 @@ describe("Leitura do professor após desvinculação (HTTP, banco simulado)", ()
   it("autoria continua obrigatória mesmo com vínculo atual", async () => {
     autorAtividade = "outro";
     assert.equal((await get("atividades/atividade/situacao")).status, 404);
-    const outro = jwt.sign({ sub: "outro", papel: "professor" });
+    const outro = jwt.sign({ sub: "outro", papel: "professor", v: 1 });
     // A guarda consulta o papel da conta; o conteúdo continua recortado pelo sub.
     assert.deepEqual(await (await get("planos", outro)).json(), []);
     assert.equal((await get("planos/plano-a", outro)).status, 404);

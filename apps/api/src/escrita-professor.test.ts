@@ -5,7 +5,7 @@ import { Module, type INestApplication } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
 import { JwtModule, JwtService } from "@nestjs/jwt";
 import { UNIDADES_TEMATICAS } from "@modolume/core";
-import { ProfessorController } from "./professor.js";
+import { ControladorProfessor } from "./professor.js";
 import { Banco } from "./infra.js";
 
 // Aplicação HTTP real; armazenamento exclusivo do teste, sem PrismaClient ou .env.
@@ -30,6 +30,7 @@ function inicial() {
           ordem: 0,
           tipo: "objetiva",
           enunciado: "Questão original",
+          feedbackErro: "Releia o enunciado e confira a condição.",
           opcoes: [
             { texto: "Sim", correta: true },
             { texto: "Não", correta: false },
@@ -84,6 +85,7 @@ function permitida(turmaId: string, filtro: Filtro) {
   );
 }
 const banco = {
+  $transaction: async (executar: (transacao: unknown) => Promise<unknown>) => executar(banco),
   professor: {
     findUnique: async () => ({
       id: "professor",
@@ -91,6 +93,7 @@ const banco = {
       papel: "professor",
       ativo: true,
       senhaProvisoria: false,
+      versaoAcesso: 1,
       instituicaoId: "escola",
     }),
   },
@@ -187,7 +190,7 @@ const dadosPlano = (turmaId = "a") => ({
 });
 @Module({
   imports: [JwtModule.register({ global: true, secret: "somente-testes-escrita-professor" })],
-  controllers: [ProfessorController],
+  controllers: [ControladorProfessor],
   providers: [{ provide: Banco, useValue: banco }],
 })
 class ModuloTeste {}
@@ -200,7 +203,7 @@ describe("Escrita após perda do vínculo (HTTP, banco simulado)", () => {
     app = await NestFactory.create(ModuloTeste, { logger: false });
     await app.listen(0, "127.0.0.1");
     url = await app.getUrl();
-    token = app.get(JwtService).sign({ sub: "professor", papel: "professor" });
+    token = app.get(JwtService).sign({ sub: "professor", papel: "professor", v: 1 });
   });
   after(async () => {
     await app?.close();
@@ -248,6 +251,15 @@ describe("Escrita após perda do vínculo (HTTP, banco simulado)", () => {
     await recusada("PUT", "atividades/atividade", dadosAtividade(["c"]));
     await recusada("PUT", "planos/plano", dadosPlano("c"));
     await recusada("POST", "atividades", dadosAtividade(["c"]));
+  });
+  it("impede marcar uma aula futura como realizada ou registrar a aula por requisição direta", async () => {
+    await recusada("PUT", "planos/plano", { ...dadosPlano(), data: "2999-01-01", registro: "Antes da aula" }, 400);
+    await recusada(
+      "PUT",
+      "planos/plano",
+      { ...dadosPlano(), data: "2999-01-01", registro: "", status: "realizada" },
+      400,
+    );
   });
   it("novo vínculo a outra turma não permite contornar a perda do vínculo original", async () => {
     vinculos.delete("a");

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import type { IndicadorSmart, StatusMeta } from "@modolume/core";
+import type { IndicadorSmart, SituacaoMeta } from "@modolume/core";
 import { Cabecalho, FAIXAS, LIMITE_ATENCAO, corDaTurma, dataCurta, decimal, pct } from "@/components/painel/blocos";
 import { FiltroTurmas, comFiltros } from "@/components/painel/filtros";
 import { IndicadoresSmart } from "@/components/painel/indicadores-smart";
@@ -105,7 +105,7 @@ function GraficoEvolucao({
   );
 }
 
-const SITUACAO: Record<StatusMeta, { rotulo: string; classe: string }> = {
+const SITUACAO: Record<SituacaoMeta, { rotulo: string; classe: string }> = {
   atingida: { rotulo: "Atingida", classe: "text-roxo-escuro" },
   perto: { rotulo: "Perto da meta", classe: "text-[#1F6E9F]" },
   abaixo: { rotulo: "Abaixo da meta", classe: "font-semibold text-alerta" },

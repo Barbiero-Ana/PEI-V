@@ -62,7 +62,7 @@ const vinculo = z.object({ professorId: z.string().min(1, "Escolha o professor."
 
 @Controller("coordenacao")
 @UseGuards(GuardaCoordenacao)
-export class CoordenacaoController {
+export class ControladorCoordenacao {
   constructor(@Inject(Banco) private readonly banco: Banco) {}
 
   private async rotulosDosFormatos() {
@@ -298,12 +298,14 @@ export class CoordenacaoController {
     });
     if (!ja) {
       // o primeiro professor da turma fica como responsável
-      const temOutros = await this.banco.professorTurma.count({ where: { turmaId: id } });
-      await this.banco.professorTurma.create({ data: { professorId, turmaId: id, responsavel: temOutros === 0 } });
-      await registrar(this.banco, eu, "turma.vinculo", {
-        tipo: "turma",
-        id,
-        detalhe: `${professor.nome} → ${turma.nome}`,
+      await this.banco.$transaction(async (transacao) => {
+        const temOutros = await transacao.professorTurma.count({ where: { turmaId: id } });
+        await transacao.professorTurma.create({ data: { professorId, turmaId: id, responsavel: temOutros === 0 } });
+        await registrar(transacao, eu, "turma.vinculo", {
+          tipo: "turma",
+          id,
+          detalhe: `${professor.nome} → ${turma.nome}`,
+        });
       });
     }
     return { ok: true };
@@ -317,11 +319,13 @@ export class CoordenacaoController {
       include: { turma: { select: { nome: true } }, professor: { select: { nome: true } } },
     });
     if (!v) throw new NotFoundException("Vínculo não encontrado.");
-    await this.banco.professorTurma.delete({ where: { professorId_turmaId: { professorId, turmaId: id } } });
-    await registrar(this.banco, eu, "turma.desvinculo", {
-      tipo: "turma",
-      id,
-      detalhe: `${v.professor.nome} saiu de ${v.turma.nome}`,
+    await this.banco.$transaction(async (transacao) => {
+      await transacao.professorTurma.delete({ where: { professorId_turmaId: { professorId, turmaId: id } } });
+      await registrar(transacao, eu, "turma.desvinculo", {
+        tipo: "turma",
+        id,
+        detalhe: `${v.professor.nome} saiu de ${v.turma.nome}`,
+      });
     });
     return { ok: true };
   }

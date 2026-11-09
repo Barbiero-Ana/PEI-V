@@ -1,10 +1,15 @@
 import { describe, expect, it } from "vitest";
 import { analisarAprendizagem } from "./aprendizagem";
-import type { FormatoId } from "./formats";
+import type { FormatoId } from "./formato";
 import type { ResultadoJogada } from "./missoes";
 
 /** Jogada de teste: `acertos` de `rodadas` fases acertadas de primeira. */
-function jogada(formato: FormatoId, acertos: number, rodadas = 4, extra: Partial<ResultadoJogada> = {}): ResultadoJogada {
+function jogada(
+  formato: FormatoId,
+  acertos: number,
+  rodadas = 4,
+  extra: Partial<ResultadoJogada> = {},
+): ResultadoJogada {
   return {
     missaoId: `teste-${formato}`,
     formato,
@@ -45,10 +50,7 @@ describe("análise de aprendizagem", () => {
   });
 
   it("pedir dica reduz a autonomia, mas não o acerto", () => {
-    const r = analisarAprendizagem([
-      jogada("montagem", 4, 4, { dicas: 2 }),
-      jogada("montagem", 4, 4, { dicas: 2 }),
-    ]);
+    const r = analisarAprendizagem([jogada("montagem", 4, 4, { dicas: 2 }), jogada("montagem", 4, 4, { dicas: 2 })]);
     const f = doFormato(r, "montagem");
     expect(f.acerto).toBe(100);
     expect(f.autonomia).toBe(50);

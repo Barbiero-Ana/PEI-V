@@ -1,0 +1,26 @@
+# MOD-PER-004
+
+O aluno pode escolher uma capa animada para o perfil, gratuita ou comprada com luzes.
+
+Origem: [PRD-07 — Perfil e personalização](../../02-modulos/PRD-07%20%E2%80%94%20Perfil%20e%20personaliza%C3%A7%C3%A3o.md), seção 5. Prioridade **D**, método **D**. Situação declarada na origem **Implementado**.
+
+[Módulo, fluxo, perfis e entidades](README.md). [Requisitos transversais](../prd-17/README.md).
+
+## Regras, histórias e critérios de aceite
+
+- HU-PER-02 Como **aluno**, quero escolher uma capa para o meu perfil, para deixá-lo do meu jeito.
+
+- **HU-PER-02** CA-01: Capas gratuitas podem ser escolhidas direto; capas pagas exigem luzes suficientes e ficam liberadas depois da compra.
+
+Consulte as regras transversais no PRD-17.
+
+## Implementação e evidência
+
+- [apps/mobile/src/app/(abas)/perfil.tsx](../../../apps/mobile/src/app/(abas)/perfil.tsx)
+- [apps/mobile/src/estado/jogador.tsx](../../../apps/mobile/src/estado/jogador.tsx)
+- [apps/web/app/conta/senha](../../../apps/web/app/conta/senha)
+- [apps/api/src/acesso.ts](../../../apps/api/src/acesso.ts)
+
+**Aceite nesta auditoria** Pendente.
+
+Aceite individual pendente de verificação nesta auditoria. Consulte os cenários e as evidências do módulo.

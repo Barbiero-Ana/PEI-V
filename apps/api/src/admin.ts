@@ -15,7 +15,9 @@ import {
 } from "@nestjs/common";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
-import { ALFABETO_CODIGO, gerarCodigoAcesso } from "./codigo-acesso.js";
+import { numeroDaPagina } from "@modolume/core";
+import { configuracaoRecuperacao, gerarSegredo } from "./credencial.js";
+import { ALFABETO_CODIGO_TURMA, gerarCodigoAcesso } from "./codigo-acesso.js";
 import { Banco, EquipeAtual, GuardaAdmin, registrar, validar, type Equipe } from "./infra.js";
 
 /**
@@ -71,18 +73,9 @@ const dadosAluno = z.object({
   turmaId: z.string().min(1, "Escolha a turma.").max(40),
 });
 
-/** Senha provisória legível (sem letras e números que se confundem), com letras e números. */
-function senhaProvisoria() {
-  const letras = "abcdefghjkmnpqrstuvwxyz";
-  let s = "";
-  for (let i = 0; i < 6; i++) s += letras[randomInt(letras.length)];
-  for (let i = 0; i < 4; i++) s += String(randomInt(2, 10));
-  return s;
-}
-
 @Controller("admin")
 @UseGuards(GuardaAdmin)
-export class AdminController {
+export class ControladorAdministracao {
   constructor(@Inject(Banco) private readonly banco: Banco) {}
 
   // ─────────────────────────── visão geral ───────────────────────────
@@ -117,8 +110,19 @@ export class AdminController {
   async usuarios(@EquipeAtual() eu: Equipe) {
     const pessoas = await this.banco.professor.findMany({
       where: { instituicaoId: eu.instituicaoId },
-      orderBy: [{ ativo: "desc" }, { nome: "asc" }],
-      include: { turmas: { include: { turma: { select: { id: true, nome: true, ativa: true } } } } },
+      orderBy: [{ ativo: "desc" }, { nome: "asc" }, { id: "asc" }],
+      select: {
+        id: true,
+        nome: true,
+        email: true,
+        papel: true,
+        disciplina: true,
+        ativo: true,
+        senhaProvisoria: true,
+        ultimoAcesso: true,
+        criadoEm: true,
+        turmas: { include: { turma: { select: { id: true, nome: true, ativa: true } } } },
+      },
     });
     return pessoas.map((p) => ({
       id: p.id,
@@ -140,61 +144,70 @@ export class AdminController {
     const d = validar(dadosUsuario, corpo);
     if (await this.banco.professor.findUnique({ where: { email: d.email } }))
       throw new ConflictException("Já existe uma pessoa com esse e-mail.");
-    const senha = senhaProvisoria();
-    const nova = await this.banco.professor.create({
-      data: {
-        id: randomUUID(),
-        instituicaoId: eu.instituicaoId,
-        nome: d.nome,
-        email: d.email,
-        papel: d.papel,
-        disciplina: d.papel === "professor" ? d.disciplina! : (d.disciplina ?? null) || null,
-        senhaHash: await bcrypt.hash(senha, 12),
-        senhaProvisoria: true,
-      },
+    const senha = gerarSegredo();
+    const senhaHash = await bcrypt.hash(senha, 12);
+    return this.banco.$transaction(async (transacao) => {
+      const nova = await transacao.professor.create({
+        data: {
+          id: randomUUID(),
+          instituicaoId: eu.instituicaoId,
+          nome: d.nome,
+          email: d.email,
+          papel: d.papel,
+          disciplina: d.papel === "professor" ? d.disciplina! : (d.disciplina ?? null) || null,
+          senhaHash,
+          senhaProvisoria: true,
+        },
+      });
+      await registrar(transacao, eu, "usuario.criado", {
+        tipo: "usuario",
+        id: nova.id,
+        detalhe: `${nova.nome} (${NOME_PAPEL[nova.papel]})`,
+      });
+      return { id: nova.id };
     });
-    await registrar(this.banco, eu, "usuario.criado", {
-      tipo: "usuario",
-      id: nova.id,
-      detalhe: `${nova.nome} (${NOME_PAPEL[nova.papel]})`,
-    });
-    // a senha provisória aparece só agora, para o administrador repassar
-    return { id: nova.id, senhaProvisoria: senha };
   }
 
   @Put("usuarios/:id")
   async editarUsuario(@EquipeAtual() eu: Equipe, @Param("id") id: string, @Body() corpo: unknown) {
     const d = validar(dadosUsuario, corpo);
     const atual = await this.pessoaDaEscola(eu, id);
+    const alterouEmail = atual.email !== d.email;
+    if (alterouEmail && !atual.senhaProvisoria)
+      throw new BadRequestException(
+        "O e-mail de uma conta com senha definida não pode ser alterado pela administração.",
+      );
     if (id === eu.id && d.papel !== "admin")
       throw new BadRequestException("Você não pode tirar o seu próprio papel de administrador.");
     if (atual.papel === "admin" && d.papel !== "admin") await this.garantirOutroAdmin(eu, id);
     const outro = await this.banco.professor.findUnique({ where: { email: d.email } });
     if (outro && outro.id !== id) throw new ConflictException("Já existe uma pessoa com esse e-mail.");
 
+    const mudancas: string[] = [];
+    if (atual.papel !== d.papel) mudancas.push(`papel: ${NOME_PAPEL[atual.papel]} → ${NOME_PAPEL[d.papel]}`);
+    if (atual.email !== d.email) mudancas.push("e-mail alterado");
+    if (atual.nome !== d.nome) mudancas.push("nome alterado");
     await this.banco.$transaction(async (tx) => {
       await tx.professor.update({
-        where: { id },
+        where: { id, ...(alterouEmail ? { senhaProvisoria: true, email: atual.email } : {}) },
         data: {
           nome: d.nome,
-          email: d.email,
+          ...(alterouEmail ? { email: d.email } : {}),
           papel: d.papel,
           disciplina: d.papel === "professor" ? d.disciplina! : (d.disciplina ?? null) || null,
+          ...(atual.papel !== d.papel || atual.email !== d.email
+            ? { versaoAcesso: { increment: 1 }, redefinicaoHash: null, redefinicaoExpiraEm: null }
+            : {}),
         },
       });
       // Papel e vínculos mudam juntos; atividades, planos e histórico são preservados.
       if (atual.papel === "professor" && d.papel !== "professor")
         await tx.professorTurma.deleteMany({ where: { professorId: id } });
-    });
-
-    const mudancas: string[] = [];
-    if (atual.papel !== d.papel) mudancas.push(`papel: ${NOME_PAPEL[atual.papel]} → ${NOME_PAPEL[d.papel]}`);
-    if (atual.email !== d.email) mudancas.push("e-mail alterado");
-    if (atual.nome !== d.nome) mudancas.push("nome alterado");
-    await registrar(this.banco, eu, atual.papel !== d.papel ? "usuario.papel" : "usuario.editado", {
-      tipo: "usuario",
-      id,
-      detalhe: `${d.nome}${mudancas.length ? `: ${mudancas.join(", ")}` : ""}`,
+      await registrar(tx, eu, atual.papel !== d.papel ? "usuario.papel" : "usuario.editado", {
+        tipo: "usuario",
+        id,
+        detalhe: `${d.nome}${mudancas.length ? `: ${mudancas.join(", ")}` : ""}`,
+      });
     });
     return { ok: true };
   }
@@ -205,11 +218,16 @@ export class AdminController {
     const pessoa = await this.pessoaDaEscola(eu, id);
     if (!valor && id === eu.id) throw new BadRequestException("Você não pode desativar a sua própria conta.");
     if (!valor && pessoa.papel === "admin") await this.garantirOutroAdmin(eu, id);
-    await this.banco.professor.update({ where: { id }, data: { ativo: valor } });
-    await registrar(this.banco, eu, valor ? "usuario.ativado" : "usuario.desativado", {
-      tipo: "usuario",
-      id,
-      detalhe: pessoa.nome,
+    await this.banco.$transaction(async (transacao) => {
+      await transacao.professor.update({
+        where: { id },
+        data: { ativo: valor, versaoAcesso: { increment: 1 }, redefinicaoHash: null, redefinicaoExpiraEm: null },
+      });
+      await registrar(transacao, eu, valor ? "usuario.ativado" : "usuario.desativado", {
+        tipo: "usuario",
+        id,
+        detalhe: pessoa.nome,
+      });
     });
     return { ok: true };
   }
@@ -217,13 +235,23 @@ export class AdminController {
   @Post("usuarios/:id/nova-senha")
   async novaSenha(@EquipeAtual() eu: Equipe, @Param("id") id: string) {
     const pessoa = await this.pessoaDaEscola(eu, id);
-    const senha = senhaProvisoria();
-    await this.banco.professor.update({
-      where: { id },
-      data: { senhaHash: await bcrypt.hash(senha, 12), senhaProvisoria: true },
+    if (id === eu.id) throw new BadRequestException("Para alterar sua senha, use a área da conta.");
+    configuracaoRecuperacao(); // Sem envio configurado, a pessoa não teria como recuperar o acesso.
+    const senha = gerarSegredo();
+    const senhaHash = await bcrypt.hash(senha, 12);
+    await this.banco.$transaction(async (transacao) => {
+      await transacao.professor.update({
+        where: { id },
+        data: {
+          senhaHash,
+          versaoAcesso: { increment: 1 },
+          redefinicaoHash: null,
+          redefinicaoExpiraEm: null,
+        },
+      });
+      await registrar(transacao, eu, "usuario.senha_redefinida", { tipo: "usuario", id, detalhe: pessoa.nome });
     });
-    await registrar(this.banco, eu, "usuario.senha_redefinida", { tipo: "usuario", id, detalhe: pessoa.nome });
-    return { senhaProvisoria: senha };
+    return { ok: true };
   }
 
   // ─────────────────────────── turmas ───────────────────────────
@@ -255,30 +283,34 @@ export class AdminController {
   @Post("turmas")
   async criarTurma(@EquipeAtual() eu: Equipe, @Body() corpo: unknown) {
     const d = validar(dadosTurma, corpo);
-    const turma = await this.banco.turma.create({
-      data: {
-        id: randomUUID(),
-        instituicaoId: eu.instituicaoId,
-        nome: d.nome,
-        serie: d.serie,
-        periodo: PERIODOS[d.periodo],
-        anoLetivo: d.anoLetivo,
-        codigo: await this.codigoDeTurmaLivre(),
-      },
+    return this.banco.$transaction(async (transacao) => {
+      const turma = await transacao.turma.create({
+        data: {
+          id: randomUUID(),
+          instituicaoId: eu.instituicaoId,
+          nome: d.nome,
+          serie: d.serie,
+          periodo: PERIODOS[d.periodo],
+          anoLetivo: d.anoLetivo,
+          codigo: await this.codigoDeTurmaLivre(),
+        },
+      });
+      await registrar(transacao, eu, "turma.criada", { tipo: "turma", id: turma.id, detalhe: turma.nome });
+      return { id: turma.id };
     });
-    await registrar(this.banco, eu, "turma.criada", { tipo: "turma", id: turma.id, detalhe: turma.nome });
-    return { id: turma.id };
   }
 
   @Put("turmas/:id")
   async editarTurma(@EquipeAtual() eu: Equipe, @Param("id") id: string, @Body() corpo: unknown) {
     const d = validar(dadosTurma, corpo);
     await this.turmaDaEscola(eu, id);
-    await this.banco.turma.update({
-      where: { id },
-      data: { nome: d.nome, serie: d.serie, periodo: PERIODOS[d.periodo], anoLetivo: d.anoLetivo },
+    await this.banco.$transaction(async (transacao) => {
+      await transacao.turma.update({
+        where: { id },
+        data: { nome: d.nome, serie: d.serie, periodo: PERIODOS[d.periodo], anoLetivo: d.anoLetivo },
+      });
+      await registrar(transacao, eu, "turma.editada", { tipo: "turma", id, detalhe: d.nome });
     });
-    await registrar(this.banco, eu, "turma.editada", { tipo: "turma", id, detalhe: d.nome });
     return { ok: true };
   }
 
@@ -286,19 +318,16 @@ export class AdminController {
   async ativarTurma(@EquipeAtual() eu: Equipe, @Param("id") id: string, @Body() corpo: unknown) {
     const { ativa: valor } = validar(ativa, corpo);
     const turma = await this.turmaDaEscola(eu, id);
-    if (valor) {
-      await this.banco.turma.update({ where: { id }, data: { ativa: true } });
-    } else {
+    await this.banco.$transaction(async (transacao) => {
+      await transacao.turma.update({ where: { id }, data: { ativa: valor } });
       // Encerramento e revogação juntos: reabrir não restaura sessões anteriores.
-      await this.banco.$transaction([
-        this.banco.turma.update({ where: { id }, data: { ativa: false } }),
-        this.banco.aluno.updateMany({ where: { turmaId: id }, data: { versaoAcesso: { increment: 1 } } }),
-      ]);
-    }
-    await registrar(this.banco, eu, valor ? "turma.reaberta" : "turma.encerrada", {
-      tipo: "turma",
-      id,
-      detalhe: turma.nome,
+      if (!valor)
+        await transacao.aluno.updateMany({ where: { turmaId: id }, data: { versaoAcesso: { increment: 1 } } });
+      await registrar(transacao, eu, valor ? "turma.reaberta" : "turma.encerrada", {
+        tipo: "turma",
+        id,
+        detalhe: turma.nome,
+      });
     });
     return { ok: true };
   }
@@ -331,21 +360,23 @@ export class AdminController {
     if (!turma.ativa) throw new BadRequestException("Não é possível cadastrar alunos em uma turma encerrada.");
     if (await this.banco.aluno.findFirst({ where: { turmaId: d.turmaId, matricula: d.matricula } }))
       throw new ConflictException("Já existe um aluno com essa matrícula nesta turma.");
-    const aluno = await this.banco.aluno.create({
-      data: {
-        id: randomUUID(),
-        turmaId: d.turmaId,
-        nome: d.nome,
-        matricula: d.matricula,
-        codigoAcesso: await this.codigoDeAlunoLivre(),
-      },
+    return this.banco.$transaction(async (transacao) => {
+      const aluno = await transacao.aluno.create({
+        data: {
+          id: randomUUID(),
+          turmaId: d.turmaId,
+          nome: d.nome,
+          matricula: d.matricula,
+          codigoAcesso: await this.codigoDeAlunoLivre(),
+        },
+      });
+      await registrar(transacao, eu, "aluno.criado", {
+        tipo: "aluno",
+        id: aluno.id,
+        detalhe: `${aluno.nome} · ${turma.nome}`,
+      });
+      return { id: aluno.id, codigoAcesso: aluno.codigoAcesso };
     });
-    await registrar(this.banco, eu, "aluno.criado", {
-      tipo: "aluno",
-      id: aluno.id,
-      detalhe: `${aluno.nome} · ${turma.nome}`,
-    });
-    return { id: aluno.id, codigoAcesso: aluno.codigoAcesso };
   }
 
   @Put("alunos/:id")
@@ -360,21 +391,23 @@ export class AdminController {
       where: { turmaId: d.turmaId, matricula: d.matricula, NOT: { id } },
     });
     if (repetido) throw new ConflictException("Já existe um aluno com essa matrícula nesta turma.");
-    await this.banco.aluno.update({
-      where: { id },
-      data: {
-        nome: d.nome,
-        matricula: d.matricula,
-        turmaId: d.turmaId,
-        // Mesma gravação da transferência: nenhum token da turma anterior continua válido.
-        ...(trocou ? { versaoAcesso: { increment: 1 } } : {}),
-      },
-    });
-    // as jogadas ficam ligadas ao aluno: trocar de turma preserva o histórico (RN-18)
-    await registrar(this.banco, eu, trocou ? "aluno.trocou_turma" : "aluno.editado", {
-      tipo: "aluno",
-      id,
-      detalhe: trocou ? `${d.nome} → ${destino.nome}` : d.nome,
+    await this.banco.$transaction(async (transacao) => {
+      await transacao.aluno.update({
+        where: { id },
+        data: {
+          nome: d.nome,
+          matricula: d.matricula,
+          turmaId: d.turmaId,
+          // Mesma gravação da transferência: nenhum token da turma anterior continua válido.
+          ...(trocou ? { versaoAcesso: { increment: 1 } } : {}),
+        },
+      });
+      // as jogadas ficam ligadas ao aluno: trocar de turma preserva o histórico (RN-18)
+      await registrar(transacao, eu, trocou ? "aluno.trocou_turma" : "aluno.editado", {
+        tipo: "aluno",
+        id,
+        detalhe: trocou ? `${d.nome} → ${destino.nome}` : d.nome,
+      });
     });
     return { ok: true };
   }
@@ -384,11 +417,13 @@ export class AdminController {
     const { ativo: valor } = validar(ativo, corpo);
     const aluno = await this.alunoDaEscola(eu, id);
     // desativar encerra as sessões do aluno no app (a guarda confere "ativo")
-    await this.banco.aluno.update({ where: { id }, data: { ativo: valor } });
-    await registrar(this.banco, eu, valor ? "aluno.ativado" : "aluno.desativado", {
-      tipo: "aluno",
-      id,
-      detalhe: aluno.nome,
+    await this.banco.$transaction(async (transacao) => {
+      await transacao.aluno.update({ where: { id }, data: { ativo: valor, versaoAcesso: { increment: 1 } } });
+      await registrar(transacao, eu, valor ? "aluno.ativado" : "aluno.desativado", {
+        tipo: "aluno",
+        id,
+        detalhe: aluno.nome,
+      });
     });
     return { ok: true };
   }
@@ -403,7 +438,7 @@ export class AdminController {
     @Query("pagina") pagina = "1",
   ) {
     const POR_PAGINA = 50;
-    const n = Math.max(1, Math.min(1000, Number(pagina) || 1));
+    const n = numeroDaPagina(pagina);
     const where = {
       instituicaoId: eu.instituicaoId,
       // filtro por grupo: "usuario" pega usuario.criado, usuario.papel...
@@ -414,7 +449,7 @@ export class AdminController {
       this.banco.registro.count({ where }),
       this.banco.registro.findMany({
         where,
-        orderBy: { criadoEm: "desc" },
+        orderBy: [{ criadoEm: "desc" }, { id: "desc" }],
         skip: (n - 1) * POR_PAGINA,
         take: POR_PAGINA,
       }),
@@ -453,7 +488,7 @@ export class AdminController {
   private async codigoDeTurmaLivre() {
     for (;;) {
       let c = "";
-      for (let i = 0; i < 6; i++) c += ALFABETO_CODIGO[randomInt(ALFABETO_CODIGO.length)];
+      for (let i = 0; i < 6; i++) c += ALFABETO_CODIGO_TURMA[randomInt(ALFABETO_CODIGO_TURMA.length)];
       if (!(await this.banco.turma.findUnique({ where: { codigo: c } }))) return c;
     }
   }

@@ -12,7 +12,7 @@ Banco PostgreSQL (UTF-8) da API do Modolume. O esquema fica em `apps/api/prisma/
 | --- | --- | --- |
 | 1. Catálogos | `formato_atividade`, `mapa`, `habilidade_bncc`, `unidade_tematica` | `missao` (filha de mapa e de formato) |
 | 2. Escola | `instituicao` | `professor`, `turma`, `professor_turma` (vínculo N:N), `aluno` |
-| 3. Aluno | `aluno` | `avatar_aluno` (1:1), `progresso_missao`, `pontos_mapa`, `constelacao_conquistada`, `desafio_concluido`, `compra_loja` |
+| 3. Aluno | `aluno` | `avatar_aluno` (1:1), `progresso_missao`, `ponto_mapa`, `constelacao_conquistada`, `desafio_concluido`, `compra_loja` |
 | 4. Histórico | `aluno`, `missao`, `atividade_professor`, `formato_atividade` | `jogada` |
 | 5. Atividades | `atividade_professor` | `atividade_turma` (N:N com turma), `questao_atividade` → `opcao_questao` |
 | 6. Planejamento | `plano_aula` | `plano_habilidade`, `plano_formato`, `plano_missao`, `plano_aluno_foco` |
@@ -85,10 +85,10 @@ Os catálogos são carregados do núcleo (`packages/core`) pelo seed, que os atu
 | Tabela | Chave | Colunas principais | Observação |
 | --- | --- | --- | --- |
 | `instituicao` | `id` | `nome`, `criado_em` | Escola. |
-| `professor` | `id` | `instituicao_id`, `nome`, `email` (único, minúsculo), `senha_hash` (bcrypt), `papel` (`professor`, `coordenacao` ou `admin`), `disciplina` (só professor), `ativo`, `senha_provisoria`, `ultimo_acesso` | Guarda toda a equipe da escola (ADR 0019). Desativar, não excluir (RN-16). |
+| `professor` | `id` | `instituicao_id`, `nome`, `email` (único, minúsculo), `senha_hash` (bcrypt), `papel` (`professor`, `coordenacao` ou `admin`), `disciplina` (só professor), `ativo`, `senha_provisoria`, `ultimo_acesso`, `versao_acesso`, `redefinicao_hash`, `redefinicao_expira_em` | Guarda a equipe da escola (ADR 0019). `versao_acesso` invalida sessões anteriores. O resumo e o prazo do link são preenchidos ou limpos juntos. A desativação preserva o histórico (RN-16). |
 | `turma` | `id` | `instituicao_id`, `nome`, `serie`, `periodo` (enum), `ano_letivo`, `codigo` (único, `[A-Z0-9]{4,10}`), `ativa` | Código da turma (organização interna); o aluno entra com o código pessoal (ADR 0017). |
 | `professor_turma` | `(professor_id, turma_id)` | `responsavel`, `desde` | Uma turma pode ter mais de um professor (MOD-TUR-003). |
-| `aluno` | `id` | `turma_id`, `nome`, `matricula`, `ativo`, `luzes_gastas`, `codigo_acesso` (único, 8 caracteres sem O/0/I/1/L), `pin_hash` (bcrypt, nulo até o 1º acesso), `pin_falhas` (0 a 10), `bloqueado_ate`, `versao_acesso` (≥ 1), `ultimo_acesso` | `(turma_id, matricula)` é único. Acesso ao app pelo código pessoal + PIN (ADR 0017); um código novo aumenta a `versao_acesso` e derruba as sessões antigas. Sem e-mail, telefone ou foto (MOD-SEG-009). |
+| `aluno` | `id` | `turma_id`, `nome`, `matricula`, `ativo`, `luzes_gastas`, `codigo_acesso` (único, 8 caracteres sem O/0/I/1/L), `pin_hash` (bcrypt, nulo até o 1º acesso), `pin_falhas` (0 a 10), `bloqueado_ate`, `versao_acesso` (≥ 1), `ultimo_acesso` | `(turma_id, matricula)` é único. Códigos novos têm quatro letras e quatro números, guardados sem hífen (ADR 0020). Gerar outro código aumenta `versao_acesso` e revoga as sessões antigas (ADR 0017). Sem e-mail, telefone ou foto (MOD-SEG-009). |
 
 | `registro` | `id` (sequencial) | `instituicao_id`, `usuario_id`, `usuario_nome`, `papel`, `acao`, `alvo_tipo`, `alvo_id`, `detalhe`, `criado_em` | Registro de atividades (auditoria, ADR 0019). Só cresce: o usuário da API inclui e lê, mas não altera nem apaga. |
 
@@ -98,7 +98,7 @@ Os catálogos são carregados do núcleo (`packages/core`) pelo seed, que os atu
 | --- | --- | --- | --- |
 | `avatar_aluno` | `aluno_id` | `pele`, `cabelo`, `cor_cabelo`, `olhos`, `boca`, `acessorio`, `fundo`, `capa`, `svg` | 1:1 com o aluno; o painel mostra o `svg`. O SVG precisa começar com `<svg`. |
 | `progresso_missao` | `(aluno_id, missao_id)` | `estrelas` (0–3), `vezes`, `melhor_acerto` (0–100) | Melhor resultado em cada missão. |
-| `pontos_mapa` | `(aluno_id, mapa_numero)` | `pontos` (≥ 0) | Pontos de luz por mapa (RN-02, RN-03). |
+| `ponto_mapa` | `(aluno_id, mapa_numero)` | `pontos` (≥ 0) | Pontos de luz por mapa (RN-02, RN-03). A tabela `pontos_mapa` foi renomeada por migração, preservando as linhas e relações. |
 | `constelacao_conquistada` | `(aluno_id, mapa_numero)` | `data` | Álbum de constelações (RN-04). |
 | `desafio_concluido` | `(aluno_id, data)` | `missao_id` | Um desafio por dia (RN-11). |
 | `compra_loja` | `(aluno_id, item_id)` | `comprada_em` | Itens permanentes (RN-10). |

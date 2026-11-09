@@ -5,14 +5,14 @@ import { redirect } from "next/navigation";
 import { MISSOES } from "@modolume/core";
 import { listaDeTurmas, professorLogado } from "@/lib/painel/dados";
 import {
-  STATUS_PLANO,
+  SITUACOES_PLANO,
   buscarPlano,
   duplicarPlano,
   excluirPlano,
   formatoValido,
   salvarPlano,
   type DadosPlano,
-  type StatusPlano,
+  type SituacaoPlano,
 } from "@/lib/painel/planejamento";
 
 export interface EstadoPlano {
@@ -33,7 +33,7 @@ export async function gravarPlano(anterior: EstadoPlano, form: FormData): Promis
 
   const turmaId = texto(form, "turmaId");
   const aulas = Number(texto(form, "aulas") || "1");
-  const status = texto(form, "status") as StatusPlano;
+  const status = texto(form, "status") as SituacaoPlano;
   const dados: DadosPlano = {
     turmaId,
     data: texto(form, "data"),
@@ -58,7 +58,7 @@ export async function gravarPlano(anterior: EstadoPlano, form: FormData): Promis
       .map(String)
       .filter((a) => a.startsWith(`${turmaId}-`)),
     observacoes: texto(form, "observacoes"),
-    status: STATUS_PLANO.includes(status) ? status : "rascunho",
+    status: SITUACOES_PLANO.includes(status) ? status : "rascunho",
     registro: texto(form, "registro"),
   };
 
@@ -77,10 +77,10 @@ export async function gravarPlano(anterior: EstadoPlano, form: FormData): Promis
   redirect(`/professor/planejamento/${plano.id}`);
 }
 
-export async function mudarStatus(id: string, status: StatusPlano) {
+export async function mudarStatus(id: string, status: SituacaoPlano) {
   const professor = await professorLogado();
   const plano = await buscarPlano(professor, id);
-  if (plano && STATUS_PLANO.includes(status)) {
+  if (plano && SITUACOES_PLANO.includes(status)) {
     await salvarPlano(professor, { ...plano, status }, id);
     revalidatePath("/professor", "layout");
   }

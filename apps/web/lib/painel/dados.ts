@@ -3,7 +3,7 @@ import { cache } from "react";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import {
-  MockDataProvider,
+  ProvedorDadosDemonstracao,
   desempenhoPorAluno,
   evolucaoMensal,
   desempenhoPorFormato,
@@ -11,7 +11,7 @@ import {
   perfilDoAluno,
   resumoGeral,
   type DadosModolume,
-  type DataProvider,
+  type ProvedorDados,
   type FormatoId,
   type Professor,
 } from "@modolume/core";
@@ -28,8 +28,8 @@ import { COOKIE_SESSAO, lerSessao } from "./sessao";
  * as telas não mudam.
  */
 
-let provider: DataProvider | null = null;
-const demonstracao = () => (provider ??= new MockDataProvider());
+let provider: ProvedorDados | null = null;
+const demonstracao = () => (provider ??= new ProvedorDadosDemonstracao());
 
 /** Resposta de GET /professor/dados. */
 interface DadosDaApi {

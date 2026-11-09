@@ -1,11 +1,12 @@
 import { Body, Controller, Get, Inject, Patch, Post, Put, UseGuards } from "@nestjs/common";
-import { FORMATO_IDS, NIVEIS } from "@modolume/core";
+import { NIVEIS, esquemaData } from "@modolume/core";
+import { esquemaJogada, referenciaDaJogadaValida } from "./jogada.js";
 import { z } from "zod";
 import { rostoDoAvatar } from "./acesso.js";
 import { atividadeDoBanco, dataDoBanco, dataIso, incluirAtividade } from "./conversao.js";
 import { Banco, GuardaAluno, SessaoAtual, hojeBrasil, validar, type Sessao } from "./infra.js";
 
-const dataIsoValida = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
+const dataIsoValida = esquemaData;
 const idCurto = z.string().min(1).max(60);
 
 const perfil = z.object({
@@ -32,24 +33,7 @@ const perfil = z.object({
 });
 
 const inteiro = (max: number) => z.number().int().min(0).max(max);
-const jogada = z.object({
-  id: z.string().min(8).max(80),
-  origem: z.enum(["mapa", "professor"]),
-  missaoId: idCurto,
-  atividadeId: z.string().max(40).nullish(),
-  titulo: z.string().min(1).max(160),
-  formato: z.enum(FORMATO_IDS),
-  rodadas: inteiro(200),
-  acertosDePrimeira: inteiro(200),
-  tentativas: inteiro(2000),
-  percentualConclusao: inteiro(100),
-  percentualAcerto: inteiro(100),
-  tempoSegundos: inteiro(86_400),
-  estrelas: z.number().int().min(1).max(3),
-  dicas: inteiro(500).default(0),
-  data: dataIsoValida,
-});
-const lote = z.object({ jogadas: z.array(jogada).max(300) });
+const lote = z.object({ jogadas: z.array(z.object({ id: z.string().min(8).max(80) }).passthrough()).max(300) });
 
 /** Retrato do progresso de gamificação guardado no app (o mesmo formato do aparelho). */
 const progresso = z.object({
@@ -69,7 +53,7 @@ const progresso = z.object({
 /** O que o app do aluno usa: perfil, envio de jogadas, progresso e atividades do professor. */
 @Controller("aluno")
 @UseGuards(GuardaAluno)
-export class AlunoController {
+export class ControladorAluno {
   constructor(@Inject(Banco) private readonly banco: Banco) {}
 
   @Get("eu")
@@ -109,20 +93,29 @@ export class AlunoController {
    */
   @Post("jogadas")
   async jogadas(@SessaoAtual() s: Sessao, @Body() corpo: unknown) {
-    const { jogadas } = validar(lote, corpo);
+    const { jogadas: entradas } = validar(lote, corpo);
+    const jogadas = entradas.flatMap((entrada) => {
+      const resultado = esquemaJogada.safeParse(entrada);
+      return resultado.success ? [resultado.data] : [];
+    });
     const [missoes, atividades] = await Promise.all([
-      this.banco.missao.findMany({ where: { id: { in: jogadas.map((j) => j.missaoId) } }, select: { id: true } }),
+      this.banco.missao.findMany({
+        where: { id: { in: jogadas.map((j) => j.missaoId) } },
+        select: { id: true, formatoId: true },
+      }),
       this.banco.atividadeProfessor.findMany({
         where: {
           id: { in: jogadas.flatMap((j) => (j.atividadeId ? [j.atividadeId] : [])) },
           turmas: { some: { turmaId: s.turmaId! } },
         },
-        select: { id: true },
+        select: { id: true, formato: true, missaoId: true },
       }),
     ]);
-    const missaoExiste = new Set(missoes.map((m) => m.id));
-    const atividadeValida = new Set(atividades.map((a) => a.id));
-    const aceitas = jogadas.filter((j) => j.origem === "professor" || missaoExiste.has(j.missaoId));
+    const missaoExiste = new Map(missoes.map((m) => [m.id, m]));
+    const atividadeValida = new Map(atividades.map((a) => [a.id, a]));
+    const aceitas = jogadas.filter((j) =>
+      referenciaDaJogadaValida(j, missaoExiste.get(j.missaoId), atividadeValida.get(j.atividadeId ?? "")),
+    );
     await this.banco.jogada.createMany({
       data: aceitas.map((j) => ({
         id: j.id,
@@ -134,7 +127,7 @@ export class AlunoController {
         formatoId: j.formato,
         titulo: j.titulo,
         rodadas: j.rodadas,
-        acertosDePrimeira: Math.min(j.acertosDePrimeira, j.rodadas),
+        acertosDePrimeira: j.acertosDePrimeira,
         tentativas: j.tentativas,
         percentualConclusao: j.percentualConclusao,
         percentualAcerto: j.percentualAcerto,
@@ -145,9 +138,16 @@ export class AlunoController {
       })),
       skipDuplicates: true,
     });
+    // Confirma reenvios do mesmo aluno, inclusive após mudança no catálogo.
+    // Uma colisão de ID com outro aluno não pode ser confirmada.
+    const persistidas = await this.banco.jogada.findMany({
+      where: { alunoId: s.sub, id: { in: entradas.map((entrada) => entrada.id) } },
+      select: { id: true },
+    });
+    const recebidas = new Set(persistidas.map((linha) => linha.id));
     return {
-      recebidas: aceitas.map((j) => j.id),
-      recusadas: jogadas.filter((j) => !aceitas.includes(j)).map((j) => j.id),
+      recebidas: [...recebidas],
+      recusadas: [...new Set(entradas.map((entrada) => entrada.id).filter((id) => !recebidas.has(id)))],
     };
   }
 
@@ -157,7 +157,7 @@ export class AlunoController {
     const [aluno, progressos, pontos, constelacoes, desafios, compras, dias] = await Promise.all([
       this.banco.aluno.findUniqueOrThrow({ where: { id: s.sub }, select: { luzesGastas: true } }),
       this.banco.progressoMissao.findMany({ where: { alunoId: s.sub } }),
-      this.banco.pontosMapa.findMany({ where: { alunoId: s.sub } }),
+      this.banco.pontoMapa.findMany({ where: { alunoId: s.sub } }),
       this.banco.constelacaoConquistada.findMany({ where: { alunoId: s.sub }, include: { mapa: true } }),
       this.banco.desafioConcluido.findMany({ where: { alunoId: s.sub } }),
       this.banco.compraLoja.findMany({ where: { alunoId: s.sub } }),
@@ -211,8 +211,8 @@ export class AlunoController {
         const mapaNumero = Number(num);
         if (!numerosDeMapa.has(mapaNumero)) continue;
         const chave = { alunoId_mapaNumero: { alunoId: s.sub, mapaNumero } };
-        const valor = Math.max((await tx.pontosMapa.findUnique({ where: chave }))?.pontos ?? 0, pontos);
-        await tx.pontosMapa.upsert({
+        const valor = Math.max((await tx.pontoMapa.findUnique({ where: chave }))?.pontos ?? 0, pontos);
+        await tx.pontoMapa.upsert({
           where: chave,
           create: { alunoId: s.sub, mapaNumero, pontos: valor },
           update: { pontos: valor },

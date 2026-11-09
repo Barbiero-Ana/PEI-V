@@ -49,7 +49,14 @@ export default async function FichaPessoa({ params }: { params: Promise<{ id: st
               className="grid gap-4 md:grid-cols-2"
             >
               <Campo nome="nome" rotulo="Nome" valor={p.nome} />
-              <Campo nome="email" rotulo="E-mail" tipo="email" valor={p.email} />
+              <Campo
+                nome="email"
+                rotulo="E-mail"
+                tipo="email"
+                valor={p.email}
+                somenteLeitura={!p.senhaProvisoria}
+                dica={p.senhaProvisoria ? undefined : "O e-mail protege a recuperação de acesso desta conta."}
+              />
               <Escolha nome="papel" rotulo="Papel" opcoes={OPCOES_PAPEL} valor={p.papel} />
               <Campo
                 nome="disciplina"
@@ -64,17 +71,21 @@ export default async function FichaPessoa({ params }: { params: Promise<{ id: st
 
         <Painel titulo="Acesso">
           <div className="flex flex-col gap-6">
-            <div>
-              <p className="text-sm text-texto-suave">
-                Esqueceu a senha? Crie uma senha provisória e repasse à pessoa. Ela troca no próximo acesso.
-              </p>
-              <FormularioAcao
-                acao={novaSenhaUsuario.bind(null, p.id)}
-                botao="Criar senha provisória"
-                variante="secundario"
-                className="mt-3"
-              />
-            </div>
+            {!p.eu && (
+              <div>
+                <p className="text-sm text-texto-suave">
+                  Revogue a credencial anterior se necessário. A própria pessoa solicita um link pelo e-mail em
+                  Recuperar acesso.
+                </p>
+                <FormularioAcao
+                  acao={novaSenhaUsuario.bind(null, p.id)}
+                  botao="Revogar credencial anterior"
+                  confirmar="Revogar a senha e todas as sessões desta pessoa? Ela precisará recuperar o acesso por e-mail."
+                  variante="secundario"
+                  className="mt-3"
+                />
+              </div>
+            )}
             {p.eu ? (
               <p className="text-sm text-texto-suave">Esta é a sua conta: você não pode desativá-la.</p>
             ) : (

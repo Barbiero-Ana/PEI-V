@@ -30,7 +30,7 @@ SENHA_DEMO="<SENHA_PRIVADA_PARA_CARGA_LOCAL>"
 
 Não execute com placeholders literais. Caracteres especiais na senha precisam ser representados corretamente na URL. O banco embutido provisiona a conta definida em `scripts/banco-local.ts`; não cria automaticamente um usuário `modolume_api`. Para desenvolvimento isolado, ambas as conexões podem usar essa conta local. Isso não homologa privilégios mínimos.
 
-O SQL `prisma/sql/papel-da-api.sql` visa produção e fixa `railway` como banco. Não aplique diretamente ao banco `modolume`. Migrações e seed escrevem no banco indicado pelas respectivas conexões; confirme o destino antes de qualquer execução.
+O SQL `prisma/sql/papel-da-api.sql` usa o banco da conexão atual e mantém `registro` restrito a leitura e acréscimo. Migrações e seed escrevem no banco indicado pelas respectivas conexões. Confira o destino antes de executar. Veja a [arquitetura atual](../08-engenharia/arquitetura.md) para configurar o Resend e a recuperação de acesso.
 
 ### Carregamento
 

@@ -43,8 +43,7 @@ export interface Eu {
 export const euLogado = cache(() => apiDaEquipe<Eu>("/auth/eu"));
 
 /** Resultado padrão das ações (formulários): ok ou a mensagem de erro já em português. */
-export type ResultadoAcao =
-  { ok: true; mensagem?: string; senha?: string; codigo?: string } | { ok: false; erro: string };
+export type ResultadoAcao = { ok: true; mensagem?: string; codigo?: string } | { ok: false; erro: string };
 
 /** Executa a chamada de uma ação e devolve a mensagem de erro da API, em vez de quebrar a página. */
 export async function acao(

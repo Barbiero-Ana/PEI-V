@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { Animated, View, type StyleProp, type ViewStyle } from "react-native";
+import { Animated, View, type StyleProp, type ViewInstance, type ViewStyle } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { useUltimo } from "@/lib/useUltimo";
 
@@ -20,10 +20,10 @@ interface Retangulo {
 }
 
 interface Contexto {
-  registrar: (id: string, ref: React.RefObject<View | null>) => () => void;
+  registrar: (id: string, ref: React.RefObject<ViewInstance | null>) => () => void;
   iniciar: (f: {
     conteudo: ReactNode;
-    item: View | null;
+    item: ViewInstance | null;
     w: number;
     h: number;
     x: number;
@@ -45,8 +45,8 @@ const dentro = (r: Retangulo, x: number, y: number, folga = 0) =>
 const FOLGA = 18;
 
 export function AreaArraste({ children, style }: { children: ReactNode; style?: StyleProp<ViewStyle> }) {
-  const area = useRef<View>(null);
-  const zonas = useRef(new Map<string, React.RefObject<View | null>>());
+  const area = useRef<ViewInstance>(null);
+  const zonas = useRef(new Map<string, React.RefObject<ViewInstance | null>>());
   const retangulos = useRef(new Map<string, Retangulo>());
   const origem = useRef({ x: 0, y: 0 });
   const deslocamento = useRef({ dx: 0, dy: 0 });
@@ -178,7 +178,7 @@ export function ZonaSoltura({
   desativada?: boolean;
 }) {
   const ctx = useArea();
-  const ref = useRef<View>(null);
+  const ref = useRef<ViewInstance>(null);
   useEffect(() => (desativada ? undefined : ctx.registrar(id, ref)), [id, desativada]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <View ref={ref} collapsable={false} style={[style, ctx.sobre === id && estiloAtivo]}>
@@ -210,7 +210,7 @@ export function Arrastavel({
 }) {
   const ctx = useArea();
   const tamanho = useRef({ w: 0, h: 0 });
-  const eu = useRef<View>(null);
+  const eu = useRef<ViewInstance>(null);
   const [arrastando, setArrastando] = useState(false);
   const cb = useUltimo({ onSoltar, onToque, conteudo: fantasma ?? children, ctx });
 

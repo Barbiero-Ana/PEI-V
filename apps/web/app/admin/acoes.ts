@@ -16,7 +16,6 @@ function resultado(r: Awaited<ReturnType<typeof acao>>, mensagem: string, caminh
   return {
     ok: true,
     mensagem,
-    senha: typeof r.dados.senhaProvisoria === "string" ? r.dados.senhaProvisoria : undefined,
     codigo: typeof r.dados.codigoAcesso === "string" ? r.dados.codigoAcesso : undefined,
   };
 }
@@ -30,7 +29,7 @@ const dadosPessoa = (f: FormData) => ({
 
 export async function criarUsuario(_: ResultadoAcao | null, f: FormData) {
   const r = await acao("/admin/usuarios", { metodo: "POST", corpo: dadosPessoa(f) });
-  return resultado(r, "Pessoa cadastrada. Repasse a senha provisória: ela aparece só agora.", [
+  return resultado(r, "Pessoa cadastrada. Ela deve solicitar o link em Recuperar acesso, usando seu e-mail.", [
     "/admin/usuarios",
     "/admin",
   ]);
@@ -51,7 +50,9 @@ export async function alternarUsuario(id: string, ativo: boolean, _: ResultadoAc
 
 export async function novaSenhaUsuario(id: string, _: ResultadoAcao | null) {
   const r = await acao(`/admin/usuarios/${encodeURIComponent(id)}/nova-senha`, { metodo: "POST" });
-  return resultado(r, "Senha provisória criada. Repasse à pessoa: ela aparece só agora.", [`/admin/usuarios/${id}`]);
+  return resultado(r, "Acesso anterior revogado. A pessoa deve solicitar o link em Recuperar acesso.", [
+    `/admin/usuarios/${id}`,
+  ]);
 }
 
 const dadosTurma = (f: FormData) => ({

@@ -1,7 +1,7 @@
 ---
 modulo: AUT
 prd: PRD-01
-atualizado: 2026-11-05
+atualizado: 2026-11-09
 status: para revisão
 ---
 
@@ -52,7 +52,7 @@ Testes funcionais de cada perfil (acesso permitido e negado), teste de expiraç�
 | MOD-AUT-006 | Manter a sessão ativa entre aberturas do aplicativo enquanto a autenticação for válida. | E | T | Implementado |
 | MOD-AUT-007 | Permitir a redefinição de senha por e-mail para professor, gestão e administrador. | I | T | Pendente |
 | MOD-AUT-008 | Permitir que o professor redefina o acesso de um aluno (zerar o PIN ou gerar novo código). | I | T | Implementado |
-| MOD-AUT-009 | Permitir o acesso do aluno por um código pessoal (passado pelo professor ou coordenação) e um PIN de 4 números criado no primeiro acesso, sem exigir e-mail e sem escolher nome numa lista. | E | T | Implementado |
+| MOD-AUT-009 | Permitir o acesso do aluno por um código pessoal (passado pelo professor ou coordenação) e um PIN de 4 números criado no primeiro acesso, sem exigir e-mail e sem escolher nome numa lista. Códigos novos têm quatro letras e quatro números, como `BDFH-2468`, conforme o ADR 0020. | E | T | Implementado |
 
 **Situação atual, em detalhe**
 
@@ -102,8 +102,10 @@ Critérios marcados com [x] já são atendidos pelo sistema atual (com dados de 
 - [x] CA-02: Dado um PIN fácil de adivinhar (todos iguais ou em sequência, como 1234), quando o aluno tenta criá-lo, então vê "Esse PIN é fácil de adivinhar. Escolha outro."
 - [x] CA-03: Dado um aluno com PIN, quando ele digita o código e o PIN certo, então entra direto na própria conta; com o PIN errado, vê quantas tentativas restam.
 - [x] CA-04: Dados 5 PINs errados seguidos, então o acesso fica bloqueado por 15 minutos, mesmo com o PIN certo.
-- [x] CA-05: Dado um código inválido ou de aluno desativado, então o aluno vê "Código não encontrado. Confira com o seu professor."
+- [x] CA-05: Dado um código bem formado que não existe ou pertence a um aluno desativado, então o aluno vê "Código não encontrado. Confira com o seu professor."
 - [x] CA-06: Em nenhum momento o app pede e-mail nem mostra a lista de nomes da turma.
+- [ ] CA-07: Dado um código no formato novo, quando o aluno o digita em minúsculas, com hífen, com espaço entre os grupos ou sem separador, então o app identifica a mesma conta. Um código antigo ainda não regenerado continua válido.
+- [ ] CA-08: Dado um código incompleto ou com caracteres inválidos, então o app explica o formato e permite corrigir a entrada.
 
 ### HU-AUT-03 — Cada perfil vê só o que lhe cabe
 
@@ -132,6 +134,7 @@ Critérios marcados com [x] já são atendidos pelo sistema atual (com dados de 
 - [x] CA-02: Dado um aluno que esqueceu o PIN, quando o professor confirma "Zerar PIN", então o aluno cria um PIN novo no próximo acesso, com o mesmo código, e o progresso salvo é mantido.
 - [x] CA-03: Dado um código vazado ou um celular perdido, quando o professor confirma "Novo código", então o código antigo deixa de funcionar e o aluno sai do app em todos os aparelhos.
 - [x] CA-04: O professor só zera o PIN ou gera código de alunos das próprias turmas; para outro aluno, a API responde "Aluno não encontrado."
+- [ ] CA-05: Ao cadastrar um aluno ou gerar um novo código, o painel mostra e copia quatro letras, um hífen e quatro números, conforme o [ADR 0020](../03-decisoes/0020-codigo-do-aluno-com-letras-e-numeros.md).
 
 ## 8. MVP e fases
 

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Simbolo } from "@/components/simbolo";
-import { Wordmark } from "@/components/logo";
+import { NomeMarca } from "@/components/logo";
 import { CONTATO_EMAIL } from "@/lib/planos";
 import { OndaDivisor, OndasFaixa } from "./ondas";
 
@@ -44,7 +44,7 @@ export function Rodape() {
           <div>
             <Link href="/" className="inline-flex items-end gap-2" aria-label="Modolume, início">
               <Simbolo tamanho={40} rotulo="" />
-              <Wordmark className="text-[1.6rem] leading-none !text-white" />
+              <NomeMarca className="text-[1.6rem] leading-none !text-white" />
             </Link>
             <p className="mt-4 max-w-xs leading-relaxed text-lilas">
               Ideias que se iluminam. Missões de Matemática para o aluno e um painel que mostra ao professor como cada

@@ -1,4 +1,4 @@
-import { StyleSheet } from "react-native";
+import { StyleSheet, type ImageStyle, type TextStyle, type ViewStyle } from "react-native";
 import { lerPrefs } from "@/lib/acessibilidadeSalva";
 
 /**
@@ -119,9 +119,9 @@ export function porTema<T extends object>(criar: () => T): T {
 }
 
 /** StyleSheet.create que acompanha a paleta ativa. */
-export function criarEstilos<T extends StyleSheet.NamedStyles<T> | StyleSheet.NamedStyles<any>>(
-  criar: () => T & StyleSheet.NamedStyles<any>,
-): T {
+export function criarEstilos<T extends Record<string, ViewStyle | TextStyle | ImageStyle>>(
+  criar: () => T,
+): Readonly<T> {
   return porTema(() => StyleSheet.create(criar()));
 }
 

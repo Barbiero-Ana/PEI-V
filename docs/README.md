@@ -12,6 +12,7 @@ Toda a documentação do projeto fica nesta pasta, separada por tipo. Os links i
 | `03-decisoes/` | ADRs | Registros de decisão de arquitetura: o **como** e o **porquê** técnico. |
 | `04-ux/` | Usabilidade | Diretrizes de interface: heurísticas de Nielsen, lei de Hick e lei de Fitts aplicadas ao painel. |
 | `05-referencia/` | Referência | Contexto completo do projeto e o [[Modelo de dados]] (dicionário e diagrama do banco). |
+| `08-engenharia/` | Engenharia | [Arquitetura, relatório de auditoria e rastreabilidade](08-engenharia/README.md). |
 | `99-arquivo/` | Arquivo | Versões substituídas. Não editar; servem só de histórico. |
 
 ## Ordem de leitura
@@ -29,6 +30,8 @@ PRD do produto  →  PRD de módulo  →  requisito (MOD-XXX-NNN)  →  históri
 ```
 
 ## PRDs de módulo
+
+Para acompanhar a jornada completa do aluno, incluindo seu cadastro pela escola, consulte o [mapa do módulo do aluno](08-engenharia/modulo-do-aluno.md).
 
 | PRD | Módulo | Sigla | Componente |
 | --- | --- | :---: | --- |

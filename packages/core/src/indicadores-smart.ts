@@ -1,5 +1,5 @@
-import { FORMATOS_ATIVIDADE } from "./formats";
-import type { DadosModolume, Id } from "./types";
+import { FORMATOS_ATIVIDADE } from "./formato";
+import type { DadosModolume, Id } from "./entidade";
 
 /**
  * Indicadores SMART do painel do professor: cada um é Específico (o que mede),
@@ -14,7 +14,7 @@ import type { DadosModolume, Id } from "./types";
 export const JANELA_SMART_DIAS = 28;
 
 export type IdIndicador = "IND-01" | "IND-02" | "IND-03" | "IND-04" | "IND-05" | "IND-06";
-export type StatusMeta = "atingida" | "perto" | "abaixo" | "sem-dados";
+export type SituacaoMeta = "atingida" | "perto" | "abaixo" | "sem-dados";
 
 export interface MetaSmart {
   valor: number;
@@ -114,7 +114,7 @@ export interface IndicadorSmart extends DefinicaoIndicador {
   valor: number | null;
   /** Valor nas 4 semanas anteriores, para comparação. */
   anterior: number | null;
-  status: StatusMeta;
+  status: SituacaoMeta;
   /** Complemento do valor, como o nome do formato no IND-03. */
   detalhe?: string;
   /** Resultados que sustentam o número. */
@@ -146,7 +146,7 @@ export function somarDias(iso: string, dias: number): string {
 }
 
 /** Situação do valor em relação à meta. */
-export function statusDaMeta(valor: number | null, meta: MetaSmart): StatusMeta {
+export function situacaoDaMeta(valor: number | null, meta: MetaSmart): SituacaoMeta {
   if (valor === null) return "sem-dados";
   const folga = meta.sentido === "minimo" ? valor - meta.valor : meta.valor - valor;
   if (folga >= 0) return "atingida";
@@ -231,7 +231,7 @@ export function indicadoresSmart(data: DadosModolume, filtro: { turmaId?: Id; re
       ...def,
       valor,
       anterior: antes?.[def.id] ?? null,
-      status: statusDaMeta(valor, def.meta),
+      status: situacaoDaMeta(valor, def.meta),
       detalhe: def.id === "IND-03" ? atual?.piorFormato : def.id === "IND-02" ? atual?.textoAbaixo : undefined,
       amostra,
     };

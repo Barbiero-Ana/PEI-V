@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { IndicadorSmart, PainelSmart, StatusMeta } from "@modolume/core";
+import type { IndicadorSmart, PainelSmart, SituacaoMeta } from "@modolume/core";
 import { dataCurta, decimal, pct } from "./blocos";
 import { IconeAlerta, IconeMais } from "./icones";
 
@@ -9,7 +9,7 @@ import { IconeAlerta, IconeMais } from "./icones";
  * completa, para o professor entender o número sem sair da tela.
  */
 
-const SITUACAO: Record<StatusMeta, { rotulo: string; classe: string }> = {
+const SITUACAO: Record<SituacaoMeta, { rotulo: string; classe: string }> = {
   atingida: { rotulo: "Meta atingida", classe: "bg-roxo-claro text-roxo-escuro" },
   perto: { rotulo: "Perto da meta", classe: "bg-azul-claro text-[#1F6E9F]" },
   abaixo: { rotulo: "Abaixo da meta", classe: "bg-pessego-claro text-alerta" },

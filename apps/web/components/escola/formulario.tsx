@@ -2,6 +2,7 @@
 
 import { useActionState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
+import { formatarCodigoAcesso } from "@modolume/core";
 import type { ResultadoAcao } from "@/lib/escola/api";
 
 /** Classes dos campos das áreas da equipe (iguais às do login). */
@@ -72,19 +73,11 @@ export function FormularioAcao({
         {estado?.ok ? (
           <div className="rounded-xl bg-roxo-claro px-4 py-3 text-sm text-tinta">
             <p>{estado.mensagem}</p>
-            {estado.senha ? (
-              <p className="mt-2">
-                Senha provisória:{" "}
-                <span className="select-all rounded-lg bg-superficie px-2 py-1 font-mono text-base font-semibold tracking-wider">
-                  {estado.senha}
-                </span>
-              </p>
-            ) : null}
             {estado.codigo ? (
               <p className="mt-2">
                 Código de acesso ao app:{" "}
                 <span className="select-all rounded-lg bg-superficie px-2 py-1 font-mono text-base font-semibold tracking-wider">
-                  {estado.codigo.slice(0, 4)}-{estado.codigo.slice(4)}
+                  {formatarCodigoAcesso(estado.codigo)}
                 </span>
               </p>
             ) : null}
@@ -102,6 +95,7 @@ export function Campo({
   tipo = "text",
   valor,
   obrigatorio = true,
+  somenteLeitura = false,
   dica,
 }: {
   nome: string;
@@ -109,6 +103,7 @@ export function Campo({
   tipo?: string;
   valor?: string | number | null;
   obrigatorio?: boolean;
+  somenteLeitura?: boolean;
   dica?: string;
 }) {
   return (
@@ -123,6 +118,7 @@ export function Campo({
         type={tipo}
         defaultValue={valor ?? ""}
         required={obrigatorio}
+        readOnly={somenteLeitura}
         className={CAMPO}
       />
       {dica ? <p className="text-xs text-texto-suave">{dica}</p> : null}
