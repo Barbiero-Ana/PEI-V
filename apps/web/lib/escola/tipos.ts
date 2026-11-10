@@ -1,4 +1,5 @@
 import type { PapelEquipe } from "@/lib/painel/sessao";
+import type { Segmento } from "@modolume/core";
 
 /** Respostas da API para as áreas do administrador e da coordenação. */
 
@@ -31,6 +32,8 @@ export interface Pessoa {
   email: string;
   papel: PapelEquipe;
   disciplina: string | null;
+  materiaId: string | null;
+  segmento: Segmento | null;
   ativo: boolean;
   senhaProvisoria: boolean;
   ultimoAcesso: string | null;
@@ -39,10 +42,18 @@ export interface Pessoa {
   eu: boolean;
 }
 
+export interface Materia {
+  id: string;
+  nome: string;
+  _count: { professores: number };
+}
+
 export interface TurmaAdmin {
   id: string;
   nome: string;
+  codigo: string;
   serie: string;
+  segmento: Segmento | null;
   periodo: string;
   anoLetivo: number;
   ativa: boolean;
@@ -79,6 +90,7 @@ export interface TurmaCoordenacao {
   id: string;
   nome: string;
   serie: string;
+  segmento: Segmento | null;
   periodo: string;
   professores: { id: string; nome: string; disciplina: string | null }[];
   alunos: number;
@@ -94,6 +106,7 @@ export interface TurmaCoordenacao {
 
 export interface VisaoCoordenacao {
   instituicao: { id: string; nome: string };
+  segmento: Segmento | null;
   janelaDias: number;
   escola: {
     turmas: number;
@@ -170,6 +183,7 @@ export const ACOES: Record<string, string> = {
   "usuario.ativado": "Reativou acesso",
   "usuario.desativado": "Desativou acesso",
   "usuario.senha_redefinida": "Criou senha provisória",
+  "materia.criada": "Cadastrou matéria",
   "turma.criada": "Criou turma",
   "turma.editada": "Editou turma",
   "turma.encerrada": "Encerrou turma",
@@ -196,6 +210,7 @@ export const GRUPOS_DE_ACAO = [
   { valor: "", rotulo: "Todas as ações" },
   { valor: "login", rotulo: "Entradas no painel" },
   { valor: "usuario", rotulo: "Equipe e permissões" },
+  { valor: "materia", rotulo: "Matérias" },
   { valor: "turma", rotulo: "Turmas e vínculos" },
   { valor: "aluno", rotulo: "Alunos e acesso ao app" },
   { valor: "atividade", rotulo: "Atividades" },

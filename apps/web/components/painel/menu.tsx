@@ -53,7 +53,7 @@ const PROFESSOR = [
 
 /** Coordenação: acompanha a escola e vincula professores; não cria atividades nem planos. */
 const COORDENACAO = [
-  { nome: null, secoes: [{ href: "/coordenacao", nome: "Visão da escola", Icone: IconeVisao }] },
+  { nome: null, secoes: [{ href: "/coordenacao", nome: "Visão do segmento", Icone: IconeVisao }] },
   {
     nome: "Acompanhar",
     secoes: [
@@ -75,6 +75,7 @@ const ADMIN = [
     secoes: [
       { href: "/admin/usuarios", nome: "Equipe e acessos", Icone: IconeEquipe },
       { href: "/admin/turmas", nome: "Turmas e alunos", Icone: IconeTurmas },
+      { href: "/admin/materias", nome: "Matérias", Icone: IconePlano },
     ],
   },
   {

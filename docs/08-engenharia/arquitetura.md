@@ -1,6 +1,6 @@
 # Arquitetura do Modolume
 
-O aplicativo Expo atende o aluno. A web Next.js atende a equipe escolar e apresenta o site público. A API NestJS valida operações e aplica permissões. O PostgreSQL mantém o histórico institucional. O núcleo TypeScript reúne catálogo, cálculos e validações que podem ser compartilhados sem depender da interface ou do banco.
+O aplicativo Expo atende o aluno no Android e no iOS. O portal Next.js atende administrador, coordenação e professor. A API NestJS valida operações e aplica permissões. O PostgreSQL mantém o histórico institucional. O núcleo TypeScript reúne catálogo, cálculos e validações que podem ser compartilhados sem depender da interface ou do banco.
 
 ```mermaid
 flowchart LR
@@ -38,6 +38,10 @@ A equipe entra com e-mail e senha. O banco guarda hash bcrypt. O JWT de equipe d
 
 Em `/redefinir-senha`, a pessoa solicita um link para o e-mail cadastrado. A API guarda o resumo SHA-256 de um valor aleatório de 256 bits e o prazo. A confirmação atualiza a senha, consome o resumo e registra o evento em uma transação. O novo token segue no fragmento da URL. O administrador pode revogar a credencial quando o canal de e-mail estiver configurado. Pode ajustar o e-mail durante o cadastro inicial. Depois de definida a senha, o e-mail é protegido contra alteração administrativa, inclusive após revogação.
 
+No app, `estado/sessao.ts` controla a credencial e sua migração. `estado/identidade.tsx` conecta o
+repositório ao SecureStore. O cache e a fila continuam em `estado/isolamento.ts` e são lidos por identidade.
+A autenticação e a persistência de progresso têm ciclos separados. [ADR 0023](../03-decisoes/0023-sessao-movel-no-cofre-nativo.md).
+
 Configure na API `RESEND_API_KEY`, `EMAIL_REMETENTE` em domínio verificado e `WEB_URL` apontando para a origem confiável da web. `REDEFINICAO_MINUTOS` aceita inteiros de 5 a 60 e tem padrão 30. Em produção a origem exige HTTPS. O fluxo responde com indisponibilidade se faltarem variáveis. O [contrato de envio do Resend](https://resend.com/docs/api-reference/emails/send-email) foi exercitado com resposta simulada. A [orientação de recuperação da OWASP](https://cheatsheetseries.owasp.org/cheatsheets/Forgot_Password_Cheat_Sheet.html) fundamenta o uso único, o prazo e a revogação.
 
 ## Envio de jogadas
@@ -48,6 +52,6 @@ Atividades recolhidas continuam aceitando resultados offline quando o vínculo e
 
 ## Operação e verificação
 
-Execute as suítes de cada pacote, `pnpm -r typecheck`, `pnpm -r lint` e a build web. `pnpm --filter @modolume/api test:banco` cria um PostgreSQL descartável em `tmp/auditoria-banco-*` e usa apenas dados sintéticos. A API usa `DATABASE_URL` com `modolume_api` e `DIRECT_URL` para migrações. Configure `API_URL` e os segredos do ambiente web antes de iniciar em produção. A demonstração sem API fica restrita ao desenvolvimento.
+Execute as suítes de cada pacote, `pnpm -r typecheck`, `pnpm -r lint` e a build web. `pnpm --filter @modolume/api test:banco` cria um PostgreSQL descartável em `tmp/auditoria-banco-*` e usa apenas dados sintéticos. A API usa `DATABASE_URL` com `modolume_api` e `DIRECT_URL` para migrações. Configure `API_URL` e os segredos do ambiente web antes de iniciar em produção. No app, a demonstração do visitante guarda o progresso no aparelho. A sessão escolar exige a API e tem dados separados por aluno.
 
 Antes de aplicar uma migração a uma base institucional, valide o backup, o destino de `DIRECT_URL` e os privilégios efetivos do papel em homologação. O ambiente real precisa de teste de HTTPS, entrega de e-mail, fluxos móveis e carga, conforme a [matriz](matriz.md).

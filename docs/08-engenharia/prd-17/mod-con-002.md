@@ -23,6 +23,6 @@ Consulte as regras transversais no PRD-17.
 - [apps/mobile/src/estado/isolamento.ts](../../../apps/mobile/src/estado/isolamento.ts)
 - [packages/core](../../../packages/core)
 
-**Aceite nesta auditoria** Pendente.
+**Aceite nesta auditoria** Evidência parcial.
 
-Aceite individual pendente de verificação nesta auditoria. Consulte os cenários e as evidências do módulo.
+A conclusão local grava recompensa e fila na mesma operação. A API ainda recebe a jogada e o retrato de gamificação por operações distintas.

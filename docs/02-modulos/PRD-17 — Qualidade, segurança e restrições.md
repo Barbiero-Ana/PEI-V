@@ -69,7 +69,7 @@ ADF-002: as missões indicam o conteúdo; falta a revisão pedagógica do códig
 
 | ID | Critério | Prior. | Verif. | Situação |
 | --- | --- | :---: | :---: | :---: |
-| MOD-CMP-001 | App: funciona nas versões de Android suportadas pelo Expo SDK adotado (iOS, se a versão para iPhone for contratada). | E | T | Implementado |
+| MOD-CMP-001 | App: funciona nas versões de Android e iOS suportadas pelo Expo SDK adotado. A distribuição inicial prioriza Android. | E | T | Implementado |
 | MOD-CMP-002 | Web: funciona nas duas versões mais recentes de Chrome, Edge, Firefox e Safari. | E | T | A medir |
 | MOD-CMP-003 | App e web trocam dados por uma interface única de serviços. | E | N | Implementado |
 

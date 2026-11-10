@@ -72,12 +72,17 @@ const banco = {
       where,
       data,
     }: {
-      where: { turmaId: string };
-      data: { versaoAcesso: { increment: number } };
+      where: Partial<typeof aluno> & { turma?: { ativa: boolean } };
+      data: Omit<Partial<typeof aluno>, "versaoAcesso"> & { versaoAcesso?: { increment: number } };
     }) => {
-      if (aluno.turmaId !== where.turmaId) return { count: 0 };
+      const { turma, ...campos } = where;
+      if (turma && turma.ativa !== comTurma().turma.ativa) return { count: 0 };
+      if (Object.entries(campos).some(([chave, valor]) => aluno[chave as keyof typeof aluno] !== valor))
+        return { count: 0 };
       escritasAluno++;
-      aluno.versaoAcesso += data.versaoAcesso.increment;
+      const { versaoAcesso, ...novosValores } = data;
+      Object.assign(aluno, novosValores);
+      if (versaoAcesso) aluno.versaoAcesso += versaoAcesso.increment;
       return { count: 1 };
     },
     findUnique: async ({ where }: { where: { id?: string; codigoAcesso?: string } }) =>

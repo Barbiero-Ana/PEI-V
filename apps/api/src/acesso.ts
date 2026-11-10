@@ -157,6 +157,7 @@ export class ControladorAcesso {
       email: pessoa.email,
       papel: pessoa.papel,
       disciplina: pessoa.disciplina,
+      segmento: pessoa.segmento,
       senhaProvisoria: pessoa.senhaProvisoria,
       instituicao: { id: pessoa.instituicao.id, nome: pessoa.instituicao.nome },
     };
@@ -275,57 +276,77 @@ export class ControladorAcesso {
   @Post("auth/aluno")
   async entrarAluno(@Body() corpo: unknown) {
     const { codigo, pin } = validar(entradaAluno, corpo);
-    const aluno = await this.banco.aluno.findUnique({
-      where: { codigoAcesso: codigo },
-      include: { turma: true, avatar: true },
-    });
-    if (!aluno || !aluno.ativo || !aluno.turma.ativa) throw new UnauthorizedException(NAO_ACHOU);
-
-    const agora = new Date();
-    if (aluno.bloqueadoAte && aluno.bloqueadoAte > agora) {
-      const minutos = Math.ceil((aluno.bloqueadoAte.getTime() - agora.getTime()) / 60_000);
-      throw new HttpException(
-        `Muitas tentativas. Espere ${minutos} min ou peça ao professor para zerar o seu PIN.`,
-        HttpStatus.TOO_MANY_REQUESTS,
-      );
-    }
-
-    if (!aluno.pinHash) {
-      if (pinFraco(pin)) throw new UnauthorizedException("Esse PIN é fácil de adivinhar. Escolha outro.");
-      await this.banco.aluno.update({
-        where: { id: aluno.id },
-        data: { pinHash: await bcrypt.hash(pin, 10), pinFalhas: 0, bloqueadoAte: null },
+    const buscarAluno = () =>
+      this.banco.aluno.findUnique({
+        where: { codigoAcesso: codigo },
+        include: { turma: true, avatar: true },
       });
-    } else if (!(await bcrypt.compare(pin, aluno.pinHash))) {
+    let pinNovo: string | undefined;
+    let versaoInicial: number | undefined;
+    for (let tentativa = 0; tentativa < 12; tentativa++) {
+      const aluno = await buscarAluno();
+      if (!aluno || !aluno.ativo || !aluno.turma.ativa) throw new UnauthorizedException(NAO_ACHOU);
+      versaoInicial ??= aluno.versaoAcesso;
+      if (aluno.versaoAcesso !== versaoInicial) {
+        throw new UnauthorizedException("Seu acesso mudou. Entre de novo.");
+      }
+
+      const agora = new Date();
+      if (aluno.bloqueadoAte && aluno.bloqueadoAte > agora) {
+        const minutos = Math.ceil((aluno.bloqueadoAte.getTime() - agora.getTime()) / 60_000);
+        throw new HttpException(
+          `Muitas tentativas. Espere ${minutos} min ou peça ao professor para zerar o seu PIN.`,
+          HttpStatus.TOO_MANY_REQUESTS,
+        );
+      }
+
+      if (!aluno.pinHash && pinFraco(pin)) {
+        throw new UnauthorizedException("Esse PIN é fácil de adivinhar. Escolha outro.");
+      }
+      const correto = aluno.pinHash ? await bcrypt.compare(pin, aluno.pinHash) : true;
+      if (!aluno.pinHash) pinNovo ??= await bcrypt.hash(pin, 10);
       const falhas = aluno.pinFalhas + 1;
       const bloquear = falhas >= MAX_FALHAS;
-      await this.banco.aluno.update({
-        where: { id: aluno.id },
-        data: bloquear
-          ? { pinFalhas: 0, bloqueadoAte: new Date(agora.getTime() + BLOQUEIO_MS) }
-          : { pinFalhas: falhas },
+      const alterados = await this.banco.aluno.updateMany({
+        where: {
+          id: aluno.id,
+          codigoAcesso: codigo,
+          turmaId: aluno.turmaId,
+          turma: { ativa: true },
+          ativo: true,
+          versaoAcesso: aluno.versaoAcesso,
+          pinHash: aluno.pinHash,
+          pinFalhas: aluno.pinFalhas,
+          bloqueadoAte: aluno.bloqueadoAte,
+        },
+        data: correto
+          ? { pinHash: aluno.pinHash ?? pinNovo, ultimoAcesso: agora, pinFalhas: 0, bloqueadoAte: null }
+          : bloquear
+            ? { pinFalhas: 0, bloqueadoAte: new Date(agora.getTime() + BLOQUEIO_MS) }
+            : { pinFalhas: falhas },
       });
-      throw new UnauthorizedException(
-        bloquear
-          ? "PIN errado de novo. O acesso ficou bloqueado por 15 minutos."
-          : `PIN errado. Você ainda tem ${MAX_FALHAS - falhas} ${MAX_FALHAS - falhas === 1 ? "tentativa" : "tentativas"}.`,
-      );
-    }
+      // Se outra requisição alterou o PIN ou o contador, revalida no estado vigente.
+      if (alterados.count !== 1) continue;
+      if (!correto) {
+        throw new UnauthorizedException(
+          bloquear
+            ? "PIN errado de novo. O acesso ficou bloqueado por 15 minutos."
+            : `PIN errado. Você ainda tem ${MAX_FALHAS - falhas} ${MAX_FALHAS - falhas === 1 ? "tentativa" : "tentativas"}.`,
+        );
+      }
 
-    await this.banco.aluno.update({
-      where: { id: aluno.id },
-      data: { ultimoAcesso: agora, pinFalhas: 0, bloqueadoAte: null },
-    });
-    const sessao: Sessao = { sub: aluno.id, papel: "aluno", turmaId: aluno.turmaId, v: aluno.versaoAcesso };
-    return {
-      // o aluno continua conectado entre aberturas do app (MOD-AUT-006)
-      token: await this.jwt.signAsync(sessao, { expiresIn: "180d" }),
-      aluno: {
-        id: aluno.id,
-        nome: aluno.nome,
-        avatar: aluno.avatar ? { rosto: rostoDoAvatar(aluno.avatar), svg: aluno.avatar.svg } : null,
-      },
-      turma: { id: aluno.turma.id, nome: aluno.turma.nome, serie: aluno.turma.serie },
-    };
+      const sessao: Sessao = { sub: aluno.id, papel: "aluno", turmaId: aluno.turmaId, v: aluno.versaoAcesso };
+      return {
+        // o aluno continua conectado entre aberturas do app (MOD-AUT-006)
+        token: await this.jwt.signAsync(sessao, { expiresIn: "180d" }),
+        aluno: {
+          id: aluno.id,
+          nome: aluno.nome,
+          avatar: aluno.avatar ? { rosto: rostoDoAvatar(aluno.avatar), svg: aluno.avatar.svg } : null,
+        },
+        turma: { id: aluno.turma.id, nome: aluno.turma.nome, serie: aluno.turma.serie },
+      };
+    }
+    throw new HttpException("Tente entrar novamente em instantes.", HttpStatus.TOO_MANY_REQUESTS);
   }
 }

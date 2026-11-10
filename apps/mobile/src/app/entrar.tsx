@@ -195,7 +195,7 @@ export default function Entrar() {
           style={e.largo}
         />
         <Botao
-          titulo="Usar sem conta, só neste aparelho"
+          titulo="Experimentar demonstração"
           variante="fantasma"
           onPress={() => {
             continuarSemTurma();
@@ -203,6 +203,7 @@ export default function Entrar() {
           }}
           style={e.largo}
         />
+        <Texto style={e.centro}>O progresso da demonstração fica só neste aparelho.</Texto>
       </ScrollView>
     </KeyboardAvoidingView>
   );

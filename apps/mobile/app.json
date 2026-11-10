@@ -12,6 +12,7 @@
       "bundleIdentifier": "br.com.modolume.app"
     },
     "android": {
+      "allowBackup": false,
       "adaptiveIcon": {
         "backgroundColor": "#FAF8FE",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -21,13 +22,7 @@
       "predictiveBackGestureEnabled": false,
       "package": "br.com.modolume.app"
     },
-    "plugins": [
-      "expo-router",
-      "expo-status-bar",
-      "expo-font",
-      "expo-sharing",
-      "expo-sqlite"
-    ],
+    "plugins": ["expo-router", "expo-status-bar", "expo-font", "expo-sharing", "expo-sqlite", "expo-secure-store"],
     "scheme": "modolume",
     "backgroundColor": "#F7F6FD",
     "experiments": {

@@ -70,6 +70,7 @@ async function apagarTudo() {
     prisma.professorTurma.deleteMany(),
     prisma.turma.deleteMany(),
     prisma.professor.deleteMany(),
+    prisma.materia.deleteMany(),
     prisma.instituicao.deleteMany(),
   ]);
 }
@@ -83,7 +84,13 @@ async function equipeDemo() {
   if (!escola) return;
   const senhaHash = await bcrypt.hash(process.env.SENHA_DEMO ?? "modolume2026", 10);
   const pessoas = [
-    { id: "coord-helena", nome: "Helena Prado", email: "coordenacao@escola.example", papel: "coordenacao" as const },
+    {
+      id: "coord-helena",
+      nome: "Helena Prado",
+      email: "coordenacao@escola.example",
+      papel: "coordenacao" as const,
+      segmento: "fundamental_ii" as const,
+    },
     { id: "admin-rafael", nome: "Rafael Costa", email: "admin@escola.example", papel: "admin" as const },
   ];
   for (const p of pessoas) {
@@ -106,6 +113,16 @@ async function main() {
   const senhaHash = await bcrypt.hash(process.env.SENHA_DEMO ?? "modolume2026", 10);
 
   await prisma.instituicao.createMany({ data: d.instituicoes.map((i) => ({ id: i.id, nome: i.nome })) });
+  const materias = new Map<string, string>();
+  for (const p of d.professores) {
+    const chave = p.disciplina.toLowerCase();
+    const materia = await prisma.materia.upsert({
+      where: { instituicaoId_chave: { instituicaoId: p.instituicaoId, chave } },
+      create: { id: `materia-${p.id}`, nome: p.disciplina, chave, instituicaoId: p.instituicaoId },
+      update: {},
+    });
+    materias.set(p.id, materia.id);
+  }
   await prisma.professor.createMany({
     data: d.professores.map((p) => ({
       id: p.id,
@@ -114,6 +131,7 @@ async function main() {
       email: p.email.toLowerCase(),
       senhaHash,
       disciplina: p.disciplina,
+      materiaId: materias.get(p.id),
     })),
   });
   await prisma.turma.createMany({
@@ -122,6 +140,7 @@ async function main() {
       instituicaoId: d.professores.find((p) => p.id === t.professorId)!.instituicaoId,
       nome: t.nome,
       serie: t.serie,
+      segmento: "fundamental_ii",
       periodo: t.periodo === "manhã" ? "manha" : t.periodo,
       anoLetivo: 2026,
       codigo: CODIGOS[t.id] ?? `LUZ${t.id.slice(-2).toUpperCase()}`,

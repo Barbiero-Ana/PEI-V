@@ -10,6 +10,17 @@
         "buildType": "apk"
       },
       "node": "22.14.0"
+    },
+    "production": {
+      "environment": "production",
+      "distribution": "store",
+      "android": {
+        "buildType": "app-bundle"
+      }
+    },
+    "play-internal": {
+      "extends": "production",
+      "environment": "preview"
     }
   }
 }

@@ -178,7 +178,7 @@ export class ControladorAluno {
   }
 
   /**
-   * Recebe o progresso do aparelho e junta com o do servidor, sem perder nada:
+   * Recebe o retrato do aparelho e junta com o do servidor:
    * fica sempre o maior valor (estrelas, pontos, gastos) e a união das conquistas.
    */
   @Put("progresso")
@@ -192,6 +192,8 @@ export class ControladorAluno {
     const numerosDeMapa = new Set(NIVEIS.map((n) => n.numero));
 
     await this.banco.$transaction(async (tx) => {
+      // Serializa retratos do mesmo aluno, para uma leitura antiga não sobrescrever outra atualização.
+      await tx.$queryRaw`SELECT id FROM aluno WHERE id = ${s.sub} FOR UPDATE`;
       for (const [missaoId, v] of Object.entries(p.progresso)) {
         if (!missoesValidas.has(missaoId)) continue;
         const chave = { alunoId_missaoId: { alunoId: s.sub, missaoId } };

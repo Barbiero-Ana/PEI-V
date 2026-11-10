@@ -13,7 +13,7 @@ import {
 } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { Reflector } from "@nestjs/core";
-import { PrismaClient, type Prisma } from "@prisma/client";
+import { PrismaClient, type Prisma, type Segmento } from "@prisma/client";
 import type { ZodTypeAny, output } from "zod";
 
 /**
@@ -53,6 +53,7 @@ export interface Equipe {
   nome: string;
   papel: PapelEquipe;
   instituicaoId: string;
+  segmento?: Segmento | null;
 }
 
 /** Valida o corpo da requisição com um esquema zod; erro 400 com as mensagens em português. */
@@ -110,6 +111,7 @@ function guardaDe(...papeis: Papel[]) {
             papel: true,
             ativo: true,
             instituicaoId: true,
+            segmento: true,
             senhaProvisoria: true,
             versaoAcesso: true,
           },
@@ -124,7 +126,13 @@ function guardaDe(...papeis: Papel[]) {
           throw new UnauthorizedException("Seu acesso mudou. Entre de novo.");
         if (pessoa.senhaProvisoria && !this.reflector.get<boolean>(PERMITE_SENHA_PROVISORIA, ctx.getHandler()))
           throw new ForbiddenException("Troque sua senha provisória para continuar.");
-        req.equipe = { id: pessoa.id, nome: pessoa.nome, papel: pessoa.papel, instituicaoId: pessoa.instituicaoId };
+        req.equipe = {
+          id: pessoa.id,
+          nome: pessoa.nome,
+          papel: pessoa.papel,
+          instituicaoId: pessoa.instituicaoId,
+          segmento: pessoa.segmento,
+        };
       }
       req.sessao = sessao;
       return true;

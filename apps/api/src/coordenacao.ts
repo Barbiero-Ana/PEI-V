@@ -10,12 +10,14 @@ import {
   Post,
   UseGuards,
 } from "@nestjs/common";
+import type { Prisma } from "@prisma/client";
 import { z } from "zod";
 import { dataIso } from "./conversao.js";
 import { Banco, EquipeAtual, GuardaCoordenacao, registrar, validar, type Equipe } from "./infra.js";
+import { conferirTurmaAtiva, incluirProfessor, turmaParaVinculo } from "./vinculo-turma.js";
 
 /**
- * Área da coordenação (PRD-03 e PRD-12): acompanha a escola inteira, com os
+ * Área da coordenação (PRD-03 e PRD-12): acompanha seu segmento, com os
  * parâmetros gerais e o desempenho de cada turma, consulta os dados
  * individuais dos alunos e vincula professores às turmas. Não cria atividades
  * nem planos de aula (isso é do professor). Tudo recortado pela instituição.
@@ -60,6 +62,11 @@ function porFormato(jogadas: JogadaResumo[], rotulos: Map<string, string>) {
 
 const vinculo = z.object({ professorId: z.string().min(1, "Escolha o professor.").max(40) });
 
+const turmasDoSegmento = (eu: Equipe): Prisma.TurmaWhereInput => ({
+  instituicaoId: eu.instituicaoId,
+  ...(eu.segmento ? { segmento: eu.segmento } : { AND: [{ id: { in: [] } }] }),
+});
+
 @Controller("coordenacao")
 @UseGuards(GuardaCoordenacao)
 export class ControladorCoordenacao {
@@ -74,11 +81,12 @@ export class ControladorCoordenacao {
   @Get("visao")
   async visao(@EquipeAtual() eu: Equipe) {
     const inst = eu.instituicaoId;
+    const escopo = { ...turmasDoSegmento(eu), ativa: true };
     const desde = diasAtras(JANELA_DIAS);
     const [instituicao, turmas, jogadas, professores, rotulos] = await Promise.all([
       this.banco.instituicao.findUniqueOrThrow({ where: { id: inst } }),
       this.banco.turma.findMany({
-        where: { instituicaoId: inst, ativa: true },
+        where: escopo,
         orderBy: { nome: "asc" },
         include: {
           professores: { include: { professor: { select: { id: true, nome: true, disciplina: true, ativo: true } } } },
@@ -86,7 +94,7 @@ export class ControladorCoordenacao {
         },
       }),
       this.banco.jogada.findMany({
-        where: { data: { gte: desde }, aluno: { ativo: true, turma: { instituicaoId: inst, ativa: true } } },
+        where: { data: { gte: desde }, aluno: { ativo: true, turma: escopo } },
         select: {
           alunoId: true,
           formatoId: true,
@@ -96,11 +104,18 @@ export class ControladorCoordenacao {
           aluno: { select: { turmaId: true } },
         },
       }),
-      this.banco.professor.findMany({
-        where: { instituicaoId: inst, papel: "professor", ativo: true },
-        orderBy: { nome: "asc" },
-        select: { id: true, nome: true, disciplina: true, turmas: { select: { turmaId: true } } },
-      }),
+      eu.segmento
+        ? this.banco.professor.findMany({
+            where: { instituicaoId: inst, papel: "professor", ativo: true },
+            orderBy: { nome: "asc" },
+            select: {
+              id: true,
+              nome: true,
+              disciplina: true,
+              turmas: { where: { turma: escopo }, select: { turmaId: true } },
+            },
+          })
+        : [],
       this.rotulosDosFormatos(),
     ]);
 
@@ -119,6 +134,7 @@ export class ControladorCoordenacao {
         id: t.id,
         nome: t.nome,
         serie: t.serie,
+        segmento: t.segmento,
         periodo: periodoTexto(t.periodo),
         professores: t.professores
           .filter((v) => v.professor.ativo)
@@ -137,11 +153,12 @@ export class ControladorCoordenacao {
 
     return {
       instituicao: { id: instituicao.id, nome: instituicao.nome },
+      segmento: eu.segmento ?? null,
       janelaDias: JANELA_DIAS,
       escola: {
         turmas: linhas.length,
         alunos: linhas.reduce((s, l) => s + l.alunos, 0),
-        professores: professores.length,
+        professores: professores.filter((p) => p.turmas.length > 0).length,
         jogadas: jogadas.length,
         acertoMedio: media(jogadas.map((j) => j.percentualAcerto)),
         participacao: media(linhas.filter((l) => l.alunos > 0).map((l) => l.participacao)),
@@ -163,7 +180,7 @@ export class ControladorCoordenacao {
   @Get("turmas/:id")
   async turma(@EquipeAtual() eu: Equipe, @Param("id") id: string) {
     const turma = await this.banco.turma.findFirst({
-      where: { id, instituicaoId: eu.instituicaoId },
+      where: { ...turmasDoSegmento(eu), id },
       include: {
         professores: { include: { professor: { select: { id: true, nome: true, disciplina: true, ativo: true } } } },
         alunos: { where: { ativo: true }, orderBy: { nome: "asc" }, include: { avatar: { select: { svg: true } } } },
@@ -226,7 +243,7 @@ export class ControladorCoordenacao {
   @Get("alunos/:id")
   async aluno(@EquipeAtual() eu: Equipe, @Param("id") id: string) {
     const aluno = await this.banco.aluno.findFirst({
-      where: { id, turma: { instituicaoId: eu.instituicaoId } },
+      where: { id, turma: turmasDoSegmento(eu) },
       include: { turma: { select: { id: true, nome: true } }, avatar: { select: { svg: true } } },
     });
     if (!aluno) throw new NotFoundException("Aluno não encontrado.");
@@ -285,46 +302,47 @@ export class ControladorCoordenacao {
   @Post("turmas/:id/professores")
   async vincular(@EquipeAtual() eu: Equipe, @Param("id") id: string, @Body() corpo: unknown) {
     const { professorId } = validar(vinculo, corpo);
-    const [turma, professor] = await Promise.all([
-      this.banco.turma.findFirst({ where: { id, instituicaoId: eu.instituicaoId } }),
-      this.banco.professor.findFirst({ where: { id: professorId, instituicaoId: eu.instituicaoId } }),
-    ]);
-    if (!turma) throw new NotFoundException("Turma não encontrada.");
-    if (!professor || !professor.ativo) throw new NotFoundException("Professor não encontrado.");
-    if (professor.papel !== "professor") throw new BadRequestException("Só professores podem ser vinculados a turmas.");
-    if (!turma.ativa) throw new BadRequestException("Esta turma está encerrada.");
-    const ja = await this.banco.professorTurma.findUnique({
-      where: { professorId_turmaId: { professorId, turmaId: id } },
-    });
-    if (!ja) {
-      // o primeiro professor da turma fica como responsável
-      await this.banco.$transaction(async (transacao) => {
-        const temOutros = await transacao.professorTurma.count({ where: { turmaId: id } });
-        await transacao.professorTurma.create({ data: { professorId, turmaId: id, responsavel: temOutros === 0 } });
+    if (!eu.segmento) throw new NotFoundException("Turma não encontrada.");
+    const segmento = eu.segmento;
+    await this.banco.$transaction(async (transacao) => {
+      const turma = await turmaParaVinculo(transacao, id, eu.instituicaoId, segmento);
+      conferirTurmaAtiva(turma);
+      const [professor] = await transacao.$queryRaw<{ nome: string; ativo: boolean; papel: string }[]>`
+        SELECT nome, ativo, papel::text FROM professor
+        WHERE id = ${professorId} AND instituicao_id = ${eu.instituicaoId} FOR UPDATE
+      `;
+      if (!professor?.ativo) throw new NotFoundException("Professor não encontrado.");
+      if (professor.papel !== "professor")
+        throw new BadRequestException("Só professores podem ser vinculados a turmas.");
+      if (await incluirProfessor(transacao, id, professorId)) {
         await registrar(transacao, eu, "turma.vinculo", {
           tipo: "turma",
           id,
           detalhe: `${professor.nome} → ${turma.nome}`,
         });
-      });
-    }
+      }
+    });
     return { ok: true };
   }
 
   /** Tira o professor da turma. O histórico da turma (jogadas, atividades, planos) continua. */
   @Delete("turmas/:id/professores/:professorId")
   async desvincular(@EquipeAtual() eu: Equipe, @Param("id") id: string, @Param("professorId") professorId: string) {
-    const v = await this.banco.professorTurma.findFirst({
-      where: { turmaId: id, professorId, turma: { instituicaoId: eu.instituicaoId } },
-      include: { turma: { select: { nome: true } }, professor: { select: { nome: true } } },
-    });
-    if (!v) throw new NotFoundException("Vínculo não encontrado.");
+    if (!eu.segmento) throw new NotFoundException("Vínculo não encontrado.");
+    const segmento = eu.segmento;
     await this.banco.$transaction(async (transacao) => {
-      await transacao.professorTurma.delete({ where: { professorId_turmaId: { professorId, turmaId: id } } });
+      const turma = await turmaParaVinculo(transacao, id, eu.instituicaoId, segmento);
+      const v = await transacao.professorTurma.findUnique({
+        where: { professorId_turmaId: { professorId, turmaId: id } },
+        include: { professor: { select: { nome: true } } },
+      });
+      if (!v) return;
+      const { count } = await transacao.professorTurma.deleteMany({ where: { turmaId: id, professorId } });
+      if (count === 0) return;
       await registrar(transacao, eu, "turma.desvinculo", {
         tipo: "turma",
         id,
-        detalhe: `${v.professor.nome} saiu de ${v.turma.nome}`,
+        detalhe: `${v.professor.nome} saiu de ${turma.nome}`,
       });
     });
     return { ok: true };

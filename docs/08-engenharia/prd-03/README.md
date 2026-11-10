@@ -37,9 +37,9 @@ ciclo-aluno.test.ts e leitura-professor.test.ts. Homologar cadastro e vínculos 
 
 ## Requisitos
 
-- [MOD-TUR-001](mod-tur-001.md) A gestão deve poder cadastrar turmas com nome, série, período e ano letivo.
+- [MOD-TUR-001](mod-tur-001.md) A gestão cadastra a turma selecionando segmento, série, turno e ano letivo. O sistema salva um identificador único com o número da série, a sigla do turno (`AM`, `TD` ou `IN`) e um número sequencial, como `6AM12`.
 - [MOD-TUR-002](mod-tur-002.md) A gestão deve poder editar e consultar turmas.
-- [MOD-TUR-003](mod-tur-003.md) A gestão deve poder vincular um ou mais professores a uma turma.
+- [MOD-TUR-003](mod-tur-003.md) A administração pode atribuir uma turma no cadastro do professor. A coordenação adiciona e remove professores das turmas do seu segmento.
 - [MOD-TUR-004](mod-tur-004.md) A gestão deve poder vincular alunos a uma turma.
 - [MOD-TUR-005](mod-tur-005.md) A gestão deve poder remover vínculos, preservando o histórico.
 - [MOD-TUR-006](mod-tur-006.md) Exibir os professores e alunos de cada turma.

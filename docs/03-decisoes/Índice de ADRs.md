@@ -24,9 +24,12 @@ alternativas consideradas e as consequências. Juntos, contam como o projeto che
 | [0015](0015-integracao-app-painel-pela-api.md) | Integração do app com o painel pela API | Aceita | 04/11/2026 |
 | [0016](0016-modelo-relacional-do-banco.md) | Modelo relacional do banco | Aceita | 04/11/2026 |
 | [0017](0017-acesso-individual-do-aluno.md) | Acesso individual do aluno: código pessoal e PIN | Aceita | 05/11/2026 |
-| [0018](0018-site-com-planos-e-app-so-no-celular.md) | Site com planos e app só no celular | Aceita | 05/11/2026 |
+| [0018](0018-site-com-planos-e-app-so-no-celular.md) | Site com planos e app só no celular | Substituída em parte pelo ADR 0021 | 05/11/2026 |
 | [0019](0019-papeis-coordenacao-e-administrador.md) | Papéis da equipe: professor, coordenação e administrador | Aceita | 05/11/2026 |
 | [0020](0020-codigo-do-aluno-com-letras-e-numeros.md) | Quatro letras e quatro números no código do aluno | Aceita | 09/11/2026 |
+| [0021](0021-portal-da-equipe-e-app-nativo.md) | Portal da equipe e app nativo | Aceita | 09/11/2026 |
+| [0022](0022-conclusao-local-atomica.md) | Conclusão local atômica | Aceita | 09/11/2026 |
+| [0023](0023-sessao-movel-no-cofre-nativo.md) | Sessão móvel no cofre nativo | Aceita | 10/11/2026 |
 
 Os ADRs dizem **como** e **por que** o sistema foi construído assim. O **que** o sistema faz está nos PRDs de módulo
 (`docs/02-modulos/`).

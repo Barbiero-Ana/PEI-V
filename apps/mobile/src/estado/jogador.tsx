@@ -78,7 +78,7 @@ interface Salvo {
   compras: string[];
 }
 
-/** Por enquanto não há login: o app abre com a aluna Ana (o nome muda no perfil). */
+/** Perfil inicial da demonstração e base visual do perfil escolar. */
 const ALUNO_PADRAO: Jogador = {
   nome: "Ana",
   avatar: "lume",
@@ -130,7 +130,8 @@ interface Estado extends Salvo {
   editarPerfil: (dados: Partial<Jogador>) => void;
   sair: () => void;
   apagarProgresso: () => void;
-  salvarResultado: (r: ResultadoJogada) => Recompensa;
+  prepararResultado: (r: ResultadoJogada) => { novo: Salvo; recompensa: Recompensa };
+  aplicarSnapshot: (novo: Salvo) => void;
   mudarPreferencia: <K extends keyof Preferencias>(k: K, v: Preferencias[K]) => void;
   vibrar: (tipo: "acerto" | "erro" | "toque") => void;
   /** Luzes disponíveis para gastar: pontos de luz ganhos − gastos. */
@@ -196,16 +197,70 @@ export function ProvedorJogador({ children }: { children: React.ReactNode }) {
     };
   }, [conta, escopo, repositorio, falhar]);
 
-  const gravar = useCallback(
+  const aplicarSnapshot = useCallback(
     (novo: Salvo) => {
       if (!montado.current || !escopo.ativa()) return;
       atual.current = novo;
       setSalvo(novo);
+    },
+    [escopo],
+  );
+  const gravar = useCallback(
+    (novo: Salvo) => {
+      if (!montado.current || !escopo.ativa()) return;
+      aplicarSnapshot(novo);
       void repositorio.salvar("jogador", escopo.identidade, novo).catch(() => {
         if (montado.current && escopo.ativa()) falhar();
       });
     },
-    [escopo, repositorio, falhar],
+    [escopo, repositorio, falhar, aplicarSnapshot],
+  );
+
+  const importarPerfil = useCallback(
+    (perfil: Parameters<Estado["importarPerfil"]>[0]) => {
+      const s = atual.current;
+      if (s.perfilLocal) return;
+      gravar({
+        ...s,
+        perfilLocal: true,
+        jogador: {
+          ...(s.jogador ?? ALUNO_PADRAO),
+          nome: perfil.nome.split(" ")[0]!,
+          ...(perfil.rosto ? { rosto: normalizar(perfil.rosto) } : {}),
+        },
+      });
+    },
+    [gravar],
+  );
+
+  const importarProgresso = useCallback(
+    (p: ProgressoServidor) => {
+      const s = atual.current;
+      const progresso = { ...s.progresso };
+      for (const [id, v] of Object.entries(p.progresso)) {
+        const a = progresso[id];
+        progresso[id] = {
+          estrelas: Math.max(a?.estrelas ?? 0, v.estrelas) as 0 | 1 | 2 | 3,
+          jogadas: Math.max(a?.jogadas ?? 0, v.jogadas),
+          melhorAcerto: Math.max(a?.melhorAcerto ?? 0, v.melhorAcerto),
+        };
+      }
+      const pontosPorNivel = { ...s.pontosPorNivel };
+      for (const [n, v] of Object.entries(p.pontosPorNivel))
+        pontosPorNivel[Number(n)] = Math.max(pontosPorNivel[Number(n)] ?? 0, v);
+      const novo: Salvo = {
+        ...s,
+        progresso,
+        pontosPorNivel,
+        constelacoes: { ...p.constelacoes, ...s.constelacoes },
+        desafios: { ...p.desafios, ...s.desafios },
+        gastos: Math.max(s.gastos, p.gastos),
+        compras: [...new Set([...s.compras, ...p.compras])],
+        dias: [...new Set([...s.dias, ...(p.dias ?? [])])].sort(),
+      };
+      if (JSON.stringify(novo) !== JSON.stringify(s)) gravar(novo);
+    },
+    [gravar],
   );
 
   const valor = useMemo<Estado>(
@@ -216,19 +271,7 @@ export function ProvedorJogador({ children }: { children: React.ReactNode }) {
       editarPerfil: (dados) =>
         atual.current.jogador &&
         gravar({ ...atual.current, jogador: { ...atual.current.jogador, ...dados }, perfilLocal: true }),
-      importarPerfil: (perfil) => {
-        const s = atual.current;
-        if (s.perfilLocal) return;
-        gravar({
-          ...s,
-          perfilLocal: true,
-          jogador: {
-            ...(s.jogador ?? ALUNO_PADRAO),
-            nome: perfil.nome.split(" ")[0]!,
-            ...(perfil.rosto ? { rosto: normalizar(perfil.rosto) } : {}),
-          },
-        });
-      },
+      importarPerfil,
       sair: () => {
         if (escopo.ativa()) void selecionar(null).catch(() => {});
       },
@@ -241,31 +284,7 @@ export function ProvedorJogador({ children }: { children: React.ReactNode }) {
         gravar({ ...s, gastos: s.gastos + preco, compras: [...s.compras, id] });
         return true;
       },
-      importarProgresso: (p) => {
-        const s = atual.current;
-        const progresso = { ...s.progresso };
-        for (const [id, v] of Object.entries(p.progresso)) {
-          const a = progresso[id];
-          progresso[id] = {
-            estrelas: Math.max(a?.estrelas ?? 0, v.estrelas) as 0 | 1 | 2 | 3,
-            jogadas: Math.max(a?.jogadas ?? 0, v.jogadas),
-            melhorAcerto: Math.max(a?.melhorAcerto ?? 0, v.melhorAcerto),
-          };
-        }
-        const pontosPorNivel = { ...s.pontosPorNivel };
-        for (const [n, v] of Object.entries(p.pontosPorNivel))
-          pontosPorNivel[Number(n)] = Math.max(pontosPorNivel[Number(n)] ?? 0, v);
-        gravar({
-          ...s,
-          progresso,
-          pontosPorNivel,
-          constelacoes: { ...p.constelacoes, ...s.constelacoes },
-          desafios: { ...p.desafios, ...s.desafios },
-          gastos: Math.max(s.gastos, p.gastos),
-          compras: [...new Set([...s.compras, ...p.compras])],
-          dias: [...new Set([...s.dias, ...(p.dias ?? [])])].sort(),
-        });
-      },
+      importarProgresso,
       apagarProgresso: () =>
         gravar({
           ...VAZIO,
@@ -275,7 +294,8 @@ export function ProvedorJogador({ children }: { children: React.ReactNode }) {
         }),
       // (apagar progresso também zera luzes e compras)
       mudarPreferencia: (k, v) => gravar({ ...atual.current, preferencias: { ...atual.current.preferencias, [k]: v } }),
-      salvarResultado: (r) => {
+      aplicarSnapshot,
+      prepararResultado: (r) => {
         const s = atual.current;
         const hoje = r.data;
         const nivel = nivelDaMissao(r.missaoId)?.numero ?? 1;
@@ -296,7 +316,7 @@ export function ProvedorJogador({ children }: { children: React.ReactNode }) {
         const completou = acesasDepois === constelacao.estrelas.length && !s.constelacoes[constelacao.id];
 
         const anterior = s.progresso[r.missaoId];
-        gravar({
+        const novo: Salvo = {
           ...s,
           resultados: [...s.resultados, r],
           progresso: {
@@ -311,19 +331,22 @@ export function ProvedorJogador({ children }: { children: React.ReactNode }) {
           constelacoes: completou ? { ...s.constelacoes, [constelacao.id]: hoje } : s.constelacoes,
           dias: s.dias.includes(hoje) ? s.dias : [...s.dias, hoje],
           desafios: desafio ? { ...s.desafios, [hoje]: r.missaoId } : s.desafios,
-        });
+        };
 
         return {
-          pontos,
-          desafio,
-          constelacao,
-          nivel,
-          pontosAntes,
-          pontosDepois,
-          acesasAntes,
-          acesasDepois,
-          completou,
-          bonusMapa,
+          novo,
+          recompensa: {
+            pontos,
+            desafio,
+            constelacao,
+            nivel,
+            pontosAntes,
+            pontosDepois,
+            acesasAntes,
+            acesasDepois,
+            completou,
+            bonusMapa,
+          },
         };
       },
       vibrar: (tipo) => {
@@ -337,7 +360,7 @@ export function ProvedorJogador({ children }: { children: React.ReactNode }) {
         p.catch(() => {});
       },
     }),
-    [salvo, pronto, gravar, selecionar, escopo],
+    [salvo, pronto, gravar, selecionar, escopo, aplicarSnapshot, importarPerfil, importarProgresso],
   );
 
   return <Ctx.Provider value={valor}>{children}</Ctx.Provider>;

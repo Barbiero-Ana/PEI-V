@@ -10,6 +10,7 @@ export * from "./missoes";
 export * from "./constelacoes";
 export * from "./aprendizagem";
 export * from "./atividades-professor";
+export * from "./segmentos";
 export * from "./planejamento";
 export * from "./validacao";
 export * from "./codigo-acesso";

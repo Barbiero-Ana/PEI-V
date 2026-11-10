@@ -1,10 +1,11 @@
 import Link from "next/link";
-import { normalizarBusca, numeroDaPagina } from "@modolume/core";
+import { NOME_SEGMENTO, normalizarBusca, numeroDaPagina } from "@modolume/core";
 import { Avatar, Cabecalho, Painel, TABELA } from "@/components/painel/blocos";
 import { quando } from "@/components/escola/estrutura";
 import { Campo, Escolha, FormularioAcao } from "@/components/escola/formulario";
+import { CamposDaEquipe } from "@/components/escola/cadastros";
 import { NOME_DO_PAPEL, apiDaEquipe } from "@/lib/escola/api";
-import { OPCOES_PAPEL, type Pessoa } from "@/lib/escola/tipos";
+import { OPCOES_PAPEL, type Materia, type Pessoa, type TurmaAdmin } from "@/lib/escola/tipos";
 import { criarUsuario } from "../acoes";
 
 const COR_PAPEL = {
@@ -24,8 +25,11 @@ export default async function Equipe({
   const busca = typeof parametros.busca === "string" ? parametros.busca.trim().slice(0, 120) : "";
   const papel = OPCOES_PAPEL.find((opcao) => opcao.valor === parametros.papel)?.valor ?? "";
   const situacao = parametros.situacao === "ativo" || parametros.situacao === "inativo" ? parametros.situacao : "";
-  const pessoas = await apiDaEquipe<Pessoa[]>("/admin/usuarios");
-  const ativas = pessoas.filter((p) => p.ativo);
+  const [pessoas, materias, turmas] = await Promise.all([
+    apiDaEquipe<Pessoa[]>("/admin/usuarios"),
+    apiDaEquipe<Materia[]>("/admin/materias"),
+    apiDaEquipe<TurmaAdmin[]>("/admin/turmas"),
+  ]);
   const termo = normalizarBusca(busca);
   const filtradas = pessoas.filter(
     (pessoa) =>
@@ -50,16 +54,11 @@ export default async function Equipe({
         descricao="Após o cadastro, a pessoa define a própria senha pelo link solicitado em Recuperar acesso."
       >
         <FormularioAcao acao={criarUsuario} botao="Cadastrar">
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            <Campo nome="nome" rotulo="Nome" />
-            <Campo nome="email" rotulo="E-mail" tipo="email" />
-            <Escolha nome="papel" rotulo="Papel" opcoes={OPCOES_PAPEL} />
-            <Campo nome="disciplina" rotulo="Disciplina" obrigatorio={false} dica="Obrigatória para professor." />
-          </div>
+          <CamposDaEquipe materias={materias} turmas={turmas} />
         </FormularioAcao>
       </Painel>
 
-      <Painel titulo={`Pessoas (${ativas.length} com acesso)`} semRecuo>
+      <Painel titulo="Pessoas Cadastradas" semRecuo>
         <form className="grid gap-4 p-4 md:grid-cols-3" method="get">
           <Campo nome="busca" rotulo="Buscar por nome" valor={busca} obrigatorio={false} />
           <Escolha
@@ -122,7 +121,20 @@ export default async function Equipe({
                       </span>
                     </td>
                     <td className={`${TABELA.td} text-texto-suave`}>
-                      {p.papel === "professor" ? p.turmas.map((t) => t.nome).join(", ") || "nenhuma ainda" : "—"}
+                      {p.papel === "professor" ? (
+                        <>
+                          <span className="block font-medium text-tinta">{p.disciplina ?? "Sem matéria"}</span>
+                          {p.turmas.map((t) => t.nome).join(", ") || "Sem turma"}
+                        </>
+                      ) : p.papel === "coordenacao" ? (
+                        p.segmento ? (
+                          NOME_SEGMENTO[p.segmento]
+                        ) : (
+                          "Sem segmento"
+                        )
+                      ) : (
+                        "—"
+                      )}
                     </td>
                     <td className={`${TABELA.td} tnum text-texto-suave`}>{quando(p.ultimoAcesso)}</td>
                     <td className={TABELA.td}>

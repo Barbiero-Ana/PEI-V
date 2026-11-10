@@ -19,7 +19,7 @@ export default async function DesempenhoEscola() {
     <div className="flex flex-col gap-6">
       <Cabecalho
         titulo="Desempenho por formato"
-        descricao={`Acerto médio de cada turma em cada formato de atividade (últimos ${v.janelaDias} dias). Ajuda a ver se uma dificuldade é de uma turma ou da escola.`}
+        descricao={`Compare o acerto por formato entre as turmas do segmento nos últimos ${v.janelaDias} dias.`}
       />
       <Painel semRecuo>
         {formatos.length === 0 ? (
@@ -66,7 +66,7 @@ export default async function DesempenhoEscola() {
                   );
                 })}
                 <tr className="bg-suave/60">
-                  <td className="px-5 py-2.5 font-display font-semibold text-tinta">Escola</td>
+                  <td className="px-5 py-2.5 font-display font-semibold text-tinta">Segmento</td>
                   {formatos.map((f) => (
                     <td key={f.formato} className="px-2 py-2 text-center">
                       <span

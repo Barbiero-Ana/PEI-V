@@ -1,5 +1,6 @@
 import "server-only";
 import { cache } from "react";
+import type { Segmento } from "@modolume/core";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { ErroApi, chamarApi, usandoApi } from "@/lib/painel/api";
@@ -35,6 +36,7 @@ export interface Eu {
   email: string;
   papel: PapelEquipe;
   disciplina: string | null;
+  segmento: Segmento | null;
   senhaProvisoria: boolean;
   instituicao: { id: string; nome: string };
 }

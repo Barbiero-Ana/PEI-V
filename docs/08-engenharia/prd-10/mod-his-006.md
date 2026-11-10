@@ -1,8 +1,8 @@
 # MOD-HIS-006
 
-Ao entrar em outro aparelho, o aluno recupera seu progresso.
+Ao entrar em outro aparelho, o aluno recupera o progresso e preserva as jogadas e os ganhos feitos nos dois aparelhos.
 
-Origem: [PRD-10 — Histórico e sincronização](../../02-modulos/PRD-10%20%E2%80%94%20Hist%C3%B3rico%20e%20sincroniza%C3%A7%C3%A3o.md), seção 5. Prioridade **I**, método **T**. Situação declarada na origem **Implementado**.
+Origem: [PRD-10 — Histórico e sincronização](../../02-modulos/PRD-10%20%E2%80%94%20Hist%C3%B3rico%20e%20sincroniza%C3%A7%C3%A3o.md), seção 5. Prioridade **I**, método **T**. Situação declarada na origem **Parcial**.
 
 [Módulo, fluxo, perfis e entidades](README.md). [Requisitos transversais](../prd-17/README.md).
 
@@ -22,6 +22,6 @@ As regras de negócio aplicáveis ao contexto estão no [módulo](README.md) e n
 - [apps/mobile/src/estado/jogador.tsx](../../../apps/mobile/src/estado/jogador.tsx)
 - [apps/api/src/aluno.ts](../../../apps/api/src/aluno.ts)
 
-**Aceite nesta auditoria** Pendente.
+**Aceite nesta auditoria** Evidência parcial.
 
-Aceite individual pendente de verificação nesta auditoria. Consulte os cenários e as evidências do módulo.
+verificar-banco.ts valida que atualizações concorrentes preservam o maior total. A soma de ganhos distintos em dois aparelhos ainda está pendente.

@@ -54,7 +54,7 @@ Testes funcionais de cada operação e demonstração do cadastro de uma turma d
 | MOD-ADM-012 | O administrador não pode desativar nem tirar o próprio papel, e a escola nunca fica sem um administrador ativo. | E | T | Implementado |
 | MOD-ADM-008 | O administrador pode importar usuários a partir de planilha CSV. | D | T | Pendente |
 
-**Situação atual:** área do administrador em `/admin` (ADR 0019): visão geral, "Equipe e acessos" (cadastro, papel, desativação, senha provisória e o que cada pessoa fez), "Turmas e alunos", "Permissões" (o que cada papel pode fazer) e "Registro de atividades". A API (`apps/api/src/admin.ts`) confere o papel e a escola em cada chamada. A lista da equipe ainda não tem campo de busca (ADM-004 parcial); o registro tem filtro por tipo de ação e por pessoa. Contas de demonstração: `admin@escola.example` e `coordenacao@escola.example`, com a senha de `SENHA_DEMO`.
+**Situação atual:** a administração gerencia equipe, turmas, alunos e o catálogo de matérias em `/admin`. No cadastro de um professor, seleciona a matéria e pode atribuir uma turma ativa. Para a coordenação, define Fundamental I, Fundamental II ou Ensino Médio. A página de permissões pode ser filtrada por perfil, grupo e ação e apresenta atividade recente da equipe. O registro agrupa eventos por dia e permite filtrar por grupo de ação, pessoa, perfil, dia e busca. A API aplica o recorte por instituição.
 
 ### 5.2 Regras de negócio
 

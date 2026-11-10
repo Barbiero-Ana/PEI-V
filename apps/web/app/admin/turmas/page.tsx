@@ -1,32 +1,80 @@
 import Link from "next/link";
+import { NOME_SEGMENTO, SEGMENTOS } from "@modolume/core";
 import { Cabecalho, Painel, TABELA } from "@/components/painel/blocos";
-import { Campo, Escolha, FormularioAcao } from "@/components/escola/formulario";
+import { Escolha, FormularioAcao } from "@/components/escola/formulario";
+import { CamposDaTurma } from "@/components/escola/cadastros";
 import { apiDaEquipe } from "@/lib/escola/api";
-import { OPCOES_PERIODO, type TurmaAdmin } from "@/lib/escola/tipos";
+import type { TurmaAdmin } from "@/lib/escola/tipos";
 import { criarTurma } from "../acoes";
 
-export default async function TurmasAdmin() {
+export default async function TurmasAdmin({
+  searchParams,
+}: {
+  searchParams: Promise<{ segmento?: string; ano?: string; situacao?: string }>;
+}) {
+  const { segmento, ano: filtroAno, situacao } = await searchParams;
   const turmas = await apiDaEquipe<TurmaAdmin[]>("/admin/turmas");
+  const filtradas = turmas.filter(
+    (t) =>
+      (!segmento || (t.segmento ?? "pendente") === segmento) &&
+      (!filtroAno || String(t.anoLetivo) === filtroAno) &&
+      (!situacao || t.ativa === (situacao === "ativa")),
+  );
   const ano = new Date().getFullYear();
   return (
     <div className="flex flex-col gap-6">
       <Cabecalho
         titulo="Turmas e alunos"
-        descricao="Crie as turmas do ano letivo e cadastre os alunos. Quem vincula os professores às turmas é a coordenação."
+        descricao="Organize as turmas por segmento, série e ano letivo. A coordenação gerencia os vínculos do seu segmento."
       />
 
       <Painel titulo="Criar turma">
         <FormularioAcao acao={criarTurma} botao="Criar turma">
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            <Campo nome="nome" rotulo="Nome" dica="Ex.: 6º Ano C" />
-            <Campo nome="serie" rotulo="Série" dica="Ex.: 6º ano" />
-            <Escolha nome="periodo" rotulo="Período" opcoes={OPCOES_PERIODO} />
-            <Campo nome="anoLetivo" rotulo="Ano letivo" tipo="number" valor={ano} />
-          </div>
+          <CamposDaTurma ano={ano} />
         </FormularioAcao>
       </Painel>
 
-      <Painel titulo="Turmas" semRecuo>
+      <Painel titulo={`Turmas (${filtradas.length})`} semRecuo>
+        <form method="get" className="grid items-end gap-4 p-5 sm:grid-cols-2 xl:grid-cols-4">
+          <Escolha
+            nome="segmento"
+            rotulo="Segmento da lista"
+            valor={segmento}
+            opcoes={[
+              { valor: "", rotulo: "Todos" },
+              ...SEGMENTOS.map((s) => ({ valor: s, rotulo: NOME_SEGMENTO[s] })),
+              { valor: "pendente", rotulo: "A classificar" },
+            ]}
+          />
+          <Escolha
+            nome="ano"
+            rotulo="Ano letivo da lista"
+            valor={filtroAno}
+            opcoes={[
+              { valor: "", rotulo: "Todos" },
+              ...[...new Set(turmas.map((t) => t.anoLetivo))].map((a) => ({ valor: String(a), rotulo: String(a) })),
+            ]}
+          />
+          <Escolha
+            nome="situacao"
+            rotulo="Situação"
+            valor={situacao}
+            opcoes={[
+              { valor: "", rotulo: "Todas" },
+              { valor: "ativa", rotulo: "Ativas" },
+              { valor: "encerrada", rotulo: "Encerradas" },
+            ]}
+          />
+          <div className="flex items-center gap-3">
+            <button className="min-h-11 rounded-xl bg-roxo px-4 font-semibold text-white">Filtrar</button>
+            <Link href="/admin/turmas" className="text-sm text-roxo-escuro">
+              Limpar
+            </Link>
+          </div>
+        </form>
+        {filtradas.length === 0 ? (
+          <p className="p-5 text-sm text-texto-suave">Nenhuma turma com esses filtros.</p>
+        ) : null}
         <div className="overflow-x-auto">
           <table className={TABELA.tabela}>
             <thead className={TABELA.cabeca}>
@@ -39,13 +87,13 @@ export default async function TurmasAdmin() {
               </tr>
             </thead>
             <tbody>
-              {turmas.map((t) => (
+              {filtradas.map((t) => (
                 <tr key={t.id} className={`${TABELA.linha} ${t.ativa ? "" : "opacity-60"}`}>
                   <td className={TABELA.td}>
                     <Link href={`/admin/turmas/${t.id}`} className="font-semibold text-tinta hover:text-roxo-escuro">
                       {t.nome}
                       <span className="block text-xs font-normal text-texto-suave">
-                        {t.serie} · {t.periodo}
+                        {t.segmento ? NOME_SEGMENTO[t.segmento] : "A classificar"} · {t.serie} · {t.periodo}
                       </span>
                     </Link>
                   </td>

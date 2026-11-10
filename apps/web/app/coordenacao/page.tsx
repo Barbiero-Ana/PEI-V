@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { NOME_SEGMENTO } from "@modolume/core";
 import { Cabecalho, Painel } from "@/components/painel/blocos";
 import { BarraValor, Indicador } from "@/components/escola/estrutura";
 import { apiDaEquipe } from "@/lib/escola/api";
@@ -20,13 +21,13 @@ export default async function VisaoEscola({ searchParams }: { searchParams: Prom
         </p>
       ) : null}
       <Cabecalho
-        titulo="Visão da escola"
-        descricao={`${v.instituicao.nome} · últimos ${v.janelaDias} dias. Você acompanha todas as turmas e vincula os professores; atividades e planos ficam com os professores.`}
+        titulo="Visão do segmento"
+        descricao={`${v.instituicao.nome} · ${v.segmento ? NOME_SEGMENTO[v.segmento] : "Segmento a definir"} · últimos ${v.janelaDias} dias`}
       />
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
         <Indicador
-          rotulo="Acerto médio da escola"
+          rotulo="Acerto médio do segmento"
           valor={e.acertoMedio === null ? "—" : `${e.acertoMedio}%`}
           destaque
         />
@@ -104,7 +105,7 @@ export default async function VisaoEscola({ searchParams }: { searchParams: Prom
         </Painel>
       </div>
 
-      <Painel titulo="Acerto por formato na escola" acao={{ href: "/coordenacao/desempenho", rotulo: "Por turma" }}>
+      <Painel titulo="Acerto por formato no segmento" acao={{ href: "/coordenacao/desempenho", rotulo: "Por turma" }}>
         {e.porFormato.length === 0 ? (
           <p className="text-sm text-texto-suave">Ainda sem jogadas no período.</p>
         ) : (

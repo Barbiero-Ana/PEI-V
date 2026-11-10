@@ -35,6 +35,7 @@ export default async function VisaoAdmin() {
                 "Cadastrar professor, coordenação ou administrador",
                 "Cada pessoa define sua senha pelo link de recuperação no e-mail cadastrado.",
               ],
+              ["/admin/materias", "Cadastrar matérias", "O catálogo aparece na seleção de matéria dos professores."],
               [
                 "/admin/turmas",
                 "Criar turmas e cadastrar alunos",

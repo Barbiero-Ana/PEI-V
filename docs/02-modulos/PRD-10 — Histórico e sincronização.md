@@ -48,9 +48,9 @@ Testes de queda e volta de conexão, de envio repetido e de troca de aparelho.
 | MOD-HIS-003 | O aluno consulta o próprio histórico. | I | D | Parcial |
 | MOD-HIS-004 | As missões podem ser jogadas sem conexão com a internet, com o progresso salvo no aparelho. | E | T | Implementado |
 | MOD-HIS-005 | As jogadas feitas sem conexão são enviadas ao servidor quando a conexão é restabelecida. | E | T | Implementado |
-| MOD-HIS-006 | Ao entrar em outro aparelho, o aluno recupera seu progresso. | I | T | Implementado |
+| MOD-HIS-006 | Ao entrar em outro aparelho, o aluno recupera o progresso e preserva as jogadas e os ganhos feitos nos dois aparelhos. | I | T | Parcial |
 
-**Situação atual:** o app guarda as jogadas no aparelho e, com o aluno numa turma, coloca cada uma numa fila que é enviada à API ao abrir o app, ao voltar para ele, a cada minuto e logo depois de cada jogada. Sem internet, a fila espera e a aba "Professor" avisa quantas faltam enviar. O painel mostra o histórico vindo do banco. O progresso de gamificação (estrelas, pontos de luz, constelações, desafios do dia e compras) também vai para o banco e é juntado sem perda: em outro aparelho, o aluno recupera tudo ao entrar, e os aparelhos se igualam a cada abertura do app (ADR 0016). A lista detalhada de jogadas para o próprio aluno ainda não existe (HIS-003 parcial).
+**Situação atual:** o app salva a recompensa da missão e a jogada pendente juntas no aparelho (ADR 0022). A API confirma a fila por ID, inclusive no reenvio. O progresso de gamificação é restaurado do servidor ao abrir o app. A mesclagem mantém os maiores totais e reúne conquistas. Dois aparelhos podem acumular pontos ou gastos distintos offline e enviar totais que se sobrepõem. A consolidação desses casos segue pendente. A lista detalhada para o aluno também segue parcial (HIS-003).
 
 ### 5.2 Regras de negócio
 

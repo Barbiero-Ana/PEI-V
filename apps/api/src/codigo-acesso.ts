@@ -1,9 +1,6 @@
 import { randomInt } from "node:crypto";
 import { DIGITOS_CODIGO_ALUNO, LETRAS_CODIGO_ALUNO } from "@modolume/core";
 
-/** Alfabeto do identificador legado de turma. */
-export const ALFABETO_CODIGO_TURMA = LETRAS_CODIGO_ALUNO + DIGITOS_CODIGO_ALUNO;
-
 /** Código pessoal novo: quatro letras e quatro dígitos, sem hífen no banco (ADR 0020). */
 export function gerarCodigoAcesso() {
   const grupo = (alfabeto: string) => Array.from({ length: 4 }, () => alfabeto[randomInt(alfabeto.length)]).join("");

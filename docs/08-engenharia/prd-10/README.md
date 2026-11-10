@@ -40,4 +40,4 @@ Testes de isolamento e de validação da jogada. Persistência atômica da recom
 - [MOD-HIS-003](mod-his-003.md) O aluno consulta o próprio histórico.
 - [MOD-HIS-004](mod-his-004.md) As missões podem ser jogadas sem conexão com a internet, com o progresso salvo no aparelho.
 - [MOD-HIS-005](mod-his-005.md) As jogadas feitas sem conexão são enviadas ao servidor quando a conexão é restabelecida.
-- [MOD-HIS-006](mod-his-006.md) Ao entrar em outro aparelho, o aluno recupera seu progresso.
+- [MOD-HIS-006](mod-his-006.md) Ao entrar em outro aparelho, o aluno recupera o progresso e preserva as jogadas e os ganhos feitos nos dois aparelhos.

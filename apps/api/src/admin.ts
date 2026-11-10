@@ -1,4 +1,4 @@
-import { randomInt, randomUUID } from "node:crypto";
+import { randomUUID } from "node:crypto";
 import {
   BadRequestException,
   Body,
@@ -14,11 +14,13 @@ import {
   UseGuards,
 } from "@nestjs/common";
 import bcrypt from "bcryptjs";
+import { Prisma } from "@prisma/client";
 import { z } from "zod";
-import { numeroDaPagina } from "@modolume/core";
+import { NOME_SEGMENTO, SEGMENTOS, SERIES_POR_SEGMENTO, numeroDaPagina } from "@modolume/core";
 import { configuracaoRecuperacao, gerarSegredo } from "./credencial.js";
-import { ALFABETO_CODIGO_TURMA, gerarCodigoAcesso } from "./codigo-acesso.js";
+import { gerarCodigoAcesso } from "./codigo-acesso.js";
 import { Banco, EquipeAtual, GuardaAdmin, registrar, validar, type Equipe } from "./infra.js";
+import { conferirTurmaAtiva, incluirProfessor, turmaParaVinculo } from "./vinculo-turma.js";
 
 /**
  * Área do administrador (PRD-02): cadastra e gerencia a equipe da escola e os
@@ -37,6 +39,9 @@ const NOME_PAPEL: Record<(typeof PAPEIS)[number], string> = {
   admin: "Administrador",
 };
 const PERIODOS = { manhã: "manha", tarde: "tarde", integral: "integral" } as const;
+const SIGLA_TURNO = { manhã: "AM", tarde: "TD", integral: "IN" } as const;
+const prefixoDaTurma = (serie: string, periodo: keyof typeof SIGLA_TURNO) =>
+  `${Number.parseInt(serie, 10)}${SIGLA_TURNO[periodo]}`;
 const periodoTexto = (p: "manha" | "tarde" | "integral") => (p === "manha" ? "manhã" : p);
 
 const textoCurto = (max: number, rotulo: string) =>
@@ -51,19 +56,29 @@ const dadosUsuario = z
     nome: textoCurto(120, "o nome"),
     email: z.string().trim().toLowerCase().email("Informe um e-mail válido.").max(160),
     papel: z.enum(PAPEIS, { errorMap: () => ({ message: "Escolha o papel." }) }),
-    disciplina: z.string().trim().max(60).optional().nullable(),
+    materiaId: z.string().max(40).nullish(),
+    turmaId: z.string().max(40).nullish(),
+    segmento: z.enum(SEGMENTOS).nullish(),
   })
-  .refine((d) => d.papel !== "professor" || (d.disciplina ?? "").length >= 2, {
-    message: "Informe a disciplina do professor.",
-    path: ["disciplina"],
+  .refine((d) => d.papel !== "professor" || Boolean(d.materiaId), {
+    message: "Escolha a matéria do professor.",
+    path: ["materiaId"],
+  })
+  .refine((d) => d.papel !== "coordenacao" || Boolean(d.segmento), {
+    message: "Escolha o segmento da coordenação.",
+    path: ["segmento"],
   });
 const ativo = z.object({ ativo: z.boolean() });
 
 const dadosTurma = z.object({
-  nome: textoCurto(60, "o nome da turma"),
   serie: textoCurto(30, "a série"),
   periodo: z.enum(["manhã", "tarde", "integral"], { errorMap: () => ({ message: "Escolha o período." }) }),
   anoLetivo: z.coerce.number().int().min(2000).max(2100),
+  segmento: z.enum(SEGMENTOS, { errorMap: () => ({ message: "Escolha o segmento da turma." }) }),
+});
+const dadosTurmaNova = dadosTurma.refine((d) => SERIES_POR_SEGMENTO[d.segmento].includes(d.serie), {
+  message: "Escolha uma série do segmento selecionado.",
+  path: ["serie"],
 });
 const ativa = z.object({ ativa: z.boolean() });
 
@@ -106,6 +121,34 @@ export class ControladorAdministracao {
 
   // ─────────────────────────── usuários (equipe) ───────────────────────────
 
+  @Get("materias")
+  async materias(@EquipeAtual() eu: Equipe) {
+    return this.banco.materia.findMany({
+      where: { instituicaoId: eu.instituicaoId },
+      orderBy: { nome: "asc" },
+      select: { id: true, nome: true, _count: { select: { professores: { where: { ativo: true } } } } },
+    });
+  }
+
+  @Post("materias")
+  async criarMateria(@EquipeAtual() eu: Equipe, @Body() corpo: unknown) {
+    const { nome } = validar(z.object({ nome: textoCurto(60, "o nome da matéria") }), corpo);
+    try {
+      return await this.banco.$transaction(async (tx) => {
+        const { id } = await tx.materia.create({
+          data: { id: randomUUID(), instituicaoId: eu.instituicaoId, nome, chave: nome.toLowerCase() },
+          select: { id: true },
+        });
+        await registrar(tx, eu, "materia.criada", { tipo: "materia", id, detalhe: nome });
+        return { id };
+      });
+    } catch (erro) {
+      if (erro instanceof Prisma.PrismaClientKnownRequestError && erro.code === "P2002")
+        throw new ConflictException("Já existe uma matéria com esse nome nesta escola.");
+      throw erro;
+    }
+  }
+
   @Get("usuarios")
   async usuarios(@EquipeAtual() eu: Equipe) {
     const pessoas = await this.banco.professor.findMany({
@@ -117,6 +160,8 @@ export class ControladorAdministracao {
         email: true,
         papel: true,
         disciplina: true,
+        materiaId: true,
+        segmento: true,
         ativo: true,
         senhaProvisoria: true,
         ultimoAcesso: true,
@@ -130,6 +175,8 @@ export class ControladorAdministracao {
       email: p.email,
       papel: p.papel,
       disciplina: p.disciplina,
+      materiaId: p.materiaId,
+      segmento: p.segmento,
       ativo: p.ativo,
       senhaProvisoria: p.senhaProvisoria,
       ultimoAcesso: p.ultimoAcesso,
@@ -147,6 +194,10 @@ export class ControladorAdministracao {
     const senha = gerarSegredo();
     const senhaHash = await bcrypt.hash(senha, 12);
     return this.banco.$transaction(async (transacao) => {
+      const materia = await this.materiaDoProfessor(transacao, eu, d);
+      const turmaId = d.papel === "professor" ? d.turmaId : null;
+      const turma = turmaId ? await turmaParaVinculo(transacao, turmaId, eu.instituicaoId) : null;
+      if (turma) conferirTurmaAtiva(turma);
       const nova = await transacao.professor.create({
         data: {
           id: randomUUID(),
@@ -154,7 +205,9 @@ export class ControladorAdministracao {
           nome: d.nome,
           email: d.email,
           papel: d.papel,
-          disciplina: d.papel === "professor" ? d.disciplina! : (d.disciplina ?? null) || null,
+          disciplina: materia?.nome ?? null,
+          materiaId: materia?.id ?? null,
+          segmento: d.papel === "coordenacao" ? d.segmento : null,
           senhaHash,
           senhaProvisoria: true,
         },
@@ -164,6 +217,14 @@ export class ControladorAdministracao {
         id: nova.id,
         detalhe: `${nova.nome} (${NOME_PAPEL[nova.papel]})`,
       });
+      if (turmaId && turma) {
+        await incluirProfessor(transacao, turmaId, nova.id);
+        await registrar(transacao, eu, "turma.vinculo", {
+          tipo: "turma",
+          id: turmaId,
+          detalhe: `${nova.nome} → ${turma.nome}`,
+        });
+      }
       return { id: nova.id };
     });
   }
@@ -187,14 +248,20 @@ export class ControladorAdministracao {
     if (atual.papel !== d.papel) mudancas.push(`papel: ${NOME_PAPEL[atual.papel]} → ${NOME_PAPEL[d.papel]}`);
     if (atual.email !== d.email) mudancas.push("e-mail alterado");
     if (atual.nome !== d.nome) mudancas.push("nome alterado");
+    const segmento = d.papel === "coordenacao" ? (d.segmento ?? null) : null;
+    if (atual.segmento !== segmento && segmento) mudancas.push(`segmento: ${NOME_SEGMENTO[segmento]}`);
     await this.banco.$transaction(async (tx) => {
+      const materia = await this.materiaDoProfessor(tx, eu, d);
+      if (materia && atual.materiaId !== materia.id) mudancas.push(`matéria: ${materia.nome}`);
       await tx.professor.update({
         where: { id, ...(alterouEmail ? { senhaProvisoria: true, email: atual.email } : {}) },
         data: {
           nome: d.nome,
           ...(alterouEmail ? { email: d.email } : {}),
           papel: d.papel,
-          disciplina: d.papel === "professor" ? d.disciplina! : (d.disciplina ?? null) || null,
+          disciplina: materia?.nome ?? null,
+          materiaId: materia?.id ?? null,
+          segmento,
           ...(atual.papel !== d.papel || atual.email !== d.email
             ? { versaoAcesso: { increment: 1 }, redefinicaoHash: null, redefinicaoExpiraEm: null }
             : {}),
@@ -203,11 +270,16 @@ export class ControladorAdministracao {
       // Papel e vínculos mudam juntos; atividades, planos e histórico são preservados.
       if (atual.papel === "professor" && d.papel !== "professor")
         await tx.professorTurma.deleteMany({ where: { professorId: id } });
-      await registrar(tx, eu, atual.papel !== d.papel ? "usuario.papel" : "usuario.editado", {
-        tipo: "usuario",
-        id,
-        detalhe: `${d.nome}${mudancas.length ? `: ${mudancas.join(", ")}` : ""}`,
-      });
+      await registrar(
+        tx,
+        eu,
+        atual.papel !== d.papel || atual.segmento !== segmento ? "usuario.papel" : "usuario.editado",
+        {
+          tipo: "usuario",
+          id,
+          detalhe: `${d.nome}${mudancas.length ? `: ${mudancas.join(", ")}` : ""}`,
+        },
+      );
     });
     return { ok: true };
   }
@@ -269,7 +341,9 @@ export class ControladorAdministracao {
     return turmas.map((t) => ({
       id: t.id,
       nome: t.nome,
+      codigo: t.codigo,
       serie: t.serie,
+      segmento: t.segmento,
       periodo: periodoTexto(t.periodo),
       anoLetivo: t.anoLetivo,
       ativa: t.ativa,
@@ -282,36 +356,56 @@ export class ControladorAdministracao {
 
   @Post("turmas")
   async criarTurma(@EquipeAtual() eu: Equipe, @Body() corpo: unknown) {
-    const d = validar(dadosTurma, corpo);
+    const d = validar(dadosTurmaNova, corpo);
     return this.banco.$transaction(async (transacao) => {
+      const codigo = await this.proximoCodigoTurma(transacao, prefixoDaTurma(d.serie, d.periodo));
       const turma = await transacao.turma.create({
         data: {
           id: randomUUID(),
           instituicaoId: eu.instituicaoId,
-          nome: d.nome,
+          nome: codigo,
           serie: d.serie,
+          segmento: d.segmento,
           periodo: PERIODOS[d.periodo],
           anoLetivo: d.anoLetivo,
-          codigo: await this.codigoDeTurmaLivre(),
+          codigo,
         },
       });
       await registrar(transacao, eu, "turma.criada", { tipo: "turma", id: turma.id, detalhe: turma.nome });
-      return { id: turma.id };
+      return { id: turma.id, codigo: turma.codigo };
     });
   }
 
   @Put("turmas/:id")
   async editarTurma(@EquipeAtual() eu: Equipe, @Param("id") id: string, @Body() corpo: unknown) {
     const d = validar(dadosTurma, corpo);
-    await this.turmaDaEscola(eu, id);
-    await this.banco.$transaction(async (transacao) => {
+    return this.banco.$transaction(async (transacao) => {
+      await turmaParaVinculo(transacao, id, eu.instituicaoId);
+      const atual = await transacao.turma.findUniqueOrThrow({ where: { id } });
+      if (d.serie !== atual.serie || (atual.segmento && d.segmento !== atual.segmento)) validar(dadosTurmaNova, corpo);
+      const gerado = atual.nome === atual.codigo && /^[1-9](AM|TD|IN)\d{2,}$/.test(atual.codigo);
+      const prefixo = prefixoDaTurma(d.serie, d.periodo);
+      const codigo =
+        gerado && !atual.codigo.startsWith(prefixo) ? await this.proximoCodigoTurma(transacao, prefixo) : atual.codigo;
+      const nome = gerado ? codigo : atual.nome;
       await transacao.turma.update({
         where: { id },
-        data: { nome: d.nome, serie: d.serie, periodo: PERIODOS[d.periodo], anoLetivo: d.anoLetivo },
+        data: {
+          nome,
+          codigo,
+          serie: d.serie,
+          segmento: d.segmento,
+          periodo: PERIODOS[d.periodo],
+          anoLetivo: d.anoLetivo,
+        },
       });
-      await registrar(transacao, eu, "turma.editada", { tipo: "turma", id, detalhe: d.nome });
+      await registrar(transacao, eu, "turma.editada", {
+        tipo: "turma",
+        id,
+        detalhe: `${nome} · ${NOME_SEGMENTO[d.segmento]}`,
+      });
+      return { ok: true, codigo };
     });
-    return { ok: true };
   }
 
   @Post("turmas/:id/ativa")
@@ -436,14 +530,34 @@ export class ControladorAdministracao {
     @Query("acao") acao?: string,
     @Query("usuarioId") usuarioId?: string,
     @Query("pagina") pagina = "1",
+    @Query("papel") papel?: string,
+    @Query("busca") busca?: string,
+    @Query("dia") dia?: string,
   ) {
     const POR_PAGINA = 50;
     const n = numeroDaPagina(pagina);
-    const where = {
+    const termo = typeof busca === "string" ? busca.trim().slice(0, 100) : "";
+    const inicio =
+      typeof dia === "string" && /^\d{4}-\d{2}-\d{2}$/.test(dia) ? new Date(`${dia}T00:00:00-03:00`) : null;
+    const ondeDia =
+      inicio && Number.isFinite(inicio.getTime()) && inicio.toISOString().slice(0, 10) === dia
+        ? { gte: inicio, lt: new Date(inicio.getTime() + 86_400_000) }
+        : undefined;
+    const where: Prisma.RegistroWhereInput = {
       instituicaoId: eu.instituicaoId,
       // filtro por grupo: "usuario" pega usuario.criado, usuario.papel...
       ...(acao ? { acao: { startsWith: acao.slice(0, 40) } } : {}),
       ...(usuarioId ? { usuarioId: usuarioId.slice(0, 40) } : {}),
+      ...(PAPEIS.some((p) => p === papel) ? { papel } : {}),
+      criadoEm: ondeDia,
+      ...(termo
+        ? {
+            OR: [
+              { usuarioNome: { contains: termo, mode: "insensitive" } },
+              { detalhe: { contains: termo, mode: "insensitive" } },
+            ],
+          }
+        : {}),
     };
     const [total, linhas] = await Promise.all([
       this.banco.registro.count({ where }),
@@ -458,6 +572,13 @@ export class ControladorAdministracao {
   }
 
   // ─────────────────────────── apoio ───────────────────────────
+
+  private async materiaDoProfessor(tx: Prisma.TransactionClient, eu: Equipe, d: z.infer<typeof dadosUsuario>) {
+    if (d.papel !== "professor") return null;
+    const materia = await tx.materia.findFirst({ where: { id: d.materiaId!, instituicaoId: eu.instituicaoId } });
+    if (!materia) throw new BadRequestException("Escolha uma matéria cadastrada nesta escola.");
+    return materia;
+  }
 
   private async pessoaDaEscola(eu: Equipe, id: string) {
     const p = await this.banco.professor.findFirst({ where: { id, instituicaoId: eu.instituicaoId } });
@@ -485,12 +606,17 @@ export class ControladorAdministracao {
     if (outros === 0) throw new BadRequestException("A escola precisa de pelo menos um administrador ativo.");
   }
 
-  private async codigoDeTurmaLivre() {
-    for (;;) {
-      let c = "";
-      for (let i = 0; i < 6; i++) c += ALFABETO_CODIGO_TURMA[randomInt(ALFABETO_CODIGO_TURMA.length)];
-      if (!(await this.banco.turma.findUnique({ where: { codigo: c } }))) return c;
-    }
+  private async proximoCodigoTurma(tx: Prisma.TransactionClient, prefixo: string) {
+    // A unicidade da coluna é global, então a sequência também é global por prefixo.
+    await tx.$queryRaw`SELECT 1 FROM pg_advisory_xact_lock(hashtext(${`codigo-turma:${prefixo}`}))`;
+    const turmas = await tx.turma.findMany({ where: { codigo: { startsWith: prefixo } }, select: { codigo: true } });
+    const ultimo = turmas.reduce((max, { codigo }) => {
+      const sufixo = codigo.slice(prefixo.length);
+      return /^\d{2,}$/.test(sufixo) ? Math.max(max, Number(sufixo)) : max;
+    }, 0);
+    const codigo = `${prefixo}${String(ultimo + 1).padStart(2, "0")}`;
+    if (codigo.length > 10) throw new ConflictException("O limite de códigos para esta série e turno foi atingido.");
+    return codigo;
   }
 
   private async codigoDeAlunoLivre() {

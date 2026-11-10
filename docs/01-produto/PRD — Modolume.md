@@ -62,7 +62,7 @@ O projeto é composto por duas soluções complementares e um núcleo de serviç
 - **Painel do professor:** acompanhamento individual e coletivo dos alunos, indicadores SMART por turma, radar de habilidades por formato, tendências de aprendizagem, agenda, planejamento de aulas, criação de atividades e acompanhamento de conclusão.
 - **Gestão e administração:** cadastro e gerenciamento de usuários, turmas, vínculos, perfis de acesso e históricos, com permissões específicas para cada perfil.
 - **Serviços compartilhados:** autenticação, API, banco de dados, regras de negócio, sincronização do progresso e distribuição das atividades elaboradas pelo professor.
-- **Site institucional:** página inicial com a apresentação da empresa, as soluções comerciais (sem preços; a proposta vem da equipe de vendas) e o acesso do professor (ADR 0018). O app do aluno não abre no navegador.
+- **Portal web da equipe:** a raiz abre a entrada comum de administrador, coordenação e professor. A sessão direciona cada pessoa ao painel do seu papel. As missões do aluno estão disponíveis no app Android e iOS (ADR 0021).
 
 Cada módulo tem um PRD próprio, com requisitos, histórias de usuário e critérios de aceite (seção 10). Esses PRDs substituem a Especificação de Requisitos de Software.
 

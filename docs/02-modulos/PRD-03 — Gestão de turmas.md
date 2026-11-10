@@ -41,9 +41,9 @@ Testes de vínculo e de recorte de dados por perfil; demonstração do cadastro 
 
 | ID | Comportamento esperado | Prior. | Verif. | Situação |
 | --- | --- | :---: | :---: | :---: |
-| MOD-TUR-001 | A gestão deve poder cadastrar turmas com nome, série, período e ano letivo. | E | T | Implementado |
+| MOD-TUR-001 | A gestão cadastra a turma selecionando segmento, série, turno e ano letivo. O sistema salva um identificador único com o número da série, a sigla do turno (`AM`, `TD` ou `IN`) e um número sequencial, como `6AM12`. | E | T | Implementado |
 | MOD-TUR-002 | A gestão deve poder editar e consultar turmas. | E | T | Implementado |
-| MOD-TUR-003 | A gestão deve poder vincular um ou mais professores a uma turma. | E | T | Implementado |
+| MOD-TUR-003 | A administração pode atribuir uma turma no cadastro do professor. A coordenação adiciona e remove professores das turmas do seu segmento. | E | T | Implementado |
 | MOD-TUR-004 | A gestão deve poder vincular alunos a uma turma. | E | T | Implementado |
 | MOD-TUR-005 | A gestão deve poder remover vínculos, preservando o histórico. | E | T | Implementado |
 | MOD-TUR-006 | Exibir os professores e alunos de cada turma. | E | D | Implementado |
@@ -52,7 +52,7 @@ Testes de vínculo e de recorte de dados por perfil; demonstração do cadastro 
 | MOD-TUR-009 | O professor visualiza somente as turmas às quais está vinculado. | E | T | Implementado |
 | MOD-TUR-010 | O aluno acessa somente as informações da própria turma. | E | T | Implementado |
 
-**Situação atual:** o aluno não entra mais pelo código da turma: cada aluno tem o próprio código de acesso e um PIN (MOD-AUT-009). O código da turma continua no banco (na demonstração, `LUZ6AM` e `LUZ6BT`) só como identificação. A "gestão" deste PRD é dividida em dois papéis (ADR 0019): o **administrador** cria, edita, encerra e reabre turmas e cadastra ou troca alunos de turma (`/admin/turmas`); a **coordenação** vincula e tira professores das turmas (`/coordenacao/vinculos`) e acompanha os parâmetros de todas elas. O painel lista as turmas do professor (vindas da API) com alunos, série, turno e responsável. O recorte por professor já é aplicado em todas as consultas do painel (`recortar` em `apps/web/lib/painel/dados.ts`). Hoje cada turma tem um único professor responsável.
+**Situação atual:** cada aluno entra com código pessoal e PIN (MOD-AUT-009). O código da turma identifica o cadastro no painel. Turmas anteriores mantêm o nome e o código gravados. A coordenação acessa indicadores, alunos e vínculos somente do segmento atribuído. A atribuição usa a lista de turmas, a busca por professor e o filtro por matéria. Cada operação pede confirmação com o nome do professor e da turma. Turmas com série anterior ambígua ficam pendentes de classificação pela administração.
 
 ### 5.2 Regras de negócio
 
@@ -63,7 +63,7 @@ Testes de vínculo e de recorte de dados por perfil; demonstração do cadastro 
 
 ### Fora do escopo atual
 
-- Turmas com mais de uma disciplina.
+- Grade de horários e carga horária por matéria.
 - Enturmação automática a partir do sistema acadêmico.
 
 ## 6. Histórias de usuário

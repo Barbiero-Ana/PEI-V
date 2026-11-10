@@ -3,10 +3,11 @@ import assert from "node:assert/strict";
 import { mkdirSync, mkdtempSync, readFileSync, readdirSync } from "node:fs";
 import { resolve } from "node:path";
 import EmbeddedPostgres from "embedded-postgres";
-import { Banco } from "../src/infra.js";
+import { Banco, hojeBrasil } from "../src/infra.js";
 import { ControladorAcesso } from "../src/acesso.js";
 import { ControladorAdministracao } from "../src/admin.js";
 import { ControladorAluno } from "../src/aluno.js";
+import { ControladorProfessor } from "../src/professor.js";
 import { resumoDoSegredo } from "../src/credencial.js";
 import { JwtService } from "@nestjs/jwt";
 
@@ -85,13 +86,16 @@ try {
   console.log("OK: auditoria protegida quando o papel existe antes das migrações");
 
   await banco.instituicao.create({ data: { id: "escola", nome: "Escola de teste" } });
+  await banco.materia.create({
+    data: { id: "matematica", instituicaoId: "escola", nome: "Matemática", chave: "matematica" },
+  });
   const eu = { id: "admin", nome: "Admin", papel: "admin" as const, instituicaoId: "escola" };
   const administrador = new ControladorAdministracao(banco);
   const criada = await administrador.criarUsuario(eu, {
     nome: "Pessoa",
     email: "teste@example.test",
     papel: "professor",
-    disciplina: "Matemática",
+    materiaId: "matematica",
   });
   assert.deepEqual(Object.keys(criada), ["id"]);
   const acesso = new ControladorAcesso(banco, new JwtService({ secret: "segredo-de-teste" }));
@@ -144,6 +148,18 @@ try {
   await banco.aluno.create({
     data: { id: "aluno", nome: "Aluno", matricula: "1", turmaId: "turma", codigoAcesso: "TESTE234" },
   });
+  const codigo = "TESTE234";
+  const pins = ["2749", "3861"];
+  const entradas = await Promise.allSettled(pins.map((pin) => acesso.entrarAluno({ codigo, pin })));
+  assert.equal(entradas.filter((entrada) => entrada.status === "fulfilled").length, 1);
+  const pinVencedor = pins[entradas.findIndex((entrada) => entrada.status === "fulfilled")]!;
+  await acesso.entrarAluno({ codigo, pin: pinVencedor });
+  const errados = await Promise.allSettled(
+    ["1549", "2876", "4639", "5479", "7351"].map((pin) => acesso.entrarAluno({ codigo, pin })),
+  );
+  assert.ok(errados.every((entrada) => entrada.status === "rejected" && entrada.reason.getStatus() === 401));
+  await assert.rejects(acesso.entrarAluno({ codigo, pin: pinVencedor }), { status: 429 });
+  console.log("OK: PIN inicial único e bloqueio após cinco tentativas concorrentes");
   await banco.formatoAtividade.create({ data: { id: "objetiva", rotulo: "Objetiva" } });
   await banco.mapa.create({ data: { numero: 1, titulo: "Mapa", constelacao: "teste" } });
   await banco.missao.create({
@@ -174,6 +190,69 @@ try {
   assert.deepEqual(await aluno.jogadas(sessao, { jogadas: [jogada] }), { recebidas: [jogada.id], recusadas: [] });
   assert.equal(await banco.jogada.count(), 1);
   console.log("OK: lote misto recusa vínculo inválido e reenvio de jogada não duplica histórico");
+
+  await Promise.all(
+    [42, 7, 19].map((pontos) =>
+      aluno.gravarProgresso(sessao, {
+        progresso: { missao: { estrelas: 1, jogadas: pontos, melhorAcerto: 50 } },
+        pontosPorNivel: { "1": pontos },
+        constelacoes: {},
+        desafios: {},
+        gastos: 0,
+        compras: [],
+      }),
+    ),
+  );
+  const progressoConsolidado = await aluno.lerProgresso(sessao);
+  assert.equal(progressoConsolidado.progresso.missao?.jogadas, 42);
+  assert.equal(progressoConsolidado.pontosPorNivel["1"], 42);
+  console.log("OK: envio concorrente de retratos preserva o maior total");
+
+  await banco.professorTurma.create({ data: { professorId: criada.id, turmaId: "turma" } });
+  const professor = new ControladorProfessor(banco);
+  const equipe = { id: criada.id, nome: "Pessoa", papel: "professor" as const, instituicaoId: eu.instituicaoId };
+  const sessaoProfessor = { sub: equipe.id, papel: equipe.papel };
+  const feedbackErro = "Conte todos os lados do triângulo e tente novamente.";
+  const atividade = await professor.criar(sessaoProfessor, equipe, {
+    titulo: "Geometria de teste",
+    formato: "objetiva",
+    instrucao: "Escolha a alternativa correta.",
+    habilidade: "",
+    missaoId: "",
+    planoId: "",
+    questoes: [
+      {
+        tipo: "objetiva",
+        enunciado: "Quantos lados tem um triângulo?",
+        alternativas: ["3", "4"],
+        correta: 0,
+        feedbackErro,
+      },
+    ],
+    turmas: ["turma"],
+    liberarEm: hojeBrasil(),
+  });
+  const resposta = {
+    ...jogada,
+    id: "resposta-atividade",
+    origem: "professor",
+    missaoId: atividade.id,
+    atividadeId: atividade.id,
+    titulo: atividade.titulo,
+  };
+  assert.equal((await aluno.atividades(sessao)).atividades.length, 0);
+  await professor.mudarEnvio(sessaoProfessor, equipe, atividade.id, { enviar: true });
+  const publicada = (await aluno.atividades(sessao)).atividades[0];
+  assert.equal(publicada?.id, atividade.id);
+  assert.equal(publicada?.questoes[0]?.feedbackErro, feedbackErro);
+  assert.deepEqual((await aluno.jogadas(sessao, { jogadas: [resposta] })).recebidas, [resposta.id]);
+  assert.deepEqual((await aluno.jogadas(sessao, { jogadas: [resposta] })).recebidas, [resposta.id]);
+  assert.equal(await banco.jogada.count({ where: { atividadeId: atividade.id } }), 1);
+  const situacao = await professor.situacao(sessaoProfessor, equipe, atividade.id);
+  assert.equal(situacao.alunos[0]?.id, sessao.sub);
+  assert.equal(situacao.alunos[0]?.acerto, 100);
+  assert.equal(situacao.alunos[0]?.concluiu, true);
+  console.log("OK: professor publica, aluno recebe feedback e envia uma vez, professor consulta o resultado");
 
   await cliente.query(
     `CREATE FUNCTION recusar_registro_teste() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'falha deliberada'; END $$; CREATE TRIGGER recusar_registro_teste BEFORE INSERT ON registro FOR EACH ROW EXECUTE FUNCTION recusar_registro_teste();`,

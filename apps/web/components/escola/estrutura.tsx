@@ -1,11 +1,11 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
+import { NOME_SEGMENTO } from "@modolume/core";
 import { Simbolo } from "@/components/simbolo";
 import { MenuCompacto, MenuLateral, type Area } from "@/components/painel/menu";
 import { Avatar } from "@/components/painel/blocos";
 import { IconeSair } from "@/components/painel/icones";
 import { NOME_DO_PAPEL, euLogado } from "@/lib/escola/api";
-import { sair } from "@/app/professor/acoes";
 
 /**
  * Estrutura das áreas da coordenação e do administrador, igual à do painel do
@@ -39,9 +39,10 @@ export async function Estrutura({ area, children }: { area: Exclude<Area, "profe
           </div>
           <p className="mx-2 -mt-2 w-fit rounded-full bg-white/15 px-3 py-1 text-xs font-semibold text-white">
             {NOME_DO_PAPEL[eu.papel]}
+            {eu.segmento ? ` · ${NOME_SEGMENTO[eu.segmento]}` : ""}
           </p>
           <MenuLateral avisos={{}} area={area} />
-          <form action={sair}>
+          <form action="/sair" method="post">
             <button
               type="submit"
               className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-sm font-semibold text-white hover:bg-white/12"
@@ -63,7 +64,7 @@ export async function Estrutura({ area, children }: { area: Exclude<Area, "profe
               <Avatar nome={eu.nome} tamanho={32} tom="escuro" />
               <span className="hidden text-sm font-semibold text-tinta sm:block">{eu.nome}</span>
             </span>
-            <form action={sair} className="lg:hidden">
+            <form action="/sair" method="post" className="lg:hidden">
               <button
                 type="submit"
                 className="flex min-h-11 items-center gap-2 rounded-xl px-3 text-sm font-semibold text-texto"
@@ -73,6 +74,11 @@ export async function Estrutura({ area, children }: { area: Exclude<Area, "profe
             </form>
           </header>
           <main id="conteudo" className="relative w-full min-w-0 flex-1 px-5 py-7 lg:overflow-y-auto lg:px-8">
+            {area === "coordenacao" && !eu.segmento ? (
+              <p className="mb-5 rounded-xl bg-pessego-claro px-4 py-3 text-sm text-tinta">
+                Seu segmento ainda está a definir. A administração pode atribuí-lo em Equipe e acessos.
+              </p>
+            ) : null}
             {children}
           </main>
         </div>

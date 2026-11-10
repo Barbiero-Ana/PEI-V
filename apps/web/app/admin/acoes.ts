@@ -24,7 +24,9 @@ const dadosPessoa = (f: FormData) => ({
   nome: txt(f, "nome"),
   email: txt(f, "email"),
   papel: txt(f, "papel"),
-  disciplina: txt(f, "disciplina") || null,
+  materiaId: txt(f, "materiaId") || null,
+  turmaId: txt(f, "turmaId") || null,
+  segmento: txt(f, "segmento") || null,
 });
 
 export async function criarUsuario(_: ResultadoAcao | null, f: FormData) {
@@ -32,6 +34,7 @@ export async function criarUsuario(_: ResultadoAcao | null, f: FormData) {
   return resultado(r, "Pessoa cadastrada. Ela deve solicitar o link em Recuperar acesso, usando seu e-mail.", [
     "/admin/usuarios",
     "/admin",
+    "/admin/turmas",
   ]);
 }
 
@@ -56,15 +59,27 @@ export async function novaSenhaUsuario(id: string, _: ResultadoAcao | null) {
 }
 
 const dadosTurma = (f: FormData) => ({
-  nome: txt(f, "nome"),
   serie: txt(f, "serie"),
+  segmento: txt(f, "segmento"),
   periodo: txt(f, "periodo"),
   anoLetivo: Number(txt(f, "anoLetivo")),
 });
 
+export async function criarMateria(_: ResultadoAcao | null, f: FormData) {
+  const r = await acao("/admin/materias", { metodo: "POST", corpo: { nome: txt(f, "nome") } });
+  return resultado(r, "Matéria cadastrada e disponível no formulário de professores.", [
+    "/admin/materias",
+    "/admin/usuarios",
+  ]);
+}
+
 export async function criarTurma(_: ResultadoAcao | null, f: FormData) {
   const r = await acao("/admin/turmas", { metodo: "POST", corpo: dadosTurma(f) });
-  return resultado(r, "Turma criada. A coordenação já pode vincular os professores.", ["/admin/turmas", "/admin"]);
+  const codigo = r.ok && typeof r.dados.codigo === "string" ? ` ${r.dados.codigo}` : "";
+  return resultado(r, `Turma${codigo} criada. A coordenação já pode vincular os professores.`, [
+    "/admin/turmas",
+    "/admin",
+  ]);
 }
 
 export async function editarTurma(id: string, _: ResultadoAcao | null, f: FormData) {

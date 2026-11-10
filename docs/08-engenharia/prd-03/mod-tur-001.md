@@ -1,6 +1,6 @@
 # MOD-TUR-001
 
-A gestão deve poder cadastrar turmas com nome, série, período e ano letivo.
+A gestão cadastra a turma selecionando segmento, série, turno e ano letivo. O sistema salva um identificador único com o número da série, a sigla do turno (`AM`, `TD` ou `IN`) e um número sequencial, como `6AM12`.
 
 Origem: [PRD-03 — Gestão de turmas](../../02-modulos/PRD-03%20%E2%80%94%20Gest%C3%A3o%20de%20turmas.md), seção 5. Prioridade **E**, método **T**. Situação declarada na origem **Implementado**.
 

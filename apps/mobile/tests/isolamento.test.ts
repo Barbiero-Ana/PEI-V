@@ -3,7 +3,6 @@ import { describe, it } from "node:test";
 import {
   CONTA_LEGADA,
   JOGADOR_LEGADO,
-  SESSAO,
   EscopoIdentidade,
   RepositorioIdentidades,
   chaveDados,
@@ -13,6 +12,7 @@ import {
   type Armazenamento,
   type ContaAluno,
 } from "../src/estado/isolamento";
+import { RepositorioSessao, SESSAO_ANTIGA, SESSAO_PROTEGIDA } from "../src/estado/sessao";
 
 class Memoria implements Armazenamento {
   dados = new Map<string, string>();
@@ -21,6 +21,12 @@ class Memoria implements Armazenamento {
   }
   async setItem(chave: string, valor: string) {
     this.dados.set(chave, valor);
+  }
+  async getAllKeys() {
+    return [...this.dados.keys()];
+  }
+  async removeItem(chave: string) {
+    this.dados.delete(chave);
   }
 }
 const conta = (id: string): ContaAluno => ({
@@ -48,16 +54,20 @@ function adiada<T>() {
 describe("Isolamento de identidades e sincronização mobile", () => {
   it("logout pede login de novo mesmo quando o visitante já usava o app sem turma", async () => {
     const storage = new Memoria();
+    const cofre = new Memoria();
     const repo = new RepositorioIdentidades(storage);
+    const sessoes = new RepositorioSessao(cofre, storage);
     const aluno = conta("a");
     const fila = [{ id: "pendente", alunoId: "a" }];
-    await repo.gravar(SESSAO, { conta: aluno });
+    await sessoes.restaurar();
+    await sessoes.salvar(aluno);
     await repo.salvar("conta", identidadeDa(null), { semTurma: true, feitas: { exemplo: 1 } });
     await repo.salvar("conta", identidadeDa(aluno), { fila });
-    await repo.encerrarSessao();
+    await sessoes.salvar(null);
+    await repo.desativarDemonstracao();
 
     const reaberto = new RepositorioIdentidades(storage);
-    assert.equal(await reaberto.sessao(), null);
+    assert.equal(await new RepositorioSessao(cofre, storage).restaurar(), null);
     assert.deepEqual(await reaberto.dados("conta", identidadeDa(null), () => ({})), {
       semTurma: false,
       feitas: { exemplo: 1 },
@@ -78,35 +88,86 @@ describe("Isolamento de identidades e sincronização mobile", () => {
   });
   it("reinício restaura somente a sessão e os snapshots da identidade selecionada, sem rede", async () => {
     const storage = new Memoria();
+    const cofre = new Memoria();
     let repo = new RepositorioIdentidades(storage);
+    const sessoes = new RepositorioSessao(cofre, storage);
+    await sessoes.restaurar();
     await repo.salvar("jogador", identidadeDa(conta("a")), registro("a"));
     await repo.salvar("conta", identidadeDa(conta("a")), { fila: [{ id: "pendente", alunoId: "a" }] });
-    await repo.gravar(SESSAO, { conta: conta("a") });
+    await sessoes.salvar(conta("a"));
     repo = new RepositorioIdentidades(storage);
-    assert.deepEqual(await repo.sessao(), conta("a"));
-    assert.deepEqual(await repo.dados("jogador", identidadeDa(await repo.sessao()), () => ({})), registro("a"));
+    const restaurada = await new RepositorioSessao(cofre, storage).restaurar();
+    assert.deepEqual(restaurada, conta("a"));
+    assert.deepEqual(await repo.dados("jogador", identidadeDa(restaurada), () => ({})), registro("a"));
     assert.deepEqual(await repo.dados("conta", identidadeDa(conta("a")), () => ({})), {
       fila: [{ id: "pendente", alunoId: "a" }],
     });
-    await repo.gravar(SESSAO, { conta: null });
-    assert.equal(await new RepositorioIdentidades(storage).sessao(), null);
+    await sessoes.salvar(null);
+    assert.equal(await new RepositorioSessao(cofre, storage).restaurar(), null);
     assert.deepEqual(await repo.dados("jogador", identidadeDa(conta("a")), () => ({})), registro("a"));
   });
-  it("mantém os bytes legados intactos e não atribui progresso global a visitante ou conta", async () => {
+  it("migra a sessão legada sem atribuir progresso global a visitante ou conta", async () => {
     const storage = new Memoria();
+    const cofre = new Memoria();
     const antigo = JSON.stringify(registro("origem-desconhecida"));
     storage.dados.set(JOGADOR_LEGADO, antigo);
     storage.dados.set(CONTA_LEGADA, JSON.stringify({ conta: conta("a"), fila: [], feitas: { antiga: true } }));
     const repo = new RepositorioIdentidades(storage);
+    const sessoes = new RepositorioSessao(cofre, storage);
     assert.equal(await repo.temLegado(), true);
-    assert.deepEqual(await repo.sessao(), conta("a"));
-    await repo.gravar(SESSAO, { conta: null });
-    assert.equal(await new RepositorioIdentidades(storage).sessao(), null);
+    assert.deepEqual(await sessoes.restaurar(), conta("a"));
+    await sessoes.salvar(null);
+    assert.equal(await new RepositorioSessao(cofre, storage).restaurar(), null);
     for (const c of [null, conta("a"), conta("b")]) {
       assert.deepEqual(await repo.dados("jogador", identidadeDa(c), () => ({ progresso: {} })), { progresso: {} });
     }
     assert.equal(storage.dados.get(JOGADOR_LEGADO), antigo);
+    assert.equal(Object.hasOwn(JSON.parse(storage.dados.get(CONTA_LEGADA)!), "conta"), false);
     assert.equal(JSON.parse(storage.dados.get(CONTA_LEGADA)!).feitas.antiga, true);
+  });
+  it("remove credenciais de snapshots de todas as contas e preserva filas e progresso", async () => {
+    const local = new Memoria();
+    const cofre = new Memoria();
+    const a = conta("a");
+    const b = conta("b");
+    const identidadeA = identidadeDa(a);
+    const identidadeB = identidadeDa(b);
+    const fila = [{ id: "jogada", alunoId: "a" }];
+    await local.setItem(SESSAO_ANTIGA, JSON.stringify({ conta: a }));
+    await local.setItem(
+      chaveDados("conta", identidadeB),
+      JSON.stringify({ identidade: identidadeB, dados: { conta: b, fila: [] } }),
+    );
+    await local.setItem(
+      `modolume:isolado:v3:${identidadeA}`,
+      JSON.stringify({
+        identidade: identidadeA,
+        conta: { conta: a, fila },
+        jogador: registro("a"),
+      }),
+    );
+    const sessoes = new RepositorioSessao(cofre, local);
+    assert.deepEqual(await sessoes.restaurar(), a);
+    const repo = new RepositorioIdentidades(local);
+    assert.deepEqual(await repo.dados("conta", identidadeA, () => ({})), { fila });
+    assert.deepEqual(await repo.dados("conta", identidadeB, () => ({})), { fila: [] });
+    assert.deepEqual(await repo.dados("jogador", identidadeA, () => ({})), registro("a"));
+    assert.ok([...local.dados.values()].every((v) => !v.includes(a.token) && !v.includes(b.token)));
+  });
+  it("retoma migração interrompida e ignora credencial sobrevivente a uma reinstalação", async () => {
+    const local = new Memoria();
+    const cofre = new Memoria();
+    const aluno = conta("a");
+    await local.setItem(SESSAO_ANTIGA, JSON.stringify({ conta: aluno }));
+    const remover = local.removeItem.bind(local);
+    local.removeItem = async () => {
+      throw new Error("interrupção durante limpeza");
+    };
+    await assert.rejects(new RepositorioSessao(cofre, local).restaurar(), /interrupção/);
+    local.removeItem = remover;
+    assert.deepEqual(await new RepositorioSessao(cofre, local).restaurar(), aluno);
+    assert.equal(await local.getItem(SESSAO_ANTIGA), null);
+    assert.equal(await new RepositorioSessao(cofre, new Memoria()).restaurar(), null);
   });
   it("migra apenas filas com alunoId explícito e não reimporta pendências já confirmadas", async () => {
     const storage = new Memoria();
@@ -267,6 +328,32 @@ describe("Isolamento de identidades e sincronização mobile", () => {
       assert.equal(storage.dados.get(chave), bruto);
     }
   });
+  it("reabertura preserva juntos a recompensa e a jogada pendente", async () => {
+    const storage = new Memoria();
+    const identidade = "aluno:a";
+    const repo = new RepositorioIdentidades(storage);
+    const recompensaAnterior = { pontos: 5 };
+    const contaAnterior = { fila: [] };
+    storage.dados.set(chaveDados("jogador", identidade), JSON.stringify({ identidade, dados: recompensaAnterior }));
+    storage.dados.set(chaveDados("conta", identidade), JSON.stringify({ identidade, dados: contaAnterior }));
+    const recompensa = { pontos: 15 };
+    const contaNova = { fila: [{ id: "jogada-estavel", alunoId: "a" }] };
+    const salvar = storage.setItem.bind(storage);
+    storage.setItem = async () => {
+      throw new Error("falha ao gravar");
+    };
+    await assert.rejects(repo.salvarJuntos(identidade, recompensa, contaNova));
+    await assert.rejects(repo.salvar("jogador", identidade, recompensa));
+
+    const reaberto = new RepositorioIdentidades(storage);
+    assert.deepEqual(await reaberto.dados("jogador", identidade, () => ({})), recompensaAnterior);
+    assert.deepEqual(await reaberto.dados("conta", identidade, () => ({})), contaAnterior);
+    storage.setItem = salvar;
+    await reaberto.salvarJuntos(identidade, recompensa, contaNova);
+    const reiniciado = new RepositorioIdentidades(storage);
+    assert.deepEqual(await reiniciado.dados("jogador", identidade, () => ({})), recompensa);
+    assert.deepEqual(await reiniciado.dados("conta", identidade, () => ({})), contaNova);
+  });
   it("abertura concorrente inicializa uma única vez, sem sobrescrever dados já usados", async () => {
     const storage = new Memoria();
     const repo = new RepositorioIdentidades(storage);
@@ -286,22 +373,25 @@ describe("Isolamento de identidades e sincronização mobile", () => {
   });
   it("a troca espera as escritas pendentes antes de persistir a nova sessão", async () => {
     const storage = new Memoria();
+    const cofre = new Memoria();
     const repo = new RepositorioIdentidades(storage);
+    const sessoes = new RepositorioSessao(cofre, storage);
+    await sessoes.restaurar();
     const espera = adiada<void>();
     const salvar = storage.setItem.bind(storage);
     storage.setItem = async (chave, valor) => {
-      if (chave !== SESSAO) await espera.promessa;
+      await espera.promessa;
       await salvar(chave, valor);
     };
     const escrita = repo.salvar("jogador", "aluno:a", registro("a"));
     const troca = (async () => {
       await repo.aguardarEscritas();
-      await repo.gravar(SESSAO, { conta: conta("b") });
+      await sessoes.salvar(conta("b"));
     })();
-    assert.equal(storage.dados.has(SESSAO), false);
+    assert.equal(cofre.dados.get(SESSAO_PROTEGIDA), JSON.stringify({ conta: null }));
     espera.resolver();
     await Promise.all([escrita, troca]);
-    assert.deepEqual(await repo.sessao(), conta("b"));
+    assert.deepEqual(await sessoes.restaurar(), conta("b"));
     assert.deepEqual(await repo.dados("jogador", "aluno:a", () => ({})), registro("a"));
   });
   it("falha de leitura não cria snapshot vazio sobre dados existentes", async () => {

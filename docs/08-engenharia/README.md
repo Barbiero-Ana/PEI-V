@@ -3,6 +3,7 @@
 - [Arquitetura e convenções](arquitetura.md)
 - [Relatório de auditoria](auditoria.md)
 - [Plano de correção e testes do app](plano-correcao-mobile.md)
+- [Publicação na Google Play](publicacao-android.md)
 - [Matriz de rastreabilidade](matriz.md)
 
 ## Módulos

@@ -1,5 +1,12 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { COOKIE_SESSAO, INICIO_DO_PAPEL, lerSessao, papelDa, type PapelEquipe } from "@/lib/painel/sessao";
+import {
+  COOKIE_SESSAO,
+  expirarCookiesSessao,
+  INICIO_DO_PAPEL,
+  lerSessao,
+  papelDa,
+  type PapelEquipe,
+} from "@/lib/painel/sessao";
 
 /**
  * Protege as áreas do painel. O login (/entrar) é um portal só para toda a equipe. Sem sessão válida, qualquer página leva ao login.
@@ -16,6 +23,15 @@ const AREA_DO_CAMINHO: [string, PapelEquipe][] = [
 
 const LOGIN = "/entrar";
 const TROCAR_SENHA = "/conta/senha";
+const LOOPBACK = /^(localhost|127\.0\.0\.1|\[::1\])(?::\d+)?$/;
+
+function irPara(req: NextRequest, caminho: string) {
+  const destino = new URL(caminho, req.url);
+  const host = req.headers.get("host");
+  // No servidor local, localhost e 127.0.0.1 têm cookies separados.
+  if (host && LOOPBACK.test(host) && LOOPBACK.test(destino.host)) destino.host = host;
+  return NextResponse.redirect(destino);
+}
 
 export async function middleware(req: NextRequest) {
   const caminho = req.nextUrl.pathname;
@@ -24,22 +40,21 @@ export async function middleware(req: NextRequest) {
 
   // a API recusou o token (vencido ou de outro servidor): apaga a sessão e mostra o login
   if (noLogin && req.nextUrl.searchParams.has("expirou")) {
-    const resposta = NextResponse.next();
-    resposta.cookies.delete({ name: COOKIE_SESSAO, path: "/" });
-    resposta.cookies.delete({ name: COOKIE_SESSAO, path: "/professor" });
+    const resposta = irPara(req, LOGIN);
+    expirarCookiesSessao(resposta.headers);
     return resposta;
   }
-  if (!sessao) return noLogin ? NextResponse.next() : NextResponse.redirect(new URL(LOGIN, req.url));
+  if (!sessao) return noLogin ? NextResponse.next() : irPara(req, LOGIN);
 
   const papel = papelDa(sessao);
   const inicio = INICIO_DO_PAPEL[papel];
-  if (noLogin) return NextResponse.redirect(new URL(sessao.trocarSenha ? TROCAR_SENHA : inicio, req.url));
+  if (noLogin) return irPara(req, sessao.trocarSenha ? TROCAR_SENHA : inicio);
 
   // senha provisória: só a página de troca abre
-  if (sessao.trocarSenha && caminho !== TROCAR_SENHA) return NextResponse.redirect(new URL(TROCAR_SENHA, req.url));
+  if (sessao.trocarSenha && caminho !== TROCAR_SENHA) return irPara(req, TROCAR_SENHA);
 
   const area = AREA_DO_CAMINHO.find(([base]) => caminho === base || caminho.startsWith(`${base}/`));
-  if (area && area[1] !== papel) return NextResponse.redirect(new URL(inicio, req.url));
+  if (area && area[1] !== papel) return irPara(req, inicio);
   return NextResponse.next();
 }
 

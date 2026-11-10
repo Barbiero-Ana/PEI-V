@@ -51,7 +51,7 @@ os indicadores do professor.
 
 ## App (React Native / Expo) — principal
 
-`apps/mobile` é o aplicativo do aluno, feito com **Expo SDK 57** (React Native 0.86):
+`apps/mobile` é o aplicativo do aluno, feito com **Expo SDK 58** (React Native 0.88.1):
 
 - **Barra de navegação** inferior: Início, Níveis, Conquistas e Perfil.
 - **Níveis**: as missões ficam em 8 mapas, do "Primeiros passos" ao "Mestre dos números".
@@ -143,11 +143,11 @@ usar a URL interna (`postgres.railway.internal`). Para voltar ao banco local, tr
 ## Site (página inicial e painel)
 
 ```bash
-pnpm web     # http://localhost:3000 (planos) e http://localhost:3000/professor (painel)
+pnpm web     # http://localhost:3000/entrar
 ```
 
-O app do aluno é só para celular (ADR 0018): não há versão do aluno no navegador. Os planos e valores da página
-inicial ficam em `apps/web/lib/planos.ts`.
+O app do aluno é exclusivo de Android e iOS. A raiz de `apps/web` abre o login da equipe, com um painel para cada papel
+institucional (ADR 0021). O [roteiro da Google Play](docs/08-engenharia/publicacao-android.md) descreve as etapas para gerar e validar o AAB.
 
 ## Identidade visual
 

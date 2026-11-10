@@ -25,4 +25,4 @@ As regras de negócio aplicáveis ao contexto estão no [módulo](README.md) e n
 
 **Aceite nesta auditoria** Evidência parcial.
 
-Suíte mobile exercita fila e troca de identidade. Queda e reconexão em celular pendentes.
+Suíte mobile cobre gravação conjunta da recompensa e da fila, reabertura e troca de identidade. verificar-banco.ts cobre reenvio e consulta do resultado pelo professor. Queda e reconexão em celular pendentes.

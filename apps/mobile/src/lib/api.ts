@@ -50,9 +50,8 @@ export async function chamarApi<T>(
   if (!temApi) throw new ErroApi(0, "O app está sem servidor configurado.");
   const controle = new AbortController();
   const relogio = setTimeout(() => controle.abort(), opcoes.tempoLimite ?? 12_000);
-  let resposta: Response;
   try {
-    resposta = await fetch(`${API_URL}${caminho}`, {
+    const resposta = await fetch(`${API_URL}${caminho}`, {
       method: opcoes.metodo ?? "GET",
       headers: {
         ...(opcoes.corpo !== undefined ? { "Content-Type": "application/json" } : {}),
@@ -61,16 +60,21 @@ export async function chamarApi<T>(
       body: opcoes.corpo !== undefined ? JSON.stringify(opcoes.corpo) : undefined,
       signal: controle.signal,
     });
-  } catch {
+    const dados: unknown = await resposta.json().catch(() => null);
+    if (controle.signal.aborted) throw new Error("Tempo limite de resposta.");
+    const corpo = dados && typeof dados === "object" ? (dados as { message?: unknown; mensagem?: unknown }) : null;
+    if (!resposta.ok) {
+      const mensagem = typeof corpo?.message === "string" ? corpo.message : corpo?.mensagem;
+      throw new ErroApi(resposta.status, typeof mensagem === "string" ? mensagem : "Algo deu errado. Tente de novo.");
+    }
+    if (!corpo || Array.isArray(dados)) {
+      throw new ErroApi(502, "O servidor enviou uma resposta inválida. Tente novamente.");
+    }
+    return dados as T;
+  } catch (erro) {
+    if (erro instanceof ErroApi) throw erro;
     throw new ErroApi(0, "Sem conexão com o servidor. Confira a internet e tente de novo.");
   } finally {
     clearTimeout(relogio);
   }
-  const dados = (await resposta.json().catch(() => ({}))) as { message?: unknown; mensagem?: string };
-  if (!resposta.ok) {
-    const mensagem =
-      typeof dados.message === "string" ? dados.message : (dados.mensagem ?? "Algo deu errado. Tente de novo.");
-    throw new ErroApi(resposta.status, mensagem);
-  }
-  return dados as T;
 }

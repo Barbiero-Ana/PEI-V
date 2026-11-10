@@ -1,27 +1,38 @@
 # Vistoria e plano de correção do app do aluno
 
-09/11/2026 · Expo SDK 58 · PostgreSQL de demonstração
+09/11/2026 · Expo SDK 58 · PostgreSQL de teste
 
-O novo formato do código foi implementado conforme o [ADR 0020](../03-decisoes/0020-codigo-do-aluno-com-letras-e-numeros.md). A API de demonstração confirmou o formato novo, as variações de entrada, o acesso com código antigo, a recusa de PIN fraco, a criação de PIN e a consulta de perfil e atividades com sessão válida. Passaram 69 testes da API e 17 do app. O aceite da interface em aparelho físico está pendente.
+O [ADR 0021](../03-decisoes/0021-portal-da-equipe-e-app-nativo.md) define o app para Android e iOS e o portal web
+da equipe. O [roteiro da Google Play](publicacao-android.md) acompanha a preparação da versão Android.
 
-| Prioridade | Achado | Correção e critério de aceite |
+| Prioridade | Situação | Critério de aceite |
 | --- | --- | --- |
-| P0 | **Criação concorrente de PIN reproduzida.** Duas requisições com PINs diferentes receberam HTTP 201 para o mesmo aluno sem PIN. A leitura e a atualização ocorrem separadamente. O contador de erros também usa leitura seguida de gravação e merece teste concorrente. [Código da API](../../apps/api/src/acesso.ts#L293). | Tornar a criação condicional à ausência de PIN e à versão de acesso vigente. Atualizar tentativas e bloqueio atomicamente. Testar em PostgreSQL que só um PIN inicial é aceito, que cinco falhas concorrentes acionam o bloqueio e que a regeneração de código invalida sessões. |
-| P0 | **Recompensa e fila podem divergir se o app fechar ao concluir.** A recompensa do jogador e a jogada pendente são registradas em estados e gravações diferentes. Risco identificado no código. [Conclusão da partida](../../apps/mobile/src/componentes/Partida.tsx#L143) · [Fila de jogadas](../../apps/mobile/src/estado/conta.tsx#L349). | Persistir a conclusão com um ID estável e a recompensa na mesma operação local. Repetir envios com o mesmo ID até receber confirmação. Fechar o app antes do envio e logo após a resposta, reabrir e confirmar uma recompensa e um registro no servidor. |
-| P1 | **Progresso pode perder ganhos feitos em dois aparelhos.** A mesclagem de pontos usa o maior total de cada nível. Isso pode descartar ganhos distintos feitos offline. [Mesclagem de progresso](../../apps/mobile/src/estado/jogador.tsx#L245). | Consolidar ganhos e compras por eventos únicos no servidor, reaproveitando o ID da jogada. Planejar a transição dos totais já gravados. Fazer duas jogadas distintas offline em dois aparelhos, reconectar em ordens diferentes e conferir os totais e as compras. |
-| P1 | **Token fica no armazenamento comum do app.** A sessão é armazenada localmente e a cópia da conta contém o token. [Persistência da sessão](../../apps/mobile/src/estado/isolamento.ts#L63) · [Estado da conta](../../apps/mobile/src/estado/conta.tsx#L42). | Migrar o token para SecureStore, retirar a cópia do cache e limpar a credencial ao sair. Verificar atualização de uma instalação anterior, reabertura, logout e troca de conta no Android e no iOS. |
-| P1 | **Erro ao buscar atividades pode parecer uma lista vazia.** O carregamento registra falhas de rede, mas a tela pode continuar exibindo a mensagem de lista vazia quando não há dados em cache. [Carregamento](../../apps/mobile/src/estado/conta.tsx#L272) · [Tela Professor](../../apps/mobile/src/app/(abas)/professor.tsx#L114). | Separar carregamento, lista vazia confirmada, dados em cache e falha com tentativa novamente. Verificar com internet desligada, resposta 500, sessão expirada e turma realmente sem atividades. |
-| P2 | **Jornada de atividades e avisos incompleta.** Prazo, encerramento e estado em andamento têm critérios pendentes. A visualização de feedback e os avisos ao aluno também têm entregas pendentes. [Atividades](prd-14/README.md) · [Feedback](prd-15/README.md) · [Notificações](prd-16/README.md). | Entregar primeiro o ciclo da atividade. Em seguida, validar a publicação de feedback para o aluno certo e a abertura do aviso na tela correspondente. |
+| P0 | **Criação de PIN e bloqueio concorrentes.** A API atualiza condicionalmente o PIN, a versão de acesso e o contador de falhas. Zerar o PIN invalida as sessões antigas. | O PostgreSQL confirmou um único PIN inicial quando duas solicitações usam PINs diferentes. Cinco falhas concorrentes bloquearam a entrada. Conferir o fluxo de redefinição no aparelho. |
+| P0 | **Recompensa e jogada pendente.** O app persiste ambas em uma escrita local por identidade e mostra a conclusão após a gravação (ADR 0022). | Os testes simulam falha de gravação e reabertura. A API confirmou reenvio por ID sem duplicidade. Repetir em modo avião, fechando o app após a confirmação visual. |
+| P0 | **Consolidação entre aparelhos.** Atualizações concorrentes de totais preservam o maior retrato. Ganhos, tentativas e gastos distintos ainda podem se sobrepor. | Consolidar por ID de jogada e compra, aplicando o bônus diário uma vez por data e o de mapa uma vez por conclusão. Manter os totais históricos como base. Jogar offline em dois aparelhos, reconectar nas duas ordens e confirmar os mesmos totais e compras. |
+| P0 | **Ciclo da atividade.** Em PostgreSQL, o rascunho ficou fora da lista do aluno, o professor publicou, o aluno recebeu o feedback da questão, a jogada foi reenviada sem duplicidade e o professor consultou o resultado. | Repetir na interface com todos os formatos autorais e atividade pronta. Testar rascunho, liberação programada, erro com orientação, mensagem do Lilo e resultado no painel. |
+| P1 | **Credencial local.** A sessão usa SecureStore. A migração remove as cópias antigas do token e preserva a fila e o progresso local (ADR 0023). | Os testes simulam migração, interrupção e reinstalação. Validar atualização de uma instalação anterior, reabertura, logout e troca de conta em um build Android e iOS. |
+| P1 | **Falha ao buscar atividades.** A aba distingue erro, dados guardados e lista vazia confirmada. | Conferir em modo avião, com resposta 500, sessão expirada e turma sem atividades. Confirmar o botão de nova tentativa. |
+| P2 | **Prazo, andamento, devolutivas e avisos.** Há requisitos pendentes nos módulos. | Conferir os aceites de [atividades](prd-14/README.md), [feedback](prd-15/README.md) e [notificações](prd-16/README.md). |
+| P2 | **Revisão publicada de uma atividade.** O envio confere turma e formato. Falta vincular a jogada à revisão efetivamente publicada. | Recusar envio referente a um rascunho e aceitar o reenvio offline de uma revisão que foi publicada e depois recolhida. |
 
-O painel web teve falha separada na checagem de tipos. O `BotaoLink` recebe tipos de `key` incompatíveis entre React e Next. Alinhar a resolução dos tipos no pacote web e validar cadastro, regeneração e cópia do código após o typecheck passar. [Componente web](../../apps/web/components/ui.tsx#L29).
+## Roteiro de homologação em aparelho
 
-## Roteiro de homologação no celular
+1. Use uma base isolada com duas contas fictícias do aluno, um professor e uma turma. Abra a mesma API HTTPS
+   no app e no painel. No portal, confira os três papéis e seus vínculos. No app, teste **Experimentar demonstração**,
+   conclua uma missão e confira que o resultado fica local.
+2. No primeiro acesso escolar, cole o código no formato `AAAA-1111`. Repita em minúsculas e sem hífen. Teste
+   um PIN fraco e a confirmação com números diferentes. Crie um PIN válido. Feche e reabra. Saia uma vez e
+   verifique a tela de entrada. Entre como segundo aluno e confira que o histórico, avatar e atividades são próprios.
+3. No painel, monte uma atividade com feedback para cada questão. Salve como rascunho e confirme que fica
+   fora da lista do aluno. Publique para hoje. Em **Professor**, abra a atividade, erre uma questão e confira
+   a orientação cadastrada. Acerte e confira a mensagem do Lilo no fim da tela.
+4. Depois de carregar a atividade, ative o modo avião. Conclua, espere a tela de confirmação e feche o app.
+   Reabra, reconecte e confirme no painel que há uma entrega com o acerto esperado. Repita com missão do mapa
+   e confira a recompensa e o histórico após reabrir. Teste também abrir a aba **Professor** sem dados em cache
+   e sem internet. Após reconectar, use **Tentar novamente**.
+5. No Android e no iOS, confira TalkBack ou VoiceOver, texto ampliado, teclado, jogos 3D e abertura e
+   compartilhamento do PDF. Registre aparelho, versão, passo, resultado esperado e resultado observado.
 
-1. Abra o QR atualizado no Expo Go. Se outra conta já estiver aberta, use **Perfil → Sair da conta → Entrar na turma**.
-2. Na tela de entrada, confirme que o exemplo tem dois grupos. Digite um código incompleto e toque em **Continuar**. O app deve explicar o formato. Use um código de teste válido em minúsculas e sem hífen. O app deve formatá-lo e saudar o aluno esperado.
-3. No primeiro acesso, tente `1234` duas vezes. O app deve recusar o PIN fraco. Digite um PIN de teste e confirme com números diferentes. O app deve pedir para criá-lo de novo. Confirme um PIN válido igual nas duas etapas e confira o **Início**.
-4. Feche e reabra o app. Confira a sessão. Saia, entre com uma segunda conta e confira nome e dados próprios. Volte à primeira e confirme que agora o app pede o PIN já criado. Em uma terceira sessão, use o código de demonstração do formato antigo.
-5. Abra **Professor → Porcentagem no mercado** com internet. Ative o modo avião, conclua a atividade e feche o app. Reabra, desligue o modo avião e confira se houve uma única entrega. Registre qualquer diferença entre a recompensa exibida, a fila e a atividade concluída.
-6. No iOS e no Android, verifique a colagem do código, o foco do teclado, a leitura do campo com VoiceOver ou TalkBack e a navegação com texto ampliado. Em **Perfil**, verifique edição, avatar, acessibilidade e abertura do relatório em PDF.
-
-Use apenas as contas fictícias do ambiente de teste. Ao registrar um problema, informe aparelho, versão do sistema, passo que falhou, resultado esperado e mensagem exibida.
+A validação automatizada cobre o fluxo na API e a persistência local simulada. O aceite em aparelhos físicos e
+o teste da versão assinada continuam pendentes. Use apenas contas e dados fictícios na homologação.

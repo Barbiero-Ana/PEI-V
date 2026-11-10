@@ -48,8 +48,8 @@ const TENTE = ["Quase!", "Ainda não", "Vamos de novo?"];
 export function Partida({ missao, atividadeId }: { missao: Missao; atividadeId?: string }) {
   const insets = useSafeAreaInsets();
   const { height: altura } = useWindowDimensions();
-  const { salvarResultado, vibrar, desafios } = useJogador();
-  const { registrarJogada } = useConta();
+  const { vibrar, desafios } = useJogador();
+  const { concluirMissao } = useConta();
   const { falar, voz, animacoesReduzidas } = useAcessibilidade();
   const [indice, setIndice] = useState(0);
   const [erros, setErros] = useState<number[]>(() => missao.rodadas.map(() => 0));
@@ -62,6 +62,7 @@ export function Partida({ missao, atividadeId }: { missao: Missao; atividadeId?:
   const [dicaAberta, setDicaAberta] = useState(false);
   const [fasesComDica, definirFasesComDica] = useState<number[]>([]);
   const inicio = useRef(0);
+  const concluindo = useRef(false);
   const [balanco] = useState(() => new Animated.Value(0));
   const [brilhoLampada] = useState(() => new Animated.Value(0));
   useEffect(() => {
@@ -126,7 +127,7 @@ export function Partida({ missao, atividadeId }: { missao: Missao; atividadeId?:
     vibrar("toque");
   }
 
-  function continuar() {
+  async function continuar() {
     setDicaAberta(false);
     if (!ultima) {
       setIndice((i) => i + 1);
@@ -134,20 +135,30 @@ export function Partida({ missao, atividadeId }: { missao: Missao; atividadeId?:
       setMensagem("");
       return;
     }
+    if (concluindo.current) return;
+    concluindo.current = true;
     const r = calcularResultado({
       missao,
       errosPorRodada: erros,
       tempoSegundos: (Date.now() - inicio.current) / 1000,
       dicas: fasesComDica.length,
     });
-    setRecompensa(salvarResultado(r));
-    // vai para o professor: missão do mapa (mapeamento) ou atividade pronta enviada por ele
-    registrarJogada(r, { origem: atividadeId ? "professor" : "mapa", titulo: missao.titulo, atividadeId });
-    setResultado(r);
-    setStatus("fim");
+    try {
+      const premio = await concluirMissao(r, {
+        origem: atividadeId ? "professor" : "mapa",
+        titulo: missao.titulo,
+        atividadeId,
+      });
+      setRecompensa(premio);
+      setResultado(r);
+      setStatus("fim");
+    } catch {
+      // O provedor exibe a falha de armazenamento para esta sessão.
+    }
   }
 
   function jogarDeNovo() {
+    concluindo.current = false;
     setIndice(0);
     setErros(missao.rodadas.map(() => 0));
     setStatus("jogando");

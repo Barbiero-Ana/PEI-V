@@ -57,8 +57,8 @@ Testes funcionais de cada perfil (acesso permitido e negado), teste de expiraç�
 **Situação atual, em detalhe**
 
 - **API (ADR 0015):** o professor entra com e-mail e senha (guardada com bcrypt) e recebe um token de 8 horas; o aluno entra com o código pessoal e o PIN, sem e-mail, e recebe um token de 180 dias (ADR 0017). O PIN fica só como hash; 5 PINs errados seguidos bloqueiam o acesso por 15 minutos; um código novo invalida as sessões antigas do aluno. Toda rota confere o papel (professor ou aluno) e o vínculo com a turma no servidor.
-- **Painel (web):** o login chama a API; o token fica no cookie de sessão (`httpOnly`, 8 horas). Token recusado leva de volta à tela de entrada. Por enquanto só existe o perfil professor (gestão e administrador na fase 5).
-- **App:** tela "Entre na sua turma" (código → nome → entrar). Quem não tem turma pode "continuar sem turma" e entrar depois pelo Perfil, onde também pode sair da turma.
+- **Painel (web):** a entrada é comum a administrador, coordenação e professor. O token fica no cookie de sessão (`httpOnly`, 8 horas). Token recusado leva de volta à tela de entrada.
+- **App:** a entrada na turma usa código e PIN. Quem não tem código pode tocar em **Experimentar demonstração** e usar as missões com progresso local separado. O Perfil oferece a entrada na turma e a saída da sessão escolar.
 
 ### 5.2 Regras de negócio
 
@@ -106,6 +106,7 @@ Critérios marcados com [x] já são atendidos pelo sistema atual (com dados de 
 - [x] CA-06: Em nenhum momento o app pede e-mail nem mostra a lista de nomes da turma.
 - [ ] CA-07: Dado um código no formato novo, quando o aluno o digita em minúsculas, com hífen, com espaço entre os grupos ou sem separador, então o app identifica a mesma conta. Um código antigo ainda não regenerado continua válido.
 - [ ] CA-08: Dado um código incompleto ou com caracteres inválidos, então o app explica o formato e permite corrigir a entrada.
+- [x] CA-09: Dadas duas criações concorrentes com PINs diferentes para o mesmo aluno, a API aceita apenas uma. Cinco PINs incorretos acionam o bloqueio mesmo quando chegam em paralelo.
 
 ### HU-AUT-03 — Cada perfil vê só o que lhe cabe
 

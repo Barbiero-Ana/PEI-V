@@ -3,7 +3,7 @@ import { AppState } from "react-native";
 import type { Questao, ResultadoJogada } from "@modolume/core";
 import { ErroApi, chamarApi, semConexao, temApi } from "@/lib/api";
 import { normalizar, svgDoRosto } from "@/componentes/Rosto";
-import { useJogador, type ProgressoServidor } from "./jogador";
+import { useJogador, type ProgressoServidor, type Recompensa } from "./jogador";
 import { useIdentidade } from "./identidade";
 import { receberNoEscopo, sincronizarFila, type ContaAluno, type OperacaoAluno } from "./isolamento";
 export type { ContaAluno } from "./isolamento";
@@ -38,9 +38,9 @@ export interface JogadaParaEnviar extends ResultadoJogada {
   atividadeId: string | null;
   titulo: string;
 }
+type DestinoJogada = { origem: "mapa" | "professor"; titulo: string; atividadeId?: string };
 
 interface Guardado {
-  conta: ContaAluno | null;
   fila: JogadaParaEnviar[];
   recusadas: JogadaParaEnviar[];
   atividades: AtividadeDoProfessor[];
@@ -55,7 +55,6 @@ interface Guardado {
 }
 
 const VAZIO: Guardado = {
-  conta: null,
   fila: [],
   recusadas: [],
   atividades: [],
@@ -87,16 +86,15 @@ interface Estado {
   online: boolean | null;
   atividades: AtividadeDoProfessor[];
   carregandoAtividades: boolean;
+  estadoAtividades: "aguardando" | "atualizadas" | "erro";
   /** Primeiro passo: o código pessoal que o professor ou a coordenação passou. */
   identificar: (codigo: string) => Promise<IdentificacaoAluno>;
   /** Segundo passo: o PIN de 4 números (no primeiro acesso, o PIN enviado é o que o aluno criou). */
   entrar: (codigo: string, pin: string) => Promise<void>;
   sairDaTurma: () => void;
   /** Coloca a jogada na fila do servidor (e tenta enviar na hora). */
-  registrarJogada: (
-    r: ResultadoJogada,
-    extra: { origem: "mapa" | "professor"; titulo: string; atividadeId?: string },
-  ) => void;
+  registrarJogada: (r: ResultadoJogada, destino: DestinoJogada) => Promise<void>;
+  concluirMissao: (r: ResultadoJogada, destino: DestinoJogada) => Promise<Recompensa>;
   atualizarAtividades: () => Promise<void>;
   sincronizar: () => Promise<void>;
 }
@@ -119,6 +117,8 @@ export function ProvedorConta({ children }: { children: ReactNode }) {
     gastos,
     compras,
     importarProgresso,
+    prepararResultado,
+    aplicarSnapshot,
   } = useJogador();
   // retrato do progresso do aparelho, no formato que o servidor guarda
   const retrato = useMemo<ProgressoServidor>(
@@ -134,6 +134,8 @@ export function ProvedorConta({ children }: { children: ReactNode }) {
   const atual = useRef<Guardado>(VAZIO);
   const [online, setOnline] = useState<boolean | null>(null);
   const [carregandoAtividades, setCarregandoAtividades] = useState(false);
+  const [estadoAtividades, setEstadoAtividades] = useState<Estado["estadoAtividades"]>("aguardando");
+  const buscandoAtividades = useRef(false);
   const enviando = useRef(false);
   const montado = useRef(false);
   const login = useRef(0);
@@ -144,13 +146,11 @@ export function ProvedorConta({ children }: { children: ReactNode }) {
     repositorio
       .dados<Guardado>("conta", escopo.identidade, async () => ({
         ...VAZIO,
-        conta: contaDaIdentidade,
         fila: contaDaIdentidade ? await repositorio.filaLegada<JogadaParaEnviar>(contaDaIdentidade.aluno.id) : [],
       }))
       .then((dados) => {
         if (!montado.current || !escopo.ativa()) return;
-        // O token vigente vem da sessão, nunca de um snapshot antigo da conta.
-        const lido = { ...VAZIO, ...dados, conta: contaDaIdentidade };
+        const lido = { ...VAZIO, ...dados };
         atual.current = lido;
         setG(lido);
         setPronto(true);
@@ -177,8 +177,8 @@ export function ProvedorConta({ children }: { children: ReactNode }) {
   );
 
   const capturar = useCallback(
-    () => (pronto && jogadorPronto ? escopo.capturar(atual.current.conta, () => montado.current) : null),
-    [escopo, pronto, jogadorPronto],
+    () => (pronto && jogadorPronto ? escopo.capturar(contaDaIdentidade, () => montado.current) : null),
+    [escopo, pronto, jogadorPronto, contaDaIdentidade],
   );
 
   /** Token recusado pelo servidor: sai da turma, mas guarda a fila para quando entrar de novo. */
@@ -194,14 +194,20 @@ export function ProvedorConta({ children }: { children: ReactNode }) {
   );
 
   const sincronizar = useCallback(async () => {
-    const s = atual.current;
     const sessao = capturar();
     if (!temApi || !sessao || enviando.current) return;
-    // Retrato e avatar de A são capturados antes da primeira espera.
+    const s = atual.current;
     const progressoCapturado = retratoAtual.current;
     const rostoCapturado = rostoAtual;
     enviando.current = true;
     try {
+      try {
+        await repositorio.aguardarEscritas();
+      } catch {
+        if (sessao.ativa()) falhar();
+        return;
+      }
+      if (!sessao.ativa()) return;
       await sincronizarFila(
         sessao,
         s.fila,
@@ -252,7 +258,52 @@ export function ProvedorConta({ children }: { children: ReactNode }) {
     } finally {
       enviando.current = false;
     }
-  }, [capturar, gravar, rostoAtual, tratarErro, perfilLocal, importarPerfil]);
+  }, [capturar, gravar, rostoAtual, tratarErro, perfilLocal, importarPerfil, repositorio, falhar]);
+
+  const guardarJogada = useCallback(
+    async (r: ResultadoJogada, destino: DestinoJogada, resultado?: ReturnType<typeof prepararResultado>) => {
+      if (!montado.current || !escopo.ativa()) return;
+      const s = atual.current;
+      if (contaDaIdentidade && !capturar()) return;
+      const jogada = contaDaIdentidade && {
+        ...r,
+        dicas: r.dicas ?? 0,
+        id: novoId(),
+        alunoId: contaDaIdentidade.aluno.id,
+        origem: destino.origem,
+        atividadeId: destino.atividadeId ?? null,
+        titulo: destino.titulo,
+      };
+      if (!jogada && !resultado) return;
+      const novo = jogada
+        ? {
+            ...s,
+            fila: [...s.fila, jogada],
+            feitas: destino.atividadeId
+              ? {
+                  ...s.feitas,
+                  [destino.atividadeId]: { percentualAcerto: r.percentualAcerto, estrelas: r.estrelas, data: r.data },
+                }
+              : s.feitas,
+          }
+        : s;
+
+      try {
+        const escrita = resultado
+          ? repositorio.salvarJuntos(escopo.identidade, resultado.novo, novo)
+          : repositorio.salvar("conta", escopo.identidade, novo);
+        if (resultado) aplicarSnapshot(resultado.novo);
+        atual.current = novo;
+        setG(novo);
+        await escrita;
+      } catch (erro) {
+        if (montado.current && escopo.ativa()) falhar();
+        throw erro;
+      }
+      if (jogada && escopo.ativa()) setTimeout(sincronizar, 0);
+    },
+    [aplicarSnapshot, capturar, contaDaIdentidade, escopo, falhar, repositorio, sincronizar],
+  );
 
   /** Traz o progresso guardado no servidor (de outros aparelhos) e junta com o daqui. */
   const trazerProgresso = useCallback(async () => {
@@ -271,20 +322,25 @@ export function ProvedorConta({ children }: { children: ReactNode }) {
 
   const atualizarAtividades = useCallback(async () => {
     const sessao = capturar();
-    if (!temApi || !sessao) return;
+    if (!temApi || !sessao || buscandoAtividades.current) return;
+    buscandoAtividades.current = true;
     setCarregandoAtividades(true);
     try {
       await receberNoEscopo(
         sessao,
         (token) => chamarApi<{ atividades: AtividadeDoProfessor[] }>("/aluno/atividades", { token }),
         ({ atividades }) => {
+          if (!Array.isArray(atividades)) throw new ErroApi(502, "O servidor não retornou a lista de atividades.");
           gravar((x) => ({ ...x, atividades }));
+          setEstadoAtividades("atualizadas");
           setOnline(true);
         },
       );
     } catch (e) {
+      if (sessao.ativa()) setEstadoAtividades("erro");
       tratarErro(e, sessao);
     } finally {
+      buscandoAtividades.current = false;
       if (sessao.ativa()) setCarregandoAtividades(false);
     }
   }, [capturar, gravar, tratarErro]);
@@ -302,33 +358,34 @@ export function ProvedorConta({ children }: { children: ReactNode }) {
         atualizarAtividades();
       }
     });
-    const tic = setInterval(() => atual.current.fila.length > 0 && sincronizar(), 60_000);
+    const tic = setInterval(sincronizar, 60_000);
     return () => {
       clearTimeout(primeira);
       ao.remove();
       clearInterval(tic);
     };
-  }, [pronto, jogadorPronto, sincronizar, atualizarAtividades, trazerProgresso, g.conta?.token]);
+  }, [pronto, jogadorPronto, sincronizar, atualizarAtividades, trazerProgresso, contaDaIdentidade?.token]);
 
   // avatar ou progresso mudaram no app: manda para o servidor (com um pequeno atraso,
   // para juntar várias mudanças seguidas num envio só)
   useEffect(() => {
-    if (!pronto || !g.conta) return;
+    if (!pronto || !contaDaIdentidade) return;
     const envio = setTimeout(sincronizar, 1500);
     return () => clearTimeout(envio);
-  }, [rostoAtual, retrato, pronto, g.conta, sincronizar]);
+  }, [rostoAtual, retrato, pronto, contaDaIdentidade, sincronizar]);
 
   const valor = useMemo<Estado>(
     () => ({
       pronto: pronto && jogadorPronto,
       temServidor: temApi,
-      conta: g.conta,
+      conta: contaDaIdentidade,
       semTurma: g.semTurma,
       continuarSemTurma: () => gravar((x) => ({ ...x, semTurma: true })),
-      pendentes: g.conta ? g.fila.filter((j) => j.alunoId === g.conta!.aluno.id).length : 0,
+      pendentes: contaDaIdentidade ? g.fila.filter((j) => j.alunoId === contaDaIdentidade.aluno.id).length : 0,
       recusadas: g.recusadas.length,
       online,
       carregandoAtividades,
+      estadoAtividades,
       atividades: g.atividades.map((a) => ({ ...a, feita: g.feitas[a.id] ?? a.feita })),
       identificar: (codigo) =>
         chamarApi<IdentificacaoAluno>("/auth/aluno/codigo", { metodo: "POST", corpo: { codigo } }),
@@ -346,29 +403,11 @@ export function ProvedorConta({ children }: { children: ReactNode }) {
       sairDaTurma: () => {
         if (escopo.ativa()) void selecionar(null).catch(() => {});
       },
-      registrarJogada: (r, extra) => {
-        const conta = atual.current.conta;
-        if (!conta || !capturar()) return;
-        const jogada: JogadaParaEnviar = {
-          ...r,
-          dicas: r.dicas ?? 0,
-          id: novoId(),
-          alunoId: conta.aluno.id,
-          origem: extra.origem,
-          atividadeId: extra.atividadeId ?? null,
-          titulo: extra.titulo,
-        };
-        gravar((x) => ({
-          ...x,
-          fila: [...x.fila, jogada],
-          feitas: extra.atividadeId
-            ? {
-                ...x.feitas,
-                [extra.atividadeId]: { percentualAcerto: r.percentualAcerto, estrelas: r.estrelas, data: r.data },
-              }
-            : x.feitas,
-        }));
-        setTimeout(sincronizar, 0);
+      registrarJogada: (r, destino) => guardarJogada(r, destino),
+      concluirMissao: async (r, destino) => {
+        const resultado = prepararResultado(r);
+        await guardarJogada(r, destino, resultado);
+        return resultado.recompensa;
       },
       atualizarAtividades,
       sincronizar,
@@ -376,11 +415,14 @@ export function ProvedorConta({ children }: { children: ReactNode }) {
     [
       pronto,
       g,
+      contaDaIdentidade,
       online,
       carregandoAtividades,
+      estadoAtividades,
       atualizarAtividades,
       sincronizar,
-      capturar,
+      guardarJogada,
+      prepararResultado,
       escopo,
       selecionar,
       gravar,

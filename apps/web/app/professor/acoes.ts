@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { ErroApi, chamarApi, usandoApi } from "@/lib/painel/api";
 import { professorPorEmail } from "@/lib/painel/dados";
-import { apagarSessao, gravarSessao } from "@/lib/painel/cookie-sessao";
+import { gravarSessao } from "@/lib/painel/cookie-sessao";
 import { INICIO_DO_PAPEL, type PapelEquipe } from "@/lib/painel/sessao";
 
 export interface EstadoEntrar {
@@ -56,9 +56,4 @@ export async function entrar(_anterior: EstadoEntrar, form: FormData): Promise<E
   await gravarSessao({ professorId, papel, trocarSenha, token: tokenApi });
   // cada papel abre a sua área; senha provisória precisa ser trocada antes
   redirect(trocarSenha ? "/conta/senha" : INICIO_DO_PAPEL[papel]);
-}
-
-export async function sair() {
-  await apagarSessao();
-  redirect("/entrar");
 }

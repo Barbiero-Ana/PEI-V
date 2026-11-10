@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { formatarCodigoAcesso } from "@modolume/core";
+import { formatarCodigoAcesso, NOME_SEGMENTO } from "@modolume/core";
 import { Cabecalho, Painel } from "@/components/painel/blocos";
 import { quando } from "@/components/escola/estrutura";
 import { Campo, Escolha, FormularioAcao } from "@/components/escola/formulario";
+import { CamposDaTurma } from "@/components/escola/cadastros";
 import { apiDaEquipe } from "@/lib/escola/api";
-import { OPCOES_PERIODO, type AlunoAdmin, type TurmaAdmin } from "@/lib/escola/tipos";
+import type { AlunoAdmin, TurmaAdmin } from "@/lib/escola/tipos";
 import { alternarAluno, alternarTurma, criarAluno, editarAluno, editarTurma } from "../../acoes";
 
 export default async function TurmaAdmin({ params }: { params: Promise<{ id: string }> }) {
@@ -25,20 +26,15 @@ export default async function TurmaAdmin({ params }: { params: Promise<{ id: str
       </Link>
       <Cabecalho
         titulo={t.nome}
-        descricao={`${t.serie} · ${t.periodo} · ${t.anoLetivo} · ${t.ativa ? "ativa" : "encerrada"} · professores: ${
+        descricao={`${t.segmento ? NOME_SEGMENTO[t.segmento] : "A classificar"} · ${t.serie} · ${t.periodo} · ${t.anoLetivo} · ${t.ativa ? "ativa" : "encerrada"} · professores: ${
           t.professores.map((p) => p.nome).join(", ") || "nenhum (a coordenação vincula)"
         }`}
       />
 
       <div className="grid gap-6 xl:grid-cols-[1.3fr_1fr]">
         <Painel titulo="Dados da turma">
-          <FormularioAcao acao={editarTurma.bind(null, t.id)} botao="Salvar turma">
-            <div className="grid gap-4 md:grid-cols-2">
-              <Campo nome="nome" rotulo="Nome" valor={t.nome} />
-              <Campo nome="serie" rotulo="Série" valor={t.serie} />
-              <Escolha nome="periodo" rotulo="Período" opcoes={OPCOES_PERIODO} valor={t.periodo} />
-              <Campo nome="anoLetivo" rotulo="Ano letivo" tipo="number" valor={t.anoLetivo} />
-            </div>
+          <FormularioAcao acao={editarTurma.bind(null, t.id)} botao="Salvar turma" atualizarAoSalvar>
+            <CamposDaTurma key={`${t.id}-${t.codigo}-${t.segmento}-${t.anoLetivo}`} turma={t} ano={t.anoLetivo} />
           </FormularioAcao>
           <div className="mt-6 border-t border-borda pt-5">
             <p className="text-sm text-texto-suave">

@@ -58,8 +58,16 @@ function Cartao({ a }: { a: AtividadeDoProfessor }) {
 
 export default function Professor() {
   const insets = useSafeAreaInsets();
-  const { temServidor, conta, atividades, carregandoAtividades, atualizarAtividades, pendentes, recusadas, online } =
-    useConta();
+  const {
+    temServidor,
+    conta,
+    atividades,
+    carregandoAtividades,
+    estadoAtividades,
+    atualizarAtividades,
+    pendentes,
+    recusadas,
+  } = useConta();
   useFalarAoAbrir("Atividades do professor.");
 
   // ao abrir a aba, busca a lista mais nova
@@ -111,18 +119,30 @@ export default function Professor() {
         </View>
       ) : (
         <>
-          {pendentes > 0 || online === false ? (
+          {pendentes > 0 ? (
             <View style={e.aviso} accessibilityLiveRegion="polite">
               <Texto style={e.avisoTexto}>
-                {online === false ? "Sem internet agora. " : ""}
-                {pendentes > 0
-                  ? `${pendentes} ${pendentes === 1 ? "atividade vai" : "atividades vão"} para o professor quando a internet voltar.`
-                  : "Mostrando a última lista guardada."}
+                {pendentes} {pendentes === 1 ? "jogada aguarda envio" : "jogadas aguardam envio"}.
               </Texto>
             </View>
           ) : null}
 
-          {atividades.length === 0 ? (
+          {estadoAtividades === "erro" ? (
+            <View style={e.aviso} accessibilityLiveRegion="polite">
+              <Texto style={e.avisoTexto}>
+                {atividades.length > 0
+                  ? "Não foi possível atualizar. Mostrando as atividades guardadas."
+                  : "Não foi possível carregar as atividades. Confira a conexão e tente novamente."}
+              </Texto>
+              <Botao titulo="Tentar novamente" onPress={atualizarAtividades} carregando={carregandoAtividades} />
+            </View>
+          ) : null}
+
+          {estadoAtividades === "aguardando" && atividades.length === 0 ? (
+            <Texto style={e.centro}>Carregando atividades…</Texto>
+          ) : null}
+
+          {estadoAtividades === "atualizadas" && atividades.length === 0 ? (
             <View style={e.vazio}>
               <Lilo humor="feliz" tamanho={100} />
               <Texto style={e.centro}>

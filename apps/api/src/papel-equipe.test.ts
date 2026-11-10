@@ -1,6 +1,7 @@
 import "reflect-metadata";
 import assert from "node:assert/strict";
 import { beforeEach, describe, it } from "node:test";
+import type { Segmento } from "@prisma/client";
 import { ControladorAdministracao } from "./admin.js";
 import { Banco, type Equipe, type PapelEquipe } from "./infra.js";
 
@@ -17,6 +18,8 @@ function estadoInicial() {
       senhaProvisoria: true,
       papel: "professor" as PapelEquipe,
       disciplina: "Matemática" as string | null,
+      materiaId: "matematica" as string | null,
+      segmento: null as Segmento | null,
     },
     vinculos: [
       { professorId: "professor", turmaId: "turma-a" },
@@ -30,6 +33,7 @@ function estadoInicial() {
 }
 type Estado = ReturnType<typeof estadoInicial>;
 type Transacao = {
+  materia: { findFirst(args: { where: { id: string; instituicaoId: string } }): Promise<unknown> };
   registro: { create(evento: unknown): Promise<unknown> };
   professor: { update(args: { where: { id: string }; data: Partial<Estado["pessoa"]> }): Promise<unknown> };
   professorTurma: { deleteMany(args: { where: { professorId: string } }): Promise<unknown> };
@@ -67,6 +71,12 @@ const banco = {
     transacoes++;
     const rascunho = structuredClone(estado);
     const resultado = await executar({
+      materia: {
+        findFirst: async ({ where }) =>
+          where.id === "matematica" && where.instituicaoId === eu.instituicaoId
+            ? { id: "matematica", nome: "Matemática" }
+            : null,
+      },
       registro: banco.registro,
       professor: {
         update: async ({ where, data }) => {
@@ -95,7 +105,8 @@ const dados = (papel: PapelEquipe) => ({
   nome: "Nome editado",
   email: "editado@teste.example",
   papel,
-  disciplina: papel === "professor" ? "Matemática" : null,
+  materiaId: papel === "professor" ? "matematica" : null,
+  segmento: papel === "coordenacao" ? "fundamental_ii" : null,
 });
 
 describe("Alteração de papel da equipe (controller com transação simulada)", () => {
@@ -119,6 +130,8 @@ describe("Alteração de papel da equipe (controller com transação simulada)",
       const antes = structuredClone(estado);
       assert.deepEqual(await controller.editarUsuario(eu, "professor", dados(papel)), { ok: true });
       assert.equal(estado.pessoa.papel, papel);
+      assert.equal(estado.pessoa.segmento, papel === "coordenacao" ? "fundamental_ii" : null);
+      assert.equal(estado.pessoa.materiaId, null);
       assert.equal(estado.pessoa.nome, "Nome editado");
       assert.equal(estado.pessoa.email, "editado@teste.example");
       assert.deepEqual(estado.vinculos, [antes.vinculos[2]]);
@@ -143,6 +156,8 @@ describe("Alteração de papel da equipe (controller com transação simulada)",
       const vinculos = structuredClone(estado.vinculos);
       await controller.editarUsuario(eu, "professor", dados("professor"));
       assert.equal(estado.pessoa.papel, "professor");
+      assert.equal(estado.pessoa.materiaId, "matematica");
+      assert.equal(estado.pessoa.segmento, null);
       assert.deepEqual(estado.vinculos, vinculos);
       assert.deepEqual(estado.historico, estadoInicial().historico);
     });

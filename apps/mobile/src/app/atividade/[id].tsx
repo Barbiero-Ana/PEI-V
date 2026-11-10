@@ -345,9 +345,12 @@ function ResponderAtividade({ atividade, questoes }: { atividade: AtividadeDoPro
     setRetorno({ tipo: r.tipo, texto });
   }
 
-  function continuar() {
-    setRetorno(null);
-    if (indice + 1 < total) return setIndice(indice + 1);
+  async function continuar() {
+    if (indice + 1 < total) {
+      setRetorno(null);
+      setIndice(indice + 1);
+      return;
+    }
     if (concluiu.current) return;
     concluiu.current = true;
     const r = calcularResultado({
@@ -355,8 +358,12 @@ function ResponderAtividade({ atividade, questoes }: { atividade: AtividadeDoPro
       errosPorRodada: erros,
       tempoSegundos: (Date.now() - inicio.current) / 1000,
     });
-    registrarJogada(r, { origem: "professor", titulo: atividade.titulo, atividadeId: atividade.id });
-    setResultado(r);
+    try {
+      await registrarJogada(r, { origem: "professor", titulo: atividade.titulo, atividadeId: atividade.id });
+      setResultado(r);
+    } catch {
+      // O provedor exibe a falha de armazenamento para esta sessão.
+    }
   }
 
   if (resultado) {

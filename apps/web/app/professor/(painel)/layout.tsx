@@ -7,7 +7,6 @@ import { IconeSair } from "@/components/painel/icones";
 import { escolaDoProfessor, professorLogado, visaoGeral } from "@/lib/painel/dados";
 import { alertasDoDia } from "@/lib/painel/alertas";
 import { listarPlanos } from "@/lib/painel/planejamento";
-import { sair } from "../acoes";
 
 /**
  * Estrutura do painel em tela cheia: menu roxo à esquerda, com o nome de cada
@@ -58,7 +57,7 @@ export default async function LayoutPainel({ children }: { children: ReactNode }
             </span>
           </div>
           <MenuLateral avisos={avisos} />
-          <form action={sair}>
+          <form action="/sair" method="post">
             <button
               type="submit"
               className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-sm font-semibold text-white hover:bg-white/12"
@@ -70,12 +69,12 @@ export default async function LayoutPainel({ children }: { children: ReactNode }
 
         <div className="flex min-w-0 flex-1 flex-col lg:min-h-0">
           <header className="flex flex-wrap items-center justify-end gap-3 border-b border-[#E2DEF0] bg-superficie px-5 py-3 lg:px-8">
-            <AlertasDoDia alertas={alertas} />
+            <AlertasDoDia key={professor.id} alertas={alertas} professorId={professor.id} />
             <span className="flex items-center gap-2.5 rounded-full bg-[#F3F1FA] py-1 pr-4 pl-1">
               <Avatar nome={professor.nome} tamanho={32} tom="escuro" />
               <span className="hidden text-sm font-semibold text-tinta sm:block">{professor.nome}</span>
             </span>
-            <form action={sair} className="lg:hidden">
+            <form action="/sair" method="post" className="lg:hidden">
               <button
                 type="submit"
                 className="flex min-h-11 items-center gap-2 rounded-xl px-3 text-sm font-semibold text-texto"

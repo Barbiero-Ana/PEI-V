@@ -140,6 +140,14 @@ model UnidadeTematica {
 
 // ───────────────────────────── 2. escola ─────────────────────────────
 
+enum Segmento {
+  fundamental_i
+  fundamental_ii
+  medio
+
+  @@map("segmento")
+}
+
 model Instituicao {
   id          String      @id @db.VarChar(40)
   nome        String      @db.VarChar(160)
@@ -147,8 +155,21 @@ model Instituicao {
   professores Professor[]
   turmas      Turma[]
   registros   Registro[]
+  materias    Materia[]
 
   @@map("instituicao")
+}
+
+model Materia {
+  id            String      @id @db.VarChar(40)
+  instituicaoId String      @map("instituicao_id") @db.VarChar(40)
+  instituicao   Instituicao @relation(fields: [instituicaoId], references: [id], onDelete: Restrict)
+  nome          String      @db.VarChar(60)
+  chave         String      @db.VarChar(60)
+  professores   Professor[]
+
+  @@unique([instituicaoId, chave])
+  @@map("materia")
 }
 
 model Professor {
@@ -164,6 +185,9 @@ model Professor {
   redefinicaoExpiraEm DateTime? @map("redefinicao_expira_em") @db.Timestamptz(3)
   /// Só o professor tem disciplina (CHECK na migração).
   disciplina      String?     @db.VarChar(60)
+  materiaId       String?     @map("materia_id") @db.VarChar(40)
+  materia         Materia?    @relation(fields: [materiaId], references: [id], onDelete: Restrict)
+  segmento        Segmento?
   /// professor | coordenacao | admin: define o que a pessoa vê e faz (PRD-01, PRD-02).
   papel           PapelEquipe @default(professor)
   /// Desativar em vez de excluir preserva o histórico (RN-16).
@@ -180,6 +204,7 @@ model Professor {
 
   @@index([instituicaoId])
   @@index([instituicaoId, papel])
+  @@index([materiaId])
   @@map("professor")
 }
 
@@ -189,6 +214,7 @@ model Turma {
   instituicao   Instituicao @relation(fields: [instituicaoId], references: [id], onDelete: Restrict)
   nome          String      @db.VarChar(60)
   serie         String      @db.VarChar(30)
+  segmento      Segmento?
   periodo       Periodo
   anoLetivo     Int         @map("ano_letivo") @db.SmallInt
   /// Código que o aluno digita no app (MOD-TUR-008).
@@ -202,6 +228,7 @@ model Turma {
   planos      PlanoAula[]
 
   @@index([instituicaoId])
+  @@index([instituicaoId, segmento])
   @@map("turma")
 }
 

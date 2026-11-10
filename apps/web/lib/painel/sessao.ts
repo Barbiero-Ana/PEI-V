@@ -6,6 +6,13 @@
  */
 
 export const COOKIE_SESSAO = "modolume_sessao";
+
+export function expirarCookiesSessao(headers: Headers) {
+  // Sessões antigas usavam /professor. O Next guarda só um cookie por nome na API de cookies.
+  for (const caminho of ["/", "/professor"]) {
+    headers.append("Set-Cookie", `${COOKIE_SESSAO}=; Path=${caminho}; Max-Age=0; HttpOnly; SameSite=Lax`);
+  }
+}
 /** Validade da sessão: 8 horas (um turno de trabalho). */
 export const DURACAO_SESSAO_S = 8 * 60 * 60;
 

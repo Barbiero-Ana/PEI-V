@@ -1,18 +1,21 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { NOME_SEGMENTO } from "@modolume/core";
 import { Cabecalho, Campos, Painel } from "@/components/painel/blocos";
 import { quando } from "@/components/escola/estrutura";
-import { Campo, Escolha, FormularioAcao } from "@/components/escola/formulario";
+import { FormularioAcao } from "@/components/escola/formulario";
+import { CamposDaEquipe } from "@/components/escola/cadastros";
 import { ListaRegistros } from "@/components/escola/registro";
 import { NOME_DO_PAPEL, apiDaEquipe } from "@/lib/escola/api";
-import { OPCOES_PAPEL, type PaginaRegistros, type Pessoa } from "@/lib/escola/tipos";
+import type { Materia, PaginaRegistros, Pessoa } from "@/lib/escola/tipos";
 import { alternarUsuario, editarUsuario, novaSenhaUsuario } from "../../acoes";
 
 export default async function FichaPessoa({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const [pessoas, registros] = await Promise.all([
+  const [pessoas, registros, materias] = await Promise.all([
     apiDaEquipe<Pessoa[]>("/admin/usuarios"),
     apiDaEquipe<PaginaRegistros>(`/admin/registros?usuarioId=${encodeURIComponent(id)}`),
+    apiDaEquipe<Materia[]>("/admin/materias"),
   ]);
   const p = pessoas.find((x) => x.id === id);
   if (!p) notFound();
@@ -22,7 +25,10 @@ export default async function FichaPessoa({ params }: { params: Promise<{ id: st
       <Link href="/admin/usuarios" className="w-fit text-sm font-semibold text-roxo-escuro">
         ← Equipe e acessos
       </Link>
-      <Cabecalho titulo={p.nome} descricao={`${NOME_DO_PAPEL[p.papel]} · ${p.email}`} />
+      <Cabecalho
+        titulo={p.nome}
+        descricao={`${NOME_DO_PAPEL[p.papel]} · ${p.email}${p.papel === "coordenacao" ? ` · ${p.segmento ? NOME_SEGMENTO[p.segmento] : "Sem segmento"}` : ""}`}
+      />
 
       <Campos
         colunas={4}
@@ -44,28 +50,11 @@ export default async function FichaPessoa({ params }: { params: Promise<{ id: st
           descricao="Mudar o papel muda as permissões na hora: a pessoa precisa entrar de novo."
         >
           <FormularioAcao acao={editarUsuario.bind(null, p.id)} botao="Salvar" atualizarAoSalvar>
-            <div
-              key={JSON.stringify([p.id, p.nome, p.email, p.papel, p.disciplina])}
-              className="grid gap-4 md:grid-cols-2"
-            >
-              <Campo nome="nome" rotulo="Nome" valor={p.nome} />
-              <Campo
-                nome="email"
-                rotulo="E-mail"
-                tipo="email"
-                valor={p.email}
-                somenteLeitura={!p.senhaProvisoria}
-                dica={p.senhaProvisoria ? undefined : "O e-mail protege a recuperação de acesso desta conta."}
-              />
-              <Escolha nome="papel" rotulo="Papel" opcoes={OPCOES_PAPEL} valor={p.papel} />
-              <Campo
-                nome="disciplina"
-                rotulo="Disciplina"
-                valor={p.disciplina}
-                obrigatorio={false}
-                dica="Obrigatória para professor."
-              />
-            </div>
+            <CamposDaEquipe
+              key={JSON.stringify([p.id, p.nome, p.email, p.papel, p.materiaId, p.segmento])}
+              pessoa={p}
+              materias={materias}
+            />
           </FormularioAcao>
         </Painel>
 

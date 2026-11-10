@@ -47,7 +47,7 @@ Demonstração dos alertas do painel; na fase 4, teste de recebimento no app.
 | MOD-NOT-005 | O sistema pode avisar o professor sobre avaliações pendentes. | D | T | Pendente |
 | MOD-NOT-006 | O painel mostra os alertas do dia do professor: aula hoje, plano de amanhã em rascunho, aula sem registro, atividade liberada hoje, atividade com data passada não enviada, aluno em queda e alunos que pedem atenção. | I | D | Implementado |
 
-**Situação atual:** o sino no topo do painel mostra os alertas do dia, com contador, cada um com link para a tela da ação (NOT-006). No app, ainda não há notificações; a API já existe (ADR 0015), falta o envio dos avisos. A central do professor existe, mas ainda não guarda o que já foi lido (NOT-004 parcial).
+**Situação atual:** o sino no topo do painel mostra o total de alertas não lidos. O professor marca um alerta ao abrir seu link e pode marcar todos de uma vez. O estado de leitura é guardado por conta e dia no navegador (NOT-004 parcial). O envio de avisos ao app está pendente.
 
 ### Fora do escopo atual
 

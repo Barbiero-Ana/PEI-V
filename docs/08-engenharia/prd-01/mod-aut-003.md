@@ -23,6 +23,7 @@ Origem: [PRD-01 — Autenticação e controle de acesso](../../02-modulos/PRD-01
 - **HU-AUT-02** CA-06: Em nenhum momento o app pede e-mail nem mostra a lista de nomes da turma.
 - **HU-AUT-02** CA-07: Dado um código no formato novo, quando o aluno o digita em minúsculas, com hífen, com espaço entre os grupos ou sem separador, então o app identifica a mesma conta. Um código antigo ainda não regenerado continua válido.
 - **HU-AUT-02** CA-08: Dado um código incompleto ou com caracteres inválidos, então o app explica o formato e permite corrigir a entrada.
+- **HU-AUT-02** CA-09: Dadas duas criações concorrentes com PINs diferentes para o mesmo aluno, a API aceita apenas uma. Cinco PINs incorretos acionam o bloqueio mesmo quando chegam em paralelo.
 
 As regras de negócio aplicáveis ao contexto estão no [módulo](README.md) e na seção 5 do PRD.
 

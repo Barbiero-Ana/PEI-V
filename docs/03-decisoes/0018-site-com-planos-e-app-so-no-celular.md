@@ -1,6 +1,6 @@
 # ADR 0018 — Site com planos e app só no celular
 
-- **Status:** Aceita
+- **Status:** Substituída pelo [ADR 0021](0021-portal-da-equipe-e-app-nativo.md) quanto à página inicial do portal
 - **Data:** 05/11/2026
 - **Decisores:** a preencher pela equipe
 - **Uso de IA:** auxílio na estrutura da página, na proposta de planos e na remoção da versão web do aluno, a

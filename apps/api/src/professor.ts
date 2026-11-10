@@ -124,7 +124,7 @@ export class ControladorProfessor {
     await this.banco.$transaction(async (transacao) => {
       await transacao.aluno.update({
         where: { id: aluno.id },
-        data: { pinHash: null, pinFalhas: 0, bloqueadoAte: null },
+        data: { pinHash: null, pinFalhas: 0, bloqueadoAte: null, versaoAcesso: { increment: 1 } },
       });
       await registrar(transacao, eu, "aluno.pin_zerado", { tipo: "aluno", id: aluno.id, detalhe: aluno.nome });
     });

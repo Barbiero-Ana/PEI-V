@@ -117,7 +117,7 @@ const evidencias = {
     "senha-provisoria.test.ts, ciclo-aluno.test.ts, leitura-professor.test.ts e escrita-professor.test.ts exercitam recusas de papéis e vínculos específicos.",
   "AUT-008": "A API mantém as operações de código e PIN. Falta homologar recuperação do aluno no dispositivo.",
   "AUT-009":
-    "codigo-acesso.test.ts cobre geração com quatro letras e quatro números e compatibilidade com o formato antigo. Homologar a digitação e a colagem no app, além da exibição e cópia nos painéis.",
+    "codigo-acesso.test.ts cobre formato e compatibilidade. verificar-banco.ts valida PIN inicial único e bloqueio com cinco falhas concorrentes. Homologar a digitação e a colagem no aparelho.",
   "ADM-004":
     "Filtros combinados e paginação na página de usuários. validacao.test.ts verifica acentos e limites de página. Aceite da interface pendente.",
   "ADM-009":
@@ -125,7 +125,9 @@ const evidencias = {
   "ADM-010":
     "Fluxo substituído por link privado por decisão desta auditoria. verificador comprova resposta de cadastro sem credencial e consumo único. Resend pendente.",
   "TUR-009": "leitura-professor.test.ts verifica recorte ao perder vínculo e quando turma encerra.",
-  "HIS-005": "Suíte mobile exercita fila e troca de identidade. Queda e reconexão em celular pendentes.",
+  "HIS-005": "Suíte mobile cobre gravação conjunta da recompensa e da fila, reabertura e troca de identidade. verificar-banco.ts cobre reenvio e consulta do resultado pelo professor. Queda e reconexão em celular pendentes.",
+  "HIS-006": "verificar-banco.ts valida que atualizações concorrentes preservam o maior total. A soma de ganhos distintos em dois aparelhos ainda está pendente.",
+  "CON-002": "A conclusão local grava recompensa e fila na mesma operação. A API ainda recebe a jogada e o retrato de gamificação por operações distintas.",
   "SEG-012": "verificar-banco.ts verifica privilégios efetivos e rollback de uma ação sensível no PostgreSQL local.",
   "SEG-006": "jogada.test.ts e validacao.test.ts exercitam incoerências no resultado e datas inválidas.",
   "PLA-004":
@@ -211,6 +213,6 @@ escrever(
 );
 escrever(
   resolve(destino, "README.md"),
-  `# Engenharia do Modolume\n\n- [Arquitetura e convenções](arquitetura.md)\n- [Relatório de auditoria](auditoria.md)\n- [Plano de correção e testes do app](plano-correcao-mobile.md)\n- [Matriz de rastreabilidade](matriz.md)\n\n## Módulos\n\n${entradas.join("\n")}\n\nRegere as fichas e a matriz com \`node scripts/gerar-rastreabilidade.mjs\`. Os PRDs em \`docs/02-modulos\` são a fonte dos critérios. As evidências e pendências são mantidas no gerador.`,
+  `# Engenharia do Modolume\n\n- [Arquitetura e convenções](arquitetura.md)\n- [Relatório de auditoria](auditoria.md)\n- [Plano de correção e testes do app](plano-correcao-mobile.md)\n- [Publicação na Google Play](publicacao-android.md)\n- [Matriz de rastreabilidade](matriz.md)\n\n## Módulos\n\n${entradas.join("\n")}\n\nRegere as fichas e a matriz com \`node scripts/gerar-rastreabilidade.mjs\`. Os PRDs em \`docs/02-modulos\` são a fonte dos critérios. As evidências e pendências são mantidas no gerador.`,
 );
 console.log(`${ids.size} requisitos em ${entradas.length} módulos.`);

@@ -1,20 +1,29 @@
 import Link from "next/link";
 import { Cabecalho, Painel } from "@/components/painel/blocos";
-import { CAMPO, ROTULO } from "@/components/escola/formulario";
+import { CAMPO, ROTULO, Campo, Escolha } from "@/components/escola/formulario";
 import { ListaRegistros } from "@/components/escola/registro";
 import { apiDaEquipe } from "@/lib/escola/api";
-import { GRUPOS_DE_ACAO, type PaginaRegistros, type Pessoa } from "@/lib/escola/tipos";
+import { GRUPOS_DE_ACAO, OPCOES_PAPEL, type PaginaRegistros, type Pessoa } from "@/lib/escola/tipos";
 
 /** Registro de atividades (auditoria): só cresce; ninguém altera nem apaga pela API. */
 export default async function Registros({
   searchParams,
 }: {
-  searchParams: Promise<{ acao?: string; usuarioId?: string; pagina?: string }>;
+  searchParams: Promise<{
+    acao?: string;
+    usuarioId?: string;
+    pagina?: string;
+    papel?: string;
+    dia?: string;
+    busca?: string;
+  }>;
 }) {
   const f = await searchParams;
   const consulta = new URLSearchParams();
-  if (f.acao) consulta.set("acao", f.acao);
-  if (f.usuarioId) consulta.set("usuarioId", f.usuarioId);
+  for (const campo of ["acao", "usuarioId", "papel", "dia", "busca"] as const) {
+    if (typeof f[campo] === "string" && f[campo]) consulta.set(campo, f[campo]);
+  }
+  const filtrado = consulta.size > 0;
   const pagina = Math.max(1, Number(f.pagina) || 1);
   consulta.set("pagina", String(pagina));
 
@@ -36,47 +45,59 @@ export default async function Registros({
         descricao="Quem fez o quê e quando: entradas no painel, mudanças de permissão, turmas, vínculos e acesso dos alunos. O registro só cresce: ninguém altera nem apaga."
       />
 
-      <form className="flex flex-wrap items-end gap-4" method="get">
-        <div className="flex min-w-[220px] flex-col gap-1.5">
-          <label htmlFor="filtro-acao" className={ROTULO}>
-            Tipo de ação
-          </label>
-          <select id="filtro-acao" name="acao" defaultValue={f.acao ?? ""} className={CAMPO}>
-            {GRUPOS_DE_ACAO.map((g) => (
-              <option key={g.valor} value={g.valor}>
-                {g.rotulo}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="flex min-w-[220px] flex-col gap-1.5">
-          <label htmlFor="filtro-pessoa" className={ROTULO}>
-            Pessoa
-          </label>
-          <select id="filtro-pessoa" name="usuarioId" defaultValue={f.usuarioId ?? ""} className={CAMPO}>
-            <option value="">Todas as pessoas</option>
-            {pessoas.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.nome}
-              </option>
-            ))}
-          </select>
-        </div>
-        <button
-          type="submit"
-          className="inline-flex min-h-11 items-center rounded-xl bg-roxo px-4 font-display text-sm font-semibold text-white hover:bg-roxo-escuro"
-        >
-          Filtrar
-        </button>
-        {f.acao || f.usuarioId ? (
-          <Link
-            href="/admin/registros"
-            className="inline-flex min-h-11 items-center px-2 text-sm font-semibold text-roxo-escuro"
-          >
-            Limpar filtros
-          </Link>
-        ) : null}
-      </form>
+      <Painel titulo="Filtrar registro" descricao="Combine a ação, o perfil e o dia. Os horários são de Brasília.">
+        <form className="grid items-end gap-4 sm:grid-cols-2 xl:grid-cols-3" method="get">
+          <Campo nome="busca" rotulo="Buscar por pessoa ou detalhe" valor={f.busca} obrigatorio={false} />
+          <div className="flex min-w-[220px] flex-col gap-1.5">
+            <label htmlFor="filtro-acao" className={ROTULO}>
+              Tipo de ação
+            </label>
+            <select id="filtro-acao" name="acao" defaultValue={f.acao ?? ""} className={CAMPO}>
+              {GRUPOS_DE_ACAO.map((g) => (
+                <option key={g.valor} value={g.valor}>
+                  {g.rotulo}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="flex min-w-[220px] flex-col gap-1.5">
+            <label htmlFor="filtro-pessoa" className={ROTULO}>
+              Pessoa
+            </label>
+            <select id="filtro-pessoa" name="usuarioId" defaultValue={f.usuarioId ?? ""} className={CAMPO}>
+              <option value="">Todas as pessoas</option>
+              {pessoas.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.nome}
+                </option>
+              ))}
+            </select>
+          </div>
+          <Escolha
+            nome="papel"
+            rotulo="Perfil"
+            valor={f.papel}
+            opcoes={[{ valor: "", rotulo: "Todos os perfis" }, ...OPCOES_PAPEL]}
+          />
+          <Campo nome="dia" rotulo="Dia" tipo="date" valor={f.dia} obrigatorio={false} />
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="submit"
+              className="inline-flex min-h-11 items-center rounded-xl bg-roxo px-4 font-display text-sm font-semibold text-white hover:bg-roxo-escuro"
+            >
+              Filtrar
+            </button>
+            {filtrado ? (
+              <Link
+                href="/admin/registros"
+                className="inline-flex min-h-11 items-center px-2 text-sm font-semibold text-roxo-escuro"
+              >
+                Limpar filtros
+              </Link>
+            ) : null}
+          </div>
+        </form>
+      </Painel>
 
       <Painel titulo={`${r.total} registros`} semRecuo>
         <ListaRegistros registros={r.registros} vazio="Nenhum registro com esses filtros." />

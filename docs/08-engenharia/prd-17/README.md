@@ -49,7 +49,7 @@ Veja o PRD de origem.
 - [MOD-DES-005](mod-des-005.md) O painel do professor carrega em até 3 segundos para uma turma de até 40 alunos.
 - [MOD-DES-006](mod-des-006.md) O relatório em PDF é gerado em até 5 segundos.
 - [MOD-DES-007](mod-des-007.md) Listas com mais de 20 registros são paginadas.
-- [MOD-CMP-001](mod-cmp-001.md) App: funciona nas versões de Android suportadas pelo Expo SDK adotado (iOS, se a versão para iPhone for contratada).
+- [MOD-CMP-001](mod-cmp-001.md) App: funciona nas versões de Android e iOS suportadas pelo Expo SDK adotado. A distribuição inicial prioriza Android.
 - [MOD-CMP-002](mod-cmp-002.md) Web: funciona nas duas versões mais recentes de Chrome, Edge, Firefox e Safari.
 - [MOD-CMP-003](mod-cmp-003.md) App e web trocam dados por uma interface única de serviços.
 - [MOD-USA-001](mod-usa-001.md) Textos para o aluno usam linguagem simples, sem termos técnicos.

@@ -1,6 +1,6 @@
 # MOD-CMP-001
 
-App: funciona nas versões de Android suportadas pelo Expo SDK adotado (iOS, se a versão para iPhone for contratada).
+App: funciona nas versões de Android e iOS suportadas pelo Expo SDK adotado. A distribuição inicial prioriza Android.
 
 Origem: [PRD-17 — Qualidade, segurança e restrições](../../02-modulos/PRD-17%20%E2%80%94%20Qualidade%2C%20seguran%C3%A7a%20e%20restri%C3%A7%C3%B5es.md), seção 5. Prioridade **E**, método **T**. Situação declarada na origem **Implementado**.
 

@@ -1,6 +1,6 @@
 # MOD-TUR-003
 
-A gestão deve poder vincular um ou mais professores a uma turma.
+A administração pode atribuir uma turma no cadastro do professor. A coordenação adiciona e remove professores das turmas do seu segmento.
 
 Origem: [PRD-03 — Gestão de turmas](../../02-modulos/PRD-03%20%E2%80%94%20Gest%C3%A3o%20de%20turmas.md), seção 5. Prioridade **E**, método **T**. Situação declarada na origem **Implementado**.
 
