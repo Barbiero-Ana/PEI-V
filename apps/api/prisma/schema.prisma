@@ -1,0 +1,584 @@
+// Banco do Modolume (PostgreSQL) — modelo relacional (ADR 0016).
+// Dicionário de dados e diagrama: docs/05-referencia/Modelo de dados.md
+//
+// Organização:
+//   1. Catálogos (tabelas mães de referência): formato, mapa, missão, habilidade BNCC, unidade temática
+//   2. Escola: instituição → professor e turma (vínculo professor_turma) → aluno
+//   3. Aluno (tabelas filhas): avatar, progresso por missão, pontos por mapa, constelações, desafios, compras
+//   4. Jogadas (histórico de aprendizagem)
+//   5. Atividades do professor → questões → opções; atividade ↔ turma
+//   6. Planejamento: plano de aula → habilidades, formatos, missões, alunos acompanhados
+//
+// Regras de exclusão: o histórico do aluno (jogadas) nunca é apagado em cascata (Restrict); filhas que só
+// existem junto da mãe (questões, opções, itens do plano) são apagadas com ela (Cascade). Usuários e turmas
+// são desativados, não excluídos (RN-16). Restrições CHECK ficam na migração (prisma/migrations).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  // API: usuário com privilégio mínimo (modolume_api). Migrações: administrador (DIRECT_URL).
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ───────────────────────────── enumerações ─────────────────────────────
+
+/// Papel de cada pessoa da equipe da escola (a tabela "professor" guarda toda a equipe).
+enum PapelEquipe {
+  professor
+  coordenacao
+  admin
+
+  @@map("papel_equipe")
+}
+
+enum Periodo {
+  manha    @map("manhã")
+  tarde
+  integral
+
+  @@map("periodo")
+}
+
+enum OrigemJogada {
+  mapa
+  professor
+
+  @@map("origem_jogada")
+}
+
+enum StatusAtividade {
+  rascunho
+  enviada
+
+  @@map("status_atividade")
+}
+
+enum TipoQuestao {
+  objetiva
+  completar
+  associacao_visual @map("associacao-visual")
+  sequencia
+
+  @@map("tipo_questao")
+}
+
+enum StatusPlano {
+  rascunho
+  planejada
+  realizada
+
+  @@map("status_plano")
+}
+
+// ───────────────────────────── 1. catálogos ─────────────────────────────
+
+/// Formas de interação das atividades (associação visual, montagem, sequência…).
+model FormatoAtividade {
+  id      String         @id @db.VarChar(40)
+  rotulo  String         @db.VarChar(80)
+  missoes Missao[]
+  jogadas Jogada[]
+  planos  PlanoFormato[]
+
+  @@map("formato_atividade")
+}
+
+/// Mapa (nível) do app; cada um monta uma constelação.
+model Mapa {
+  numero       Int                      @id @db.SmallInt
+  titulo       String                   @db.VarChar(80)
+  constelacao  String                   @unique @db.VarChar(40)
+  missoes      Missao[]
+  pontosAlunos PontoMapa[]
+  constelacoes ConstelacaoConquistada[]
+
+  @@map("mapa")
+}
+
+/// Missões dos mapas: as atividades padrão de mapeamento da aprendizagem.
+model Missao {
+  id         String           @id @db.VarChar(60)
+  mapaNumero Int              @map("mapa_numero") @db.SmallInt
+  mapa       Mapa             @relation(fields: [mapaNumero], references: [numero], onDelete: Restrict)
+  formatoId  String           @map("formato_id") @db.VarChar(40)
+  formato    FormatoAtividade @relation(fields: [formatoId], references: [id], onDelete: Restrict)
+  titulo     String           @db.VarChar(120)
+  conteudo   String           @db.VarChar(200)
+  ordem      Int              @db.SmallInt
+
+  jogadas    Jogada[]
+  progressos ProgressoMissao[]
+  desafios   DesafioConcluido[]
+  atividades AtividadeProfessor[]
+  planos     PlanoMissao[]
+
+  @@unique([mapaNumero, ordem])
+  @@map("missao")
+}
+
+/// Habilidades da BNCC usadas em atividades e planos.
+model HabilidadeBncc {
+  codigo     String               @id @db.VarChar(12)
+  resumo     String               @db.VarChar(200)
+  atividades AtividadeProfessor[]
+  planos     PlanoHabilidade[]
+
+  @@map("habilidade_bncc")
+}
+
+/// Unidades temáticas de Matemática na BNCC.
+model UnidadeTematica {
+  nome   String      @id @db.VarChar(60)
+  planos PlanoAula[]
+
+  @@map("unidade_tematica")
+}
+
+// ───────────────────────────── 2. escola ─────────────────────────────
+
+enum Segmento {
+  fundamental_i
+  fundamental_ii
+  medio
+
+  @@map("segmento")
+}
+
+model Instituicao {
+  id          String      @id @db.VarChar(40)
+  nome        String      @db.VarChar(160)
+  criadoEm    DateTime    @default(now()) @map("criado_em") @db.Timestamptz(3)
+  professores Professor[]
+  turmas      Turma[]
+  registros   Registro[]
+  materias    Materia[]
+
+  @@map("instituicao")
+}
+
+model Materia {
+  id            String      @id @db.VarChar(40)
+  instituicaoId String      @map("instituicao_id") @db.VarChar(40)
+  instituicao   Instituicao @relation(fields: [instituicaoId], references: [id], onDelete: Restrict)
+  nome          String      @db.VarChar(60)
+  chave         String      @db.VarChar(60)
+  professores   Professor[]
+
+  @@unique([instituicaoId, chave])
+  @@map("materia")
+}
+
+model Professor {
+  id              String      @id @db.VarChar(40)
+  instituicaoId   String      @map("instituicao_id") @db.VarChar(40)
+  instituicao     Instituicao @relation(fields: [instituicaoId], references: [id], onDelete: Restrict)
+  nome            String      @db.VarChar(120)
+  email           String      @unique @db.VarChar(160)
+  /// Senha com bcrypt (MOD-SEG-001); nunca sai da API.
+  senhaHash       String      @map("senha_hash") @db.VarChar(100)
+  versaoAcesso    Int         @default(1) @map("versao_acesso")
+  redefinicaoHash String?     @unique @map("redefinicao_hash") @db.Char(64)
+  redefinicaoExpiraEm DateTime? @map("redefinicao_expira_em") @db.Timestamptz(3)
+  /// Só o professor tem disciplina (CHECK na migração).
+  disciplina      String?     @db.VarChar(60)
+  materiaId       String?     @map("materia_id") @db.VarChar(40)
+  materia         Materia?    @relation(fields: [materiaId], references: [id], onDelete: Restrict)
+  segmento        Segmento?
+  /// professor | coordenacao | admin: define o que a pessoa vê e faz (PRD-01, PRD-02).
+  papel           PapelEquipe @default(professor)
+  /// Desativar em vez de excluir preserva o histórico (RN-16).
+  ativo           Boolean     @default(true)
+  /// Senha criada pelo administrador: a pessoa troca no primeiro acesso.
+  senhaProvisoria Boolean     @default(false) @map("senha_provisoria")
+  ultimoAcesso    DateTime?   @map("ultimo_acesso") @db.Timestamptz(3)
+  criadoEm        DateTime    @default(now()) @map("criado_em") @db.Timestamptz(3)
+  atualizadoEm    DateTime    @updatedAt @map("atualizado_em") @db.Timestamptz(3)
+
+  turmas     ProfessorTurma[]
+  atividades AtividadeProfessor[]
+  planos     PlanoAula[]
+
+  @@index([instituicaoId])
+  @@index([instituicaoId, papel])
+  @@index([materiaId])
+  @@map("professor")
+}
+
+model Turma {
+  id            String      @id @db.VarChar(40)
+  instituicaoId String      @map("instituicao_id") @db.VarChar(40)
+  instituicao   Instituicao @relation(fields: [instituicaoId], references: [id], onDelete: Restrict)
+  nome          String      @db.VarChar(60)
+  serie         String      @db.VarChar(30)
+  segmento      Segmento?
+  periodo       Periodo
+  anoLetivo     Int         @map("ano_letivo") @db.SmallInt
+  /// Código que o aluno digita no app (MOD-TUR-008).
+  codigo        String      @unique @db.VarChar(10)
+  ativa         Boolean     @default(true)
+  criadoEm      DateTime    @default(now()) @map("criado_em") @db.Timestamptz(3)
+
+  professores ProfessorTurma[]
+  alunos      Aluno[]
+  atividades  AtividadeTurma[]
+  planos      PlanoAula[]
+
+  @@index([instituicaoId])
+  @@index([instituicaoId, segmento])
+  @@map("turma")
+}
+
+/// Vínculo professor ↔ turma: uma turma pode ter mais de um professor (MOD-TUR-003).
+model ProfessorTurma {
+  professorId String    @map("professor_id") @db.VarChar(40)
+  professor   Professor @relation(fields: [professorId], references: [id], onDelete: Cascade)
+  turmaId     String    @map("turma_id") @db.VarChar(40)
+  turma       Turma     @relation(fields: [turmaId], references: [id], onDelete: Cascade)
+  responsavel Boolean   @default(true)
+  desde       DateTime  @default(now()) @db.Timestamptz(3)
+
+  @@id([professorId, turmaId])
+  @@index([turmaId])
+  @@map("professor_turma")
+}
+
+model Aluno {
+  id           String    @id @db.VarChar(40)
+  turmaId      String    @map("turma_id") @db.VarChar(40)
+  turma        Turma     @relation(fields: [turmaId], references: [id], onDelete: Restrict)
+  nome         String    @db.VarChar(120)
+  /// Matrícula ou código interno da escola.
+  matricula    String    @db.VarChar(30)
+  ativo        Boolean   @default(true)
+  /// Luzes já gastas na loja do avatar.
+  luzesGastas  Int       @default(0) @map("luzes_gastas")
+  /// Código pessoal de acesso ao app (8 caracteres, sem O/0/I/1/L), passado pelo professor ou coordenação.
+  codigoAcesso String    @unique @map("codigo_acesso") @db.Char(8)
+  /// PIN de 4 números criado pelo aluno no primeiro acesso; só o hash (bcrypt). Nulo = ainda não criado ou zerado.
+  pinHash      String?   @map("pin_hash") @db.VarChar(100)
+  /// PINs errados seguidos; ao chegar a 5, o acesso fica bloqueado por 15 minutos.
+  pinFalhas    Int       @default(0) @map("pin_falhas")
+  bloqueadoAte DateTime? @map("bloqueado_ate") @db.Timestamptz(3)
+  /// Muda quando o professor gera um código novo: as sessões antigas do aluno deixam de valer.
+  versaoAcesso Int       @default(1) @map("versao_acesso")
+  ultimoAcesso DateTime? @map("ultimo_acesso") @db.Timestamptz(3)
+  criadoEm     DateTime  @default(now()) @map("criado_em") @db.Timestamptz(3)
+
+  avatar       AvatarAluno?
+  progressos   ProgressoMissao[]
+  pontosMapas  PontoMapa[]
+  constelacoes ConstelacaoConquistada[]
+  desafios     DesafioConcluido[]
+  compras      CompraLoja[]
+  jogadas      Jogada[]
+  planosFoco   PlanoAlunoFoco[]
+
+  @@unique([turmaId, matricula])
+  @@index([turmaId])
+  @@map("aluno")
+}
+
+// ───────────────────────────── 3. aluno (filhas) ─────────────────────────────
+
+/// Avatar montado no app (1:1 com o aluno). O SVG é o mesmo que o painel mostra.
+model AvatarAluno {
+  alunoId      String   @id @map("aluno_id") @db.VarChar(40)
+  aluno        Aluno    @relation(fields: [alunoId], references: [id], onDelete: Cascade)
+  pele         Int      @db.SmallInt
+  cabelo       String   @db.VarChar(30)
+  corCabelo    Int      @map("cor_cabelo") @db.SmallInt
+  olhos        String   @db.VarChar(30)
+  boca         String   @db.VarChar(30)
+  acessorio    String   @db.VarChar(30)
+  fundo        Int      @db.SmallInt
+  capa         Int?     @db.SmallInt
+  svg          String
+  atualizadoEm DateTime @updatedAt @map("atualizado_em") @db.Timestamptz(3)
+
+  @@map("avatar_aluno")
+}
+
+/// Melhor resultado do aluno em cada missão (estrelas do mapa).
+model ProgressoMissao {
+  alunoId      String   @map("aluno_id") @db.VarChar(40)
+  aluno        Aluno    @relation(fields: [alunoId], references: [id], onDelete: Cascade)
+  missaoId     String   @map("missao_id") @db.VarChar(60)
+  missao       Missao   @relation(fields: [missaoId], references: [id], onDelete: Restrict)
+  estrelas     Int      @db.SmallInt
+  vezes        Int
+  melhorAcerto Int      @map("melhor_acerto") @db.SmallInt
+  atualizadoEm DateTime @updatedAt @map("atualizado_em") @db.Timestamptz(3)
+
+  @@id([alunoId, missaoId])
+  @@map("progresso_missao")
+}
+
+/// Pontos de luz acumulados pelo aluno em cada mapa (RN-02, RN-03).
+model PontoMapa {
+  alunoId    String @map("aluno_id") @db.VarChar(40)
+  aluno      Aluno  @relation(fields: [alunoId], references: [id], onDelete: Cascade)
+  mapaNumero Int    @map("mapa_numero") @db.SmallInt
+  mapa       Mapa   @relation(fields: [mapaNumero], references: [numero], onDelete: Restrict)
+  pontos     Int
+
+  @@id([alunoId, mapaNumero])
+  @@map("ponto_mapa")
+}
+
+/// Constelações completas (RN-04): vão para o álbum do aluno.
+model ConstelacaoConquistada {
+  alunoId    String   @map("aluno_id") @db.VarChar(40)
+  aluno      Aluno    @relation(fields: [alunoId], references: [id], onDelete: Cascade)
+  mapaNumero Int      @map("mapa_numero") @db.SmallInt
+  mapa       Mapa     @relation(fields: [mapaNumero], references: [numero], onDelete: Restrict)
+  data       DateTime @db.Date
+
+  @@id([alunoId, mapaNumero])
+  @@map("constelacao_conquistada")
+}
+
+/// Desafios do dia concluídos (RN-11): um por dia.
+model DesafioConcluido {
+  alunoId  String   @map("aluno_id") @db.VarChar(40)
+  aluno    Aluno    @relation(fields: [alunoId], references: [id], onDelete: Cascade)
+  data     DateTime @db.Date
+  missaoId String   @map("missao_id") @db.VarChar(60)
+  missao   Missao   @relation(fields: [missaoId], references: [id], onDelete: Restrict)
+
+  @@id([alunoId, data])
+  @@map("desafio_concluido")
+}
+
+/// Itens da loja do avatar comprados com luzes (RN-10: permanentes).
+model CompraLoja {
+  alunoId    String   @map("aluno_id") @db.VarChar(40)
+  aluno      Aluno    @relation(fields: [alunoId], references: [id], onDelete: Cascade)
+  itemId     String   @map("item_id") @db.VarChar(60)
+  compradaEm DateTime @default(now()) @map("comprada_em") @db.Timestamptz(3)
+
+  @@id([alunoId, itemId])
+  @@map("compra_loja")
+}
+
+// ───────────────────────────── 4. jogadas ─────────────────────────────
+
+/// Missão do mapa ou atividade do professor concluída no app. O id vem do aparelho:
+/// reenviar a mesma jogada não cria outra (MOD-CON-003).
+model Jogada {
+  id                  String              @id @db.VarChar(80)
+  alunoId             String              @map("aluno_id") @db.VarChar(40)
+  aluno               Aluno               @relation(fields: [alunoId], references: [id], onDelete: Restrict)
+  origem              OrigemJogada
+  missaoId            String?             @map("missao_id") @db.VarChar(60)
+  missao              Missao?             @relation(fields: [missaoId], references: [id], onDelete: Restrict)
+  atividadeId         String?             @map("atividade_id") @db.VarChar(40)
+  atividade           AtividadeProfessor? @relation(fields: [atividadeId], references: [id], onDelete: SetNull)
+  formatoId           String              @map("formato_id") @db.VarChar(40)
+  formato             FormatoAtividade    @relation(fields: [formatoId], references: [id], onDelete: Restrict)
+  /// Título no momento da jogada (continua legível se a atividade for excluída).
+  titulo              String              @db.VarChar(160)
+  rodadas             Int                 @db.SmallInt
+  acertosDePrimeira   Int                 @map("acertos_de_primeira") @db.SmallInt
+  tentativas          Int                 @db.SmallInt
+  percentualConclusao Int                 @map("percentual_conclusao") @db.SmallInt
+  percentualAcerto    Int                 @map("percentual_acerto") @db.SmallInt
+  tempoSegundos       Int                 @map("tempo_segundos")
+  estrelas            Int                 @db.SmallInt
+  dicas               Int                 @default(0) @db.SmallInt
+  data                DateTime            @db.Date
+  recebidaEm          DateTime            @default(now()) @map("recebida_em") @db.Timestamptz(3)
+
+  @@index([alunoId, data])
+  @@index([atividadeId])
+  @@index([missaoId])
+  @@map("jogada")
+}
+
+// ───────────────────────────── 5. atividades do professor ─────────────────────────────
+
+/// Atividade montada no painel. Formato "pronta" = missão do app (missaoId).
+model AtividadeProfessor {
+  id               String          @id @db.VarChar(40)
+  professorId      String          @map("professor_id") @db.VarChar(40)
+  professor        Professor       @relation(fields: [professorId], references: [id], onDelete: Restrict)
+  titulo           String          @db.VarChar(160)
+  /// objetiva | completar | associacao-visual | sequencia | pronta
+  formato          String          @db.VarChar(40)
+  instrucao        String          @default("") @db.VarChar(400)
+  habilidadeCodigo String?         @map("habilidade_codigo") @db.VarChar(12)
+  habilidade       HabilidadeBncc? @relation(fields: [habilidadeCodigo], references: [codigo], onDelete: SetNull)
+  missaoId         String?         @map("missao_id") @db.VarChar(60)
+  missao           Missao?         @relation(fields: [missaoId], references: [id], onDelete: Restrict)
+  planoId          String?         @map("plano_id") @db.VarChar(40)
+  plano            PlanoAula?      @relation(fields: [planoId], references: [id], onDelete: SetNull)
+  liberarEm        DateTime        @map("liberar_em") @db.Date
+  status           StatusAtividade @default(rascunho)
+  enviadaEm        DateTime?       @map("enviada_em") @db.Timestamptz(3)
+  criadoEm         DateTime        @default(now()) @map("criado_em") @db.Timestamptz(3)
+  atualizadoEm     DateTime        @updatedAt @map("atualizado_em") @db.Timestamptz(3)
+
+  turmas   AtividadeTurma[]
+  questoes QuestaoAtividade[]
+  jogadas  Jogada[]
+
+  @@index([professorId])
+  @@index([status, liberarEm])
+  @@map("atividade_professor")
+}
+
+/// Turmas que recebem a atividade.
+model AtividadeTurma {
+  atividadeId String             @map("atividade_id") @db.VarChar(40)
+  atividade   AtividadeProfessor @relation(fields: [atividadeId], references: [id], onDelete: Cascade)
+  turmaId     String             @map("turma_id") @db.VarChar(40)
+  turma       Turma              @relation(fields: [turmaId], references: [id], onDelete: Restrict)
+
+  @@id([atividadeId, turmaId])
+  @@index([turmaId])
+  @@map("atividade_turma")
+}
+
+/// Questão de uma atividade, na ordem em que aparece no app.
+model QuestaoAtividade {
+  id          Int                @id @default(autoincrement())
+  atividadeId String             @map("atividade_id") @db.VarChar(40)
+  atividade   AtividadeProfessor @relation(fields: [atividadeId], references: [id], onDelete: Cascade)
+  ordem       Int                @db.SmallInt
+  tipo        TipoQuestao
+  /// Comando próprio da questão (vazio usa a instrução da atividade).
+  comando     String             @default("") @db.VarChar(200)
+  /// Orientação do professor exibida após uma resposta incorreta.
+  feedbackErro String            @default("") @map("feedback_erro") @db.VarChar(300)
+  /// Objetiva: o enunciado.
+  enunciado   String?            @db.VarChar(1000)
+  /// Completar: o texto com as respostas entre colchetes.
+  texto       String?            @db.VarChar(1000)
+  opcoes      OpcaoQuestao[]
+
+  @@unique([atividadeId, ordem])
+  @@map("questao_atividade")
+}
+
+/// Opções de uma questão: alternativas (objetiva), pares (associação) ou itens na ordem certa (sequência).
+model OpcaoQuestao {
+  id        Int              @id @default(autoincrement())
+  questaoId Int              @map("questao_id")
+  questao   QuestaoAtividade @relation(fields: [questaoId], references: [id], onDelete: Cascade)
+  ordem     Int              @db.SmallInt
+  texto     String           @db.VarChar(300)
+  /// Associação: o lado B do par.
+  par       String?          @db.VarChar(300)
+  /// Objetiva: a alternativa correta.
+  correta   Boolean          @default(false)
+
+  @@unique([questaoId, ordem])
+  @@map("opcao_questao")
+}
+
+// ───────────────────────────── 6. planejamento ─────────────────────────────
+
+model PlanoAula {
+  id           String          @id @db.VarChar(40)
+  professorId  String          @map("professor_id") @db.VarChar(40)
+  professor    Professor       @relation(fields: [professorId], references: [id], onDelete: Restrict)
+  turmaId      String          @map("turma_id") @db.VarChar(40)
+  turma        Turma           @relation(fields: [turmaId], references: [id], onDelete: Restrict)
+  data         DateTime        @db.Date
+  /// HH:MM (vazio quando não informado).
+  horario      String          @default("") @db.VarChar(5)
+  aulas        Int             @db.SmallInt
+  tema         String          @db.VarChar(200)
+  unidadeNome  String          @map("unidade") @db.VarChar(60)
+  unidade      UnidadeTematica @relation(fields: [unidadeNome], references: [nome], onDelete: Restrict)
+  objetivos    String          @default("")
+  conteudos    String          @default("")
+  metodologia  String          @default("")
+  recursos     String          @default("")
+  avaliacao    String          @default("")
+  observacoes  String          @default("")
+  status       StatusPlano     @default(planejada)
+  /// Registro depois da aula (RN-25).
+  registro     String          @default("")
+  criadoEm     DateTime        @default(now()) @map("criado_em") @db.Timestamptz(3)
+  atualizadoEm DateTime        @updatedAt @map("atualizado_em") @db.Timestamptz(3)
+
+  habilidades PlanoHabilidade[]
+  formatos    PlanoFormato[]
+  missoes     PlanoMissao[]
+  alunosFoco  PlanoAlunoFoco[]
+  atividades  AtividadeProfessor[]
+
+  @@index([professorId, data])
+  @@index([turmaId])
+  @@map("plano_aula")
+}
+
+model PlanoHabilidade {
+  planoId          String         @map("plano_id") @db.VarChar(40)
+  plano            PlanoAula      @relation(fields: [planoId], references: [id], onDelete: Cascade)
+  habilidadeCodigo String         @map("habilidade_codigo") @db.VarChar(12)
+  habilidade       HabilidadeBncc @relation(fields: [habilidadeCodigo], references: [codigo], onDelete: Restrict)
+
+  @@id([planoId, habilidadeCodigo])
+  @@map("plano_habilidade")
+}
+
+model PlanoFormato {
+  planoId   String           @map("plano_id") @db.VarChar(40)
+  plano     PlanoAula        @relation(fields: [planoId], references: [id], onDelete: Cascade)
+  formatoId String           @map("formato_id") @db.VarChar(40)
+  formato   FormatoAtividade @relation(fields: [formatoId], references: [id], onDelete: Restrict)
+
+  @@id([planoId, formatoId])
+  @@map("plano_formato")
+}
+
+/// Missões do app que serão aplicadas na aula.
+model PlanoMissao {
+  planoId  String    @map("plano_id") @db.VarChar(40)
+  plano    PlanoAula @relation(fields: [planoId], references: [id], onDelete: Cascade)
+  missaoId String    @map("missao_id") @db.VarChar(60)
+  missao   Missao    @relation(fields: [missaoId], references: [id], onDelete: Restrict)
+
+  @@id([planoId, missaoId])
+  @@map("plano_missao")
+}
+
+/// Alunos com acompanhamento mais próximo na aula (RN-23: da mesma turma do plano).
+model PlanoAlunoFoco {
+  planoId String    @map("plano_id") @db.VarChar(40)
+  plano   PlanoAula @relation(fields: [planoId], references: [id], onDelete: Cascade)
+  alunoId String    @map("aluno_id") @db.VarChar(40)
+  aluno   Aluno     @relation(fields: [alunoId], references: [id], onDelete: Cascade)
+
+  @@id([planoId, alunoId])
+  @@map("plano_aluno_foco")
+}
+
+// ───────────────────────────── 7. registro de atividades (auditoria) ─────────────────────────────
+
+/// Quem fez o quê e quando. Só cresce: a API pode incluir e ler, mas não alterar nem apagar (migração).
+model Registro {
+  id            BigInt       @id @default(autoincrement())
+  instituicaoId String?      @map("instituicao_id") @db.VarChar(40)
+  instituicao   Instituicao? @relation(fields: [instituicaoId], references: [id], onDelete: Restrict)
+  usuarioId     String?      @map("usuario_id") @db.VarChar(40)
+  /// Nome no momento da ação (continua legível se a pessoa mudar de nome).
+  usuarioNome   String?      @map("usuario_nome") @db.VarChar(120)
+  papel         String?      @db.VarChar(20)
+  /// Ex.: login, usuario.criado, turma.vinculo, aluno.pin_zerado.
+  acao          String       @db.VarChar(60)
+  alvoTipo      String?      @map("alvo_tipo") @db.VarChar(30)
+  alvoId        String?      @map("alvo_id") @db.VarChar(80)
+  detalhe       String?      @db.VarChar(300)
+  criadoEm      DateTime     @default(now()) @map("criado_em") @db.Timestamptz(3)
+
+  @@index([instituicaoId, criadoEm(sort: Desc)])
+  @@index([acao])
+  @@index([usuarioId])
+  @@map("registro")
+}
