@@ -140,6 +140,12 @@ o `.env` usa a URL pública do Postgres (TCP Proxy, `maglev.proxy.rlwy.net`); a 
 usar a URL interna (`postgres.railway.internal`). Para voltar ao banco local, troque as duas URLs pela
 `DATABASE_URL_LOCAL` e rode `banco:local`.
 
+O serviço da API no Railway usa **Railpack** com a raiz do repositório, pois precisa de `packages/core`.
+O `railpack.json` gera o cliente Prisma no build e o inclui na imagem de execução. O script `start` da raiz
+inicia somente a API. Configure **Pre-Deploy Command** como `pnpm --filter @modolume/api db:migrar` e
+**Healthcheck Path** como `/saude` nas configurações do serviço. A migração usa `DIRECT_URL` e requer a CLI
+Prisma na imagem. Mantenha as dependências de desenvolvimento disponíveis para essa etapa.
+
 ## Site (página inicial e painel)
 
 ```bash

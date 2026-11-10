@@ -1,0 +1,11 @@
+{
+  "$schema": "https://schema.railpack.com",
+  "steps": {
+    "build": {
+      "commands": ["pnpm --filter @modolume/api db:generate"]
+    }
+  },
+  "deploy": {
+    "inputs": ["...", { "step": "build", "include": ["node_modules/.prisma/client"] }]
+  }
+}
