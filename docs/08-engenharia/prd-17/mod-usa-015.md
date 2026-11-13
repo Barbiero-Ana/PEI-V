@@ -14,9 +14,11 @@ Origem: [PRD-17 — Qualidade, segurança e restrições](../../02-modulos/PRD-1
 
 ## Regras, histórias e critérios de aceite
 
-O PRD não mapeia uma história individual a este requisito.
+- HU-QUA-05 Como **usuário**, quero telas que eu entenda sem treinamento.
 
-Use a descrição da seção 5 como cenário de verificação. O PRD não associa um critério de aceite individual a este item.
+- **HU-QUA-05** CA-01: Todo formulário do painel mostra a mensagem de erro junto ao campo.
+- **HU-QUA-05** CA-02: Ações que apagam dados pedem confirmação.
+- **HU-QUA-05** CA-03: Todas as telas passam no checklist das [[Diretrizes de usabilidade do painel]].
 
 Consulte as regras transversais no PRD-17.
 

@@ -1,5 +1,5 @@
 import { ConflictException, Body, Controller, Get, Inject, Patch, Post, Put, UseGuards } from "@nestjs/common";
-import { NIVEIS, esquemaData } from "@modolume/core";
+import { NIVEIS, esquemaData, esquemaAtividade } from "@modolume/core";
 import { esquemaJogada, referenciaDaJogadaValida } from "./jogada.js";
 import { z } from "zod";
 import { rostoDoAvatar } from "./acesso.js";
@@ -7,6 +7,7 @@ import { atividadeDoBanco, dataDoBanco, dataIso, incluirAtividade } from "./conv
 import { Banco, GuardaAluno, SessaoAtual, hojeBrasil, validar, type Sessao } from "./infra.js";
 
 import { lerProgressoAluno } from "./progresso-aluno.js";
+import { publicacaoDoResultado } from "./publicacoes.js";
 
 const dataIsoValida = esquemaData;
 const idCurto = z.string().min(1).max(60);
@@ -100,24 +101,19 @@ export class ControladorAluno {
       const resultado = esquemaJogada.safeParse(entrada);
       return resultado.success ? [resultado.data] : [];
     });
-    const [missoes, atividades] = await Promise.all([
-      this.banco.missao.findMany({
-        where: { id: { in: jogadas.map((j) => j.missaoId) } },
-        select: { id: true, formatoId: true },
-      }),
-      this.banco.atividadeProfessor.findMany({
-        where: {
-          id: { in: jogadas.flatMap((j) => (j.atividadeId ? [j.atividadeId] : [])) },
-          turmas: { some: { turmaId: s.turmaId! } },
-        },
-        select: { id: true, formato: true, missaoId: true },
-      }),
-    ]);
+    const missoes = await this.banco.missao.findMany({
+      where: { id: { in: jogadas.map((j) => j.missaoId) } },
+      select: { id: true, formatoId: true },
+    });
     const missaoExiste = new Map(missoes.map((m) => [m.id, m]));
-    const atividadeValida = new Map(atividades.map((a) => [a.id, a]));
-    const aceitas = jogadas.filter((j) =>
-      referenciaDaJogadaValida(j, missaoExiste.get(j.missaoId), atividadeValida.get(j.atividadeId ?? "")),
-    );
+    const aceitas = [];
+    for (const j of jogadas) {
+      if (j.origem === "professor") {
+        const publicada = await publicacaoDoResultado(this.banco, j, s.turmaId!, missaoExiste.get(j.missaoId));
+        if (publicada) aceitas.push({ ...j, titulo: publicada.dados.titulo });
+      } else if (j.data <= hojeBrasil() && referenciaDaJogadaValida(j, missaoExiste.get(j.missaoId), undefined))
+        aceitas.push(j);
+    }
     await this.banco.jogada.createMany({
       data: aceitas.map((j) => ({
         id: j.id,
@@ -125,7 +121,8 @@ export class ControladorAluno {
         origem: j.origem,
         // atividade do professor que não é jogo do app não tem missão no catálogo
         missaoId: missaoExiste.has(j.missaoId) ? j.missaoId : null,
-        atividadeId: j.atividadeId && atividadeValida.has(j.atividadeId) ? j.atividadeId : null,
+        atividadeId: j.atividadeId ?? null,
+        publicacaoId: j.publicacaoId ?? null,
         formatoId: j.formato,
         titulo: j.titulo,
         rodadas: j.rodadas,
@@ -241,31 +238,48 @@ export class ControladorAluno {
           turmas: { some: { turmaId: s.turmaId! } },
           liberarEm: { lte: dataDoBanco(hojeBrasil()) },
         },
-        include: incluirAtividade,
+        include: {
+          ...incluirAtividade,
+          publicacoes: {
+            orderBy: { numero: "desc" },
+            take: 1,
+            select: { id: true, numero: true, conteudo: true, prazo: true },
+          },
+        },
         orderBy: { liberarEm: "desc" },
       }),
       this.banco.jogada.findMany({
         where: { alunoId: s.sub, origem: "professor", atividadeId: { not: null } },
-        select: { atividadeId: true, percentualAcerto: true, estrelas: true, data: true },
+        select: { atividadeId: true, publicacaoId: true, percentualAcerto: true, estrelas: true, data: true },
         orderBy: [{ recebidaEm: "asc" }, { id: "asc" }],
       }),
     ]);
-    const ultima = new Map(feitas.map((f) => [f.atividadeId, f]));
     return {
       atividades: lista.map((linha) => {
         const a = atividadeDoBanco(linha);
-        const f = ultima.get(a.id);
+        const publicacao = linha.publicacoes[0];
+        const conteudo = publicacao ? esquemaAtividade.parse(publicacao.conteudo) : a;
+        const prazo = publicacao ? (publicacao.prazo ? dataIso(publicacao.prazo) : "") : a.prazo;
+        const f = [...feitas]
+          .reverse()
+          .find(
+            (f) =>
+              f.atividadeId === a.id &&
+              (f.publicacaoId === a.publicacaoId || (!f.publicacaoId && linha.publicacoes[0]?.numero === 1)),
+          );
         return {
           id: a.id,
-          titulo: a.titulo,
-          formato: a.formato,
-          instrucao: a.instrucao,
-          habilidade: a.habilidade,
-          missaoId: a.missaoId,
-          questoes: a.questoes,
-          liberarEm: a.liberarEm,
-          prazo: a.prazo ?? "",
-          encerrada: Boolean(a.prazo && a.prazo < hojeBrasil()),
+          publicacaoId: a.publicacaoId,
+          publicacaoNumero: a.publicacaoNumero,
+          titulo: conteudo.titulo,
+          formato: conteudo.formato,
+          instrucao: conteudo.instrucao,
+          habilidade: conteudo.habilidade,
+          missaoId: conteudo.missaoId,
+          questoes: conteudo.questoes,
+          liberarEm: conteudo.liberarEm,
+          prazo: prazo ?? "",
+          encerrada: Boolean(prazo && prazo < hojeBrasil()),
           feita: f ? { percentualAcerto: f.percentualAcerto, estrelas: f.estrelas, data: dataIso(f.data) } : null,
         };
       }),

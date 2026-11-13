@@ -11,6 +11,7 @@ export async function avisosDoAluno(banco: Banco, s: Sessao): Promise<AvisoAluno
   amanha.setUTCDate(amanha.getUTCDate() + 1);
   const [atividades, avaliacoes, feitas, leituras] = await Promise.all([
     banco.atividadeProfessor.findMany({
+      include: { publicacoes: { orderBy: { numero: "desc" }, take: 1, select: { id: true, numero: true } } },
       where: {
         status: "enviada",
         arquivada: false,
@@ -24,13 +25,19 @@ export async function avisosDoAluno(banco: Banco, s: Sessao): Promise<AvisoAluno
       orderBy: { criadaEm: "desc" },
       take: 100,
     }),
-    banco.jogada.findMany({ where: { alunoId: s.sub, atividadeId: { not: null } }, select: { atividadeId: true } }),
+    banco.jogada.findMany({
+      where: { alunoId: s.sub, atividadeId: { not: null } },
+      select: { atividadeId: true, publicacaoId: true },
+    }),
     banco.leituraAvisoAluno.findMany({ where: { alunoId: s.sub }, select: { avisoId: true } }),
   ]);
-  const concluidas = new Set(feitas.map((j) => j.atividadeId));
   const lidas = new Set(leituras.map((l) => l.avisoId));
   const avisos: Omit<AvisoAluno, "lida">[] = [];
   for (const a of atividades) {
+    const p = a.publicacoes?.[0];
+    const concluida = feitas.some(
+      (j) => j.atividadeId === a.id && (!p || j.publicacaoId === p.id || (!j.publicacaoId && p.numero === 1)),
+    );
     if (a.prazo && dataIso(a.prazo) < hoje) continue;
     avisos.push({
       id: `atividade:${a.id}:${a.enviadaEm?.getTime() ?? 0}`,
@@ -40,7 +47,7 @@ export async function avisosDoAluno(banco: Banco, s: Sessao): Promise<AvisoAluno
       atividadeId: a.id,
       data: dataIso(a.liberarEm),
     });
-    if (a.prazo && dataIso(a.prazo) === dataIso(amanha) && !concluidas.has(a.id))
+    if (a.prazo && dataIso(a.prazo) === dataIso(amanha) && !concluida)
       avisos.push({
         id: `prazo:${a.id}:${dataIso(a.prazo)}`,
         titulo: "Você tem uma atividade para amanhã",

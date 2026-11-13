@@ -1,4 +1,5 @@
 import { verificarConsolidacao } from "./verificar-consolidacao.js";
+import { verificarPublicacoes } from "./verificar-publicacoes.js";
 import "reflect-metadata";
 import { execFileSync } from "node:child_process";
 import assert from "node:assert/strict";
@@ -237,6 +238,10 @@ try {
   const resposta = {
     ...jogada,
     id: "resposta-atividade",
+    rodadas: 1,
+    acertosDePrimeira: 1,
+    tentativas: 1,
+    data: hojeBrasil(),
     origem: "professor",
     missaoId: atividade.id,
     atividadeId: atividade.id,
@@ -245,6 +250,7 @@ try {
   assert.equal((await aluno.atividades(sessao)).atividades.length, 0);
   await professor.mudarEnvio(sessaoProfessor, equipe, atividade.id, { enviar: true });
   const publicada = (await aluno.atividades(sessao)).atividades[0];
+  Object.assign(resposta, { publicacaoId: publicada?.publicacaoId });
   assert.equal(publicada?.id, atividade.id);
   assert.equal(publicada?.questoes[0]?.feedbackErro, feedbackErro);
   assert.deepEqual((await aluno.jogadas(sessao, { jogadas: [resposta] })).recebidas, [resposta.id]);
@@ -257,6 +263,7 @@ try {
   console.log("OK: professor publica, aluno recebe feedback e envia uma vez, professor consulta o resultado");
 
   await verificarConsolidacao(banco, equipe);
+  await verificarPublicacoes(banco, equipe);
 
   // Exercita o comando de implantação real, duas vezes, em outra base descartável.
   await servidor.createDatabase("migracoes_cli");
@@ -289,6 +296,64 @@ try {
     await cli.end();
   }
   console.log("OK: prisma migrate deploy aplica todas as migrações e a segunda execução é idempotente");
+
+  // O mesmo pre-deploy da homologação é exercitado duas vezes numa base nova.
+  await servidor.createDatabase("homologacao_preparacao");
+  const urlHomologacao = `postgresql://postgres:teste-local@127.0.0.1:${porta}/homologacao_preparacao`;
+  const senhaApiHomologacao = "a".repeat(64);
+  const prepararHomologacao = (direto = urlHomologacao, ambiente = "homologacao") =>
+    execFileSync(
+      process.execPath,
+      [
+        resolve(import.meta.dirname, "../../../node_modules/tsx/dist/cli.mjs"),
+        resolve(import.meta.dirname, "preparar-homologacao.ts"),
+      ],
+      {
+        cwd: resolve(import.meta.dirname, ".."),
+        env: {
+          ...process.env,
+          RAILWAY_ENVIRONMENT_NAME: ambiente,
+          AMBIENTE_DADOS_FICTICIOS: "true",
+          DIRECT_URL: direto,
+          DATABASE_URL: direto.replace("postgres:teste-local", `modolume_api:${senhaApiHomologacao}`),
+          API_BANCO_SENHA: senhaApiHomologacao,
+          SENHA_DEMO: "somente-homologacao-nao-e-credencial-real",
+          PIN_HOMOLOGACAO: "2749",
+        },
+        timeout: 180000,
+        windowsHide: true,
+        stdio: "pipe",
+      },
+    );
+  prepararHomologacao();
+  prepararHomologacao();
+  const homologacao = servidor.getPgClient("homologacao_preparacao");
+  await homologacao.connect();
+  try {
+    assert.equal(
+      (await homologacao.query("SELECT current_setting('app.ambiente',true) AS ambiente")).rows[0].ambiente,
+      "homologacao",
+    );
+    assert.ok((await homologacao.query("SELECT count(*)::int AS n FROM atividade_publicacao")).rows[0].n > 0);
+    assert.equal(
+      (await homologacao.query("SELECT count(*)::int AS n FROM aluno WHERE pin_hash IS NOT NULL")).rows[0].n,
+      2,
+    );
+    const privilegios = (
+      await homologacao.query(
+        "SELECT has_table_privilege('modolume_api','atividade_publicacao','UPDATE') AS altera_conteudo, has_column_privilege('modolume_api','atividade_publicacao','prazo','UPDATE') AS altera_prazo",
+      )
+    ).rows[0];
+    assert.equal(privilegios.altera_conteudo, false);
+    assert.equal(privilegios.altera_prazo, true);
+  } finally {
+    await homologacao.end();
+  }
+  assert.throws(() => prepararHomologacao(urlHomologacao, "production"));
+  assert.throws(() => prepararHomologacao(`postgresql://postgres:teste-local@127.0.0.1:${porta}/postgres`));
+  console.log(
+    "OK: pre-deploy de homologação idempotente, contas fictícias, papel mínimo e recusa de produção/base preexistente",
+  );
 
   await cliente.query(
     `CREATE FUNCTION recusar_registro_teste() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'falha deliberada'; END $$; CREATE TRIGGER recusar_registro_teste BEFORE INSERT ON registro FOR EACH ROW EXECUTE FUNCTION recusar_registro_teste();`,

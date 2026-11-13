@@ -13,6 +13,7 @@ import { ControladorProfessor } from "./professor.js";
 import { ControladorSincronizacaoAluno } from "./sincronizacao-aluno.js";
 import { ControladorAvaliacoes } from "./avaliacoes.js";
 import { ControladorAvisosAluno } from "./avisos-aluno.js";
+import { ControladorProntidao, FiltroErroSeguro, rastrearRequisicao } from "./observabilidade.js";
 
 /**
  * API do Modolume (ADR 0007 e 0015): liga o app do aluno ao painel do
@@ -30,6 +31,7 @@ if (!segredo && process.env.NODE_ENV === "production") throw new Error("Defina J
     ThrottlerModule.forRoot([{ name: "default", ttl: 60_000, limit: 240 }]),
   ],
   controllers: [
+    ControladorProntidao,
     ControladorAcesso,
     ControladorAluno,
     ControladorSincronizacaoAluno,
@@ -44,6 +46,8 @@ if (!segredo && process.env.NODE_ENV === "production") throw new Error("Defina J
 class ModuloApi {}
 
 const app = await NestFactory.create<NestExpressApplication>(ModuloApi, { logger: ["error", "warn", "log"] });
+app.use(rastrearRequisicao);
+app.useGlobalFilters(new FiltroErroSeguro());
 // corpo das requisições limitado (avatar e lotes de jogadas cabem com folga)
 app.useBodyParser("json", { limit: "512kb" });
 app.getHttpAdapter().getInstance().disable("x-powered-by");

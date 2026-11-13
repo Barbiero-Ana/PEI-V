@@ -110,6 +110,22 @@ export const esquemaAtividade = z
   });
 export type DadosAtividade = z.infer<typeof esquemaAtividade>;
 
+/** Conteúdo pedagógico canônico: mudar o prazo não substitui a publicação. */
+export function conteudoDaPublicacao(entrada: DadosAtividade) {
+  const d = esquemaAtividade.parse(entrada);
+  return JSON.stringify({
+    titulo: d.titulo,
+    formato: d.formato,
+    instrucao: d.instrucao,
+    habilidade: d.habilidade,
+    missaoId: d.missaoId,
+    planoId: d.planoId,
+    liberarEm: d.liberarEm,
+    turmas: [...d.turmas].sort(),
+    questoes: d.questoes,
+  });
+}
+
 export const esquemaAtividadeParaEnvio = esquemaAtividade.superRefine((a, ctx) => {
   for (const [i, q] of a.questoes.entries()) {
     if (!q.feedbackErro) {
@@ -123,6 +139,8 @@ export const esquemaAtividadeParaEnvio = esquemaAtividade.superRefine((a, ctx) =
 });
 
 export interface AtividadeProfessor extends DadosAtividade {
+  publicacaoId?: string;
+  publicacaoNumero?: number;
   id: string;
   professorId: string;
   status: "rascunho" | "enviada";

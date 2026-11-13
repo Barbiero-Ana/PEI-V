@@ -55,8 +55,8 @@ legado uma vez por instalação como piso histórico. Veja o [ADR 0024](../03-de
 Os controladores de sincronização, avaliações e avisos têm responsabilidades próprias. O primeiro início
 é separado do resultado, o prazo é opcional e a avaliação publicada é uma versão imutável. O aluno recebe
 somente devolutivas publicadas e seus avisos. A leitura do aluno fica no banco. O app funciona com cache e
-fila local; os avisos novos chegam na atualização com conexão. Questões históricas por revisão de conteúdo
-continuam no roteiro de evolução do [ADR 0025](../03-decisoes/0025-ciclo-de-atividades-e-devolutivas.md).
+fila local; os avisos novos chegam na atualização com conexão. As publicações agora preservam o conteúdo e os destinatários, com início e entrega por versão,
+conforme [ADR 0026](../03-decisoes/0026-publicacoes-imutaveis-de-atividade.md).
 
 App e painel usam o mesmo cálculo de aprendizagem. A adaptação web conserva medidas originais e o
 agrupamento do pentagrama é feito sobre o domínio. Acerto médio nas tabelas continua sendo uma medida
@@ -67,3 +67,7 @@ distinta, identificada como acerto. Consulte a [consolidação funcional](consol
 Execute as suítes de cada pacote, `pnpm -r typecheck`, `pnpm -r lint` e a build web. `pnpm --filter @modolume/api test:banco` cria um PostgreSQL descartável em `tmp/auditoria-banco-*` e usa apenas dados sintéticos. A API usa `DATABASE_URL` com `modolume_api` e `DIRECT_URL` para migrações. Configure `API_URL` e os segredos do ambiente web antes de iniciar em produção. No app, a demonstração do visitante guarda o progresso no aparelho. A sessão escolar exige a API e tem dados separados por aluno.
 
 Antes de aplicar uma migração a uma base institucional, valide o backup, o destino de `DIRECT_URL` e os privilégios efetivos do papel em homologação. O ambiente real precisa de teste de HTTPS, entrega de e-mail, fluxos móveis e carga, conforme a [matriz](matriz.md).
+
+## Preparação do APK em 13/11/2026
+
+A homologação tem ambiente e banco próprios. O pre-deploy idempotente recusa produção e bases preexistentes sem a marca. O APK `preview` exige API HTTPS. A integração de crashes é opcional, sem envio quando não há DSN; a filtragem e o diagnóstico HTTP estão cobertos por testes. Veja o [roteiro de homologação](homologacao-e-preparacao-apk.md) e o [ADR 0027](../03-decisoes/0027-homologacao-isolada-e-diagnostico.md).

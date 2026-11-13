@@ -124,12 +124,12 @@ DES-007: a lista de Alunos do painel já tem páginas de 20; falta aplicar às d
 | MOD-SEG-006 | Os dados recebidos são validados no servidor antes de serem gravados. | E | T | Implementado |
 | MOD-SEG-007 | O aluno visualiza somente as próprias avaliações e dados. | E | T | Implementado |
 | MOD-SEG-008 | O tratamento de dados de menores tem consentimento dos responsáveis ou base legal firmada com a escola, conforme a LGPD. | E | N | Pendente |
-| MOD-SEG-009 | O aplicativo do aluno coleta somente nome, turma, avatar e dados de jogo. | E | N | Implementado |
+| MOD-SEG-009 | O aplicativo coleta dados mínimos de perfil escolar e jogo; diagnósticos técnicos opcionais seguem MAN-007 e o inventário de privacidade. | E | N | Implementado |
 | MOD-SEG-010 | O aplicativo não exibe publicidade nem compartilha dados com terceiros para fins comerciais. | E | N | Implementado |
 | MOD-SEG-011 | A escola pode exportar e excluir os dados de um aluno a pedido do responsável. | I | T | Pendente |
 | MOD-SEG-012 | Ações sensíveis (entradas, permissões, desativações, vínculos, acesso dos alunos) ficam num registro que o usuário da API não consegue alterar nem apagar. | E | T | Implementado |
 
-Banco (ADR 0016): chaves estrangeiras, `ENUM`, datas e 19 restrições `CHECK` recusam dados impossíveis; o histórico nunca é apagado em cascata; papel de banco com privilégio mínimo para produção; login limitado a 10 tentativas por minuto. Detalhes em [[Modelo de dados]]. SEG-002: no painel, token assinado em cookie `httpOnly`, com expiração de 8 horas. SEG-003, SEG-004 e SEG-006: no painel, a sessão e o recorte por professor são verificados no servidor, e os formulários de plano e de atividade são validados no servidor; falta a API.
+Banco (ADR 0016): chaves estrangeiras, `ENUM`, datas e restrições `CHECK` recusam dados impossíveis; o histórico nunca é apagado em cascata; papel de banco com privilégio mínimo para produção; login limitado a 10 tentativas por minuto. Detalhes em [[Modelo de dados]]. SEG-002: no painel, token assinado em cookie `httpOnly`, com expiração de 8 horas. SEG-003, SEG-004 e SEG-006: no painel, a sessão e o recorte por professor são verificados no servidor, e os formulários de plano e de atividade são validados no servidor e na API, que também confere papel, versão de acesso e vínculo atual.
 
 **Manutenibilidade (MAN)**
 
@@ -141,6 +141,9 @@ Banco (ADR 0016): chaves estrangeiras, `ENUM`, datas e 19 restrições `CHECK` r
 | MOD-MAN-004 | Componentes de interface com o mesmo comportamento são reutilizados. | I | N | Implementado |
 | MOD-MAN-005 | O código é mantido em sistema de controle de versão. | E | N | Implementado |
 | MOD-MAN-006 | Credenciais e endereços são definidos por ambiente, fora do código-fonte. | E | N | Implementado |
+
+| MOD-MAN-007 | Capturar falhas técnicas com versão e contexto mínimo, sem credenciais, conteúdo escolar ou identificação deliberada do aluno; habilitar o envio externo somente com configuração válida. | I | T | Parcial |
+| MOD-MAN-008 | Separar homologação e produção, com banco, contas fictícias e segredos próprios; validar a API HTTPS nos perfis distribuídos e recusar preparação em produção. | E | T | Implementado |
 
 MAN-006: segredo da sessão e senha de demonstração vêm do ambiente; em desenvolvimento há valores padrão, recusados em produção no caso do segredo.
 
@@ -216,6 +219,9 @@ As permissões são verificadas no servidor, não apenas na interface. O acesso 
 | HU-QUA-06 | Como **equipe**, quero regras num lugar só e código tipado, para evoluir sem quebrar. | MAN-001 a MAN-006, ADF-001 |
 | HU-QUA-07 | Como **professor orientador**, quero que o conteúdo siga a BNCC e cresça em dificuldade. | ADF-002 a ADF-004 |
 
+| HU-QUA-08 | Como **equipe**, quero diagnosticar falhas sem expor dados escolares. | MAN-007 |
+| HU-QUA-09 | Como **equipe**, quero homologar com dados fictícios sem afetar a produção. | MAN-008 |
+
 ## 7. Critérios de aceite
 
 Critérios marcados com [x] já são atendidos pelo sistema atual.
@@ -260,6 +266,20 @@ Critérios marcados com [x] já são atendidos pelo sistema atual.
 - [x] CA-01: Os mapas vão de quantidades e pares (Mapa 1) até funções, probabilidade, média e ordem das operações (Mapa 8).
 - [ ] CA-02: Cada missão tem o código da habilidade BNCC revisado.
 - [ ] CA-03: Todos os mapas têm pelo menos dois formatos (falta o Mapa 5).
+
+### HU-QUA-08 — Diagnóstico seguro
+
+- [ ] CA-01: Um erro controlado na versão instalada aparece no projeto configurado com pilha e versão, sem dados pessoais deliberados.
+- [ ] CA-02: Sem DSN o app não inicializa o envio externo; ao habilitar, o build exige as credenciais privadas de mapas de código.
+- [ ] CA-03: A API devolve um identificador de falha sem expor mensagens internas e registra apenas rota parametrizada, status e duração.
+
+### HU-QUA-09 — Homologação isolada
+
+- [ ] CA-01: O pre-deploy prepara a base fictícia duas vezes sem duplicar contas e recusa produção e bases existentes sem a marca.
+- [ ] CA-02: APK e painel de teste usam a mesma API HTTPS e o banco isolado; a produção continua disponível.
+- [ ] CA-03: O perfil de APK recusa API ausente, local ou HTTP e a prontidão retorna 503 quando o banco está indisponível.
+
+Evidência automatizada: `verificar-banco.ts`, `build.test.ts`, `diagnostico.test.ts` e `observabilidade.test.ts`. Ativação real do Sentry e aceite físico pendentes.
 
 ## 8. MVP e fases
 

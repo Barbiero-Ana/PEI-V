@@ -1,0 +1,20 @@
+name: Disponibilidade dos serviços
+on:
+  schedule:
+    - cron: "17 * * * *"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: disponibilidade
+  cancel-in-progress: false
+jobs:
+  saude:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Verificar HTTPS, painel, API e acesso ao banco
+        run: node scripts/verificar-servicos.mjs

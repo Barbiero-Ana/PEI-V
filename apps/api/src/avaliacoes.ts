@@ -9,7 +9,7 @@ import {
   Post,
   UseGuards,
 } from "@nestjs/common";
-import { esquemaAvaliacao } from "@modolume/core";
+import { esquemaAvaliacao, esquemaAtividade } from "@modolume/core";
 import { Banco, EquipeAtual, GuardaProfessor, registrar, validar, type Equipe } from "./infra.js";
 
 @Controller("professor")
@@ -47,6 +47,7 @@ export class ControladorAvaliacoes {
     const [jogadas, avaliacoes] = await Promise.all([
       this.banco.jogada.findMany({
         where: { alunoId, atividadeId: id },
+        include: { publicacao: { select: { numero: true, conteudo: true } } },
         orderBy: [{ recebidaEm: "desc" }, { id: "desc" }],
       }),
       this.banco.avaliacaoAtividade.findMany({
@@ -54,7 +55,14 @@ export class ControladorAvaliacoes {
         orderBy: [{ criadaEm: "desc" }, { id: "desc" }],
       }),
     ]);
-    return { titulo: atividade.titulo, habilidade: atividade.habilidadeCodigo, jogadas, avaliacoes };
+    const ultima = jogadas[0]?.publicacao;
+    const conteudo = ultima ? esquemaAtividade.parse(ultima.conteudo) : null;
+    return {
+      titulo: atividade.titulo,
+      habilidade: conteudo ? conteudo.habilidade || null : atividade.habilidadeCodigo,
+      jogadas,
+      avaliacoes,
+    };
   }
 
   @Post("atividades/:id/alunos/:alunoId/avaliacoes")
@@ -75,8 +83,13 @@ export class ControladorAvaliacoes {
           where: { id, arquivada: false, professorId: eu.id, turmas: { some: { turmaId: aluno.turmaId } } },
         }));
       const jogada =
-        atividade && (await tx.jogada.findFirst({ where: { id: entrada.jogadaId, alunoId, atividadeId: id } }));
+        atividade &&
+        (await tx.jogada.findFirst({
+          where: { id: entrada.jogadaId, alunoId, atividadeId: id },
+          include: { publicacao: true },
+        }));
       if (!jogada || !atividade) throw new NotFoundException("Resultado não encontrado nesta atividade.");
+      const conteudo = jogada.publicacao ? esquemaAtividade.parse(jogada.publicacao.conteudo) : null;
       const anterior = await tx.avaliacaoAtividade.findUnique({ where: { id: entrada.id } });
       if (anterior) {
         if (
@@ -98,8 +111,8 @@ export class ControladorAvaliacoes {
           atividadeId: id,
           professorId: eu.id,
           jogadaId: entrada.jogadaId,
-          tituloAtividade: atividade.titulo,
-          habilidadeCodigo: atividade.habilidadeCodigo,
+          tituloAtividade: conteudo?.titulo ?? jogada.titulo,
+          habilidadeCodigo: conteudo ? conteudo.habilidade || null : atividade.habilidadeCodigo,
           feedback: entrada.feedback,
           percepcao: entrada.percepcao,
           publicada: entrada.publicar,

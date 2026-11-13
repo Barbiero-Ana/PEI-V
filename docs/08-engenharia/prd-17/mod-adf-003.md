@@ -14,9 +14,11 @@ Origem: [PRD-17 — Qualidade, segurança e restrições](../../02-modulos/PRD-1
 
 ## Regras, histórias e critérios de aceite
 
-O PRD não mapeia uma história individual a este requisito.
+- HU-QUA-07 Como **professor orientador**, quero que o conteúdo siga a BNCC e cresça em dificuldade.
 
-Use a descrição da seção 5 como cenário de verificação. O PRD não associa um critério de aceite individual a este item.
+- **HU-QUA-07** CA-01: Os mapas vão de quantidades e pares (Mapa 1) até funções, probabilidade, média e ordem das operações (Mapa 8).
+- **HU-QUA-07** CA-02: Cada missão tem o código da habilidade BNCC revisado.
+- **HU-QUA-07** CA-03: Todos os mapas têm pelo menos dois formatos (falta o Mapa 5).
 
 Consulte as regras transversais no PRD-17.
 

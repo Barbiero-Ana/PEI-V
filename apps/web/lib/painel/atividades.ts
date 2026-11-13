@@ -1,6 +1,12 @@
 import "server-only";
-import { ATIVIDADES_EXEMPLO, type AtividadeProfessor, type DadosAtividade, type Professor } from "@modolume/core";
-import { chamarApi, usandoApi } from "./api";
+import {
+  ATIVIDADES_EXEMPLO,
+  conteudoDaPublicacao,
+  type AtividadeProfessor,
+  type DadosAtividade,
+  type Professor,
+} from "@modolume/core";
+import { chamarApi, usandoApi, ErroApi } from "./api";
 import { tokenDaApi } from "./dados";
 
 /**
@@ -59,6 +65,8 @@ export async function salvarAtividade(professor: Professor, dados: DadosAtividad
   if (id) {
     const atual = await buscarAtividade(professor, id);
     if (!atual) return null;
+    if (atual.status === "enviada" && conteudoDaPublicacao(atual) !== conteudoDaPublicacao(dados))
+      throw new ErroApi(400, "A publicação permite alterar apenas o prazo. Recolha para editar o conteúdo.");
     Object.assign(atual, dados, { atualizadaEm: agora });
     return atual;
   }

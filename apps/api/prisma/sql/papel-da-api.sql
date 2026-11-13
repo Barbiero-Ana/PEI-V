@@ -23,6 +23,10 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT USAGE, SELECT ON SEQUENCES TO mo
 -- Auditoria é somente de acréscimo, inclusive quando o papel é criado após as migrações.
 -- Quando o papel vem antes, a migração que cria registro aplica a mesma revogação.
 DO $$ BEGIN
+  IF to_regclass('public.atividade_publicacao') IS NOT NULL THEN
+    REVOKE UPDATE, DELETE, TRUNCATE ON TABLE public.atividade_publicacao FROM modolume_api;
+    GRANT UPDATE(prazo) ON public.atividade_publicacao TO modolume_api;
+  END IF;
   IF to_regclass('public._prisma_migrations') IS NOT NULL THEN
     REVOKE ALL ON TABLE public._prisma_migrations FROM modolume_api;
   END IF;

@@ -14,9 +14,10 @@ Origem: [PRD-17 — Qualidade, segurança e restrições](../../02-modulos/PRD-1
 
 ## Regras, histórias e critérios de aceite
 
-O PRD não mapeia uma história individual a este requisito.
+- HU-QUA-04 Como **aluno**, quero não perder meu progresso se a internet cair ou o app atualizar.
 
-Use a descrição da seção 5 como cenário de verificação. O PRD não associa um critério de aceite individual a este item.
+- **HU-QUA-04** CA-01: Sem internet, o app continua funcionando e salva as jogadas.
+- **HU-QUA-04** CA-02: O mesmo resultado enviado duas vezes é gravado uma única vez.
 
 Consulte as regras transversais no PRD-17.
 

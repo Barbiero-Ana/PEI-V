@@ -85,6 +85,12 @@ function permitida(turmaId: string, filtro: Filtro) {
   );
 }
 const banco = {
+  $queryRaw: async () => [],
+  atividadePublicacao: {
+    findFirst: async () => null,
+    count: async () => 0,
+    create: async () => ({}),
+  },
   avaliacaoAtividade: { count: async () => 0 },
   $transaction: async (executar: (transacao: unknown) => Promise<unknown>) => executar(banco),
   professor: {
@@ -103,6 +109,8 @@ const banco = {
       ["a", "b", "c"].filter((id) => permitida(id, where)).map((id) => ({ id })),
   },
   atividadeProfessor: {
+    findUnique: async () => structuredClone(estado.atividade),
+    findUniqueOrThrow: async () => structuredClone(estado.atividade),
     findFirst: async ({ where }: { where: { id: string; professorId: string } }) =>
       where.id === estado.atividade.id && where.professorId === estado.atividade.professorId
         ? structuredClone(estado.atividade)

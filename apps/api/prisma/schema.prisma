@@ -385,6 +385,8 @@ model ImportacaoProgresso {
 }
 
 model Jogada {
+  publicacaoId        String?              @map("publicacao_id") @db.VarChar(40)
+  publicacao          AtividadePublicacao? @relation(fields: [atividadeId, publicacaoId], references: [atividadeId, id], onDelete: Restrict)
   fases               Json?
   avaliacoes          AvaliacaoAtividade[]
   id                  String               @id @db.VarChar(80)
@@ -443,13 +445,34 @@ model AtividadeProfessor {
   criadoEm         DateTime             @default(now()) @map("criado_em") @db.Timestamptz(3)
   atualizadoEm     DateTime             @updatedAt @map("atualizado_em") @db.Timestamptz(3)
 
-  turmas   AtividadeTurma[]
-  questoes QuestaoAtividade[]
-  jogadas  Jogada[]
+  turmas      AtividadeTurma[]
+  questoes    QuestaoAtividade[]
+  jogadas     Jogada[]
+  publicacoes AtividadePublicacao[]
 
   @@index([professorId])
   @@index([status, liberarEm])
   @@map("atividade_professor")
+}
+
+/// Conteúdo e destinatários observados na publicação. Só o prazo pode ser ajustado.
+model AtividadePublicacao {
+  id          String             @id @db.VarChar(40)
+  atividadeId String             @map("atividade_id") @db.VarChar(40)
+  atividade   AtividadeProfessor @relation(fields: [atividadeId], references: [id], onDelete: Restrict)
+  numero      Int
+  conteudo    Json
+  turmas      Json
+  liberarEm   DateTime           @map("liberar_em") @db.Date
+  prazo       DateTime?          @db.Date
+  publicadaEm DateTime           @default(now()) @map("publicada_em") @db.Timestamptz(3)
+  legada      Boolean            @default(false)
+  jogadas     Jogada[]
+  inicios     AtividadeInicio[]
+
+  @@unique([atividadeId, numero])
+  @@unique([atividadeId, id])
+  @@map("atividade_publicacao")
 }
 
 /// Turmas que recebem a atividade.
@@ -607,13 +630,16 @@ model Registro {
 
 /// Primeiro início de uma atividade; não representa uma jogada concluída.
 model AtividadeInicio {
-  alunoId     String             @map("aluno_id") @db.VarChar(40)
-  aluno       Aluno              @relation(fields: [alunoId], references: [id], onDelete: Cascade)
-  atividadeId String             @map("atividade_id") @db.VarChar(40)
-  atividade   AtividadeProfessor @relation(fields: [atividadeId], references: [id], onDelete: Cascade)
-  iniciadaEm  DateTime           @map("iniciada_em") @db.Timestamptz(3)
+  id           BigInt               @id @default(autoincrement())
+  publicacaoId String?              @map("publicacao_id") @db.VarChar(40)
+  publicacao   AtividadePublicacao? @relation(fields: [atividadeId, publicacaoId], references: [atividadeId, id], onDelete: Restrict)
+  alunoId      String               @map("aluno_id") @db.VarChar(40)
+  aluno        Aluno                @relation(fields: [alunoId], references: [id], onDelete: Cascade)
+  atividadeId  String               @map("atividade_id") @db.VarChar(40)
+  atividade    AtividadeProfessor   @relation(fields: [atividadeId], references: [id], onDelete: Cascade)
+  iniciadaEm   DateTime             @map("iniciada_em") @db.Timestamptz(3)
 
-  @@id([alunoId, atividadeId])
+  @@unique([alunoId, atividadeId, publicacaoId])
   @@map("atividade_inicio")
 }
 

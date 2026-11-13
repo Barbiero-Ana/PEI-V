@@ -45,7 +45,15 @@ const ALTURA_ACOES = 72;
 const ELOGIOS = ["Isso mesmo!", "Mandou bem!", "Perfeito!", "Muito bem!", "Arrasou!", "Certinho!"];
 const TENTE = ["Quase!", "Ainda não", "Vamos de novo?"];
 
-export function Partida({ missao, atividadeId }: { missao: Missao; atividadeId?: string }) {
+export function Partida({
+  missao,
+  atividadeId,
+  publicacaoId,
+}: {
+  missao: Missao;
+  atividadeId?: string;
+  publicacaoId?: string;
+}) {
   const insets = useSafeAreaInsets();
   const { height: altura } = useWindowDimensions();
   const { vibrar, desafios } = useJogador();
@@ -70,8 +78,8 @@ export function Partida({ missao, atividadeId }: { missao: Missao; atividadeId?:
   useEffect(() => {
     if (inicio.current) return;
     inicio.current = inicioFase.current = Date.now();
-    if (atividadeId) void iniciarAtividade(atividadeId).catch(() => {});
-  }, [atividadeId, iniciarAtividade]);
+    if (atividadeId) void iniciarAtividade(atividadeId, publicacaoId).catch(() => {});
+  }, [atividadeId, publicacaoId, iniciarAtividade]);
 
   const total = missao.rodadas.length;
   const ultima = indice === total - 1;
@@ -153,6 +161,7 @@ export function Partida({ missao, atividadeId }: { missao: Missao; atividadeId?:
     });
     try {
       const premio = await concluirMissao(r, {
+        publicacaoId,
         origem: atividadeId ? "professor" : "mapa",
         titulo: missao.titulo,
         atividadeId,

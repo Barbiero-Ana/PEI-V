@@ -19,6 +19,7 @@ export const esquemaJogada = z
     origem: z.enum(["mapa", "professor"]),
     missaoId: z.string().min(1).max(60),
     atividadeId: z.string().max(40).nullish(),
+    publicacaoId: z.string().min(1).max(40).nullish(),
     titulo: z.string().min(1).max(160),
     formato: z.enum(FORMATO_IDS),
     rodadas: z.number().int().min(1).max(200),
@@ -32,6 +33,12 @@ export const esquemaJogada = z
     data: esquemaData,
   })
   .superRefine((jogada, contexto) => {
+    if (jogada.origem === "mapa" && jogada.publicacaoId)
+      contexto.addIssue({
+        code: "custom",
+        path: ["publicacaoId"],
+        message: "Missões avulsas não possuem publicação do professor.",
+      });
     if (
       jogada.fases &&
       (jogada.fases.length !== jogada.rodadas ||

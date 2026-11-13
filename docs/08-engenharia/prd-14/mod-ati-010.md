@@ -27,6 +27,7 @@ As regras de negócio aplicáveis ao contexto estão no [módulo](README.md) e n
 - [apps/web/app/professor/(painel)/atividades](../../../apps/web/app/professor/%28painel%29/atividades)
 - [apps/api/src/professor.ts](../../../apps/api/src/professor.ts)
 - [apps/api/src/aluno.ts](../../../apps/api/src/aluno.ts)
+- [apps/api/src/publicacoes.ts](../../../apps/api/src/publicacoes.ts)
 
 **Aceite nesta auditoria** Evidência parcial.
 

@@ -293,7 +293,7 @@ function AbrirAtividade({ id }: { id: string }) {
   }, [atividade]);
   // Uma atualização da lista não altera as perguntas de uma partida em andamento.
   if (atividade && questoes && !copia) guardarCopia(atividade);
-  if (atividade && questoes && !(atividade.prazo && atividade.prazo < dataEscolar()))
+  if (atividade?.publicacaoId && questoes && !(atividade.prazo && atividade.prazo < dataEscolar()))
     return <ResponderAtividade atividade={atividade} questoes={questoes} />;
   if (!pronto || carregandoAtividades) return <EsqueletoTela formato="jogo" />;
 
@@ -328,8 +328,8 @@ function ResponderAtividade({ atividade, questoes }: { atividade: AtividadeDoPro
   useEffect(() => {
     if (inicio.current) return;
     inicio.current = inicioFase.current = Date.now();
-    void iniciarAtividade(atividade.id).catch(() => {});
-  }, [atividade.id, iniciarAtividade]);
+    void iniciarAtividade(atividade.id, atividade.publicacaoId).catch(() => {});
+  }, [atividade.id, atividade.publicacaoId, iniciarAtividade]);
 
   const total = questoes.length;
   const q = questoes[indice]!;
@@ -368,7 +368,12 @@ function ResponderAtividade({ atividade, questoes }: { atividade: AtividadeDoPro
       tempoSegundos: (Date.now() - inicio.current) / 1000,
     });
     try {
-      await registrarJogada(r, { origem: "professor", titulo: atividade.titulo, atividadeId: atividade.id });
+      await registrarJogada(r, {
+        origem: "professor",
+        titulo: atividade.titulo,
+        atividadeId: atividade.id,
+        publicacaoId: atividade.publicacaoId,
+      });
       setResultado(r);
     } catch {
       // O provedor exibe a falha de armazenamento para esta sessão.

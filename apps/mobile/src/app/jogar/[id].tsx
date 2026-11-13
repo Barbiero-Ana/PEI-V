@@ -1,4 +1,5 @@
-import { useConta } from "@/estado/conta";
+import { useConta, type AtividadeDoProfessor } from "@/estado/conta";
+import { useState } from "react";
 import { View } from "react-native";
 import { dataEscolar, missaoPorId, nivelDaMissao, nivelLiberado } from "@modolume/core";
 import { useLocalSearchParams } from "expo-router";
@@ -13,10 +14,20 @@ import { EsqueletoTela } from "@/componentes/Esqueleto";
 export default function Jogar() {
   // "atividade": a missão foi enviada pelo professor como atividade pronta do app
   const { id, atividade } = useLocalSearchParams<{ id: string; atividade?: string }>();
+  return <AbrirJogo key={`${id}:${atividade ?? "mapa"}`} id={id} atividade={atividade} />;
+}
+
+function AbrirJogo({ id, atividade }: { id: string; atividade?: string }) {
   const { pronto, jogador, progresso, preferencias } = useJogador();
   const { atividades } = useConta();
-  const enviada = atividades.find((a) => a.id === atividade);
-  const encerrada = !!(atividade && (!enviada || (enviada.prazo && enviada.prazo < dataEscolar())));
+  const encontrada = atividades.find((a) => a.id === atividade);
+  const [copia, guardarCopia] = useState<AtividadeDoProfessor | null>(null);
+  const enviada = copia ?? encontrada;
+  if (encontrada && !copia) guardarCopia(encontrada);
+  const encerrada = !!(
+    atividade &&
+    (!enviada?.publicacaoId || enviada.missaoId !== id || (enviada.prazo && enviada.prazo < dataEscolar()))
+  );
   const missao = missaoPorId(id);
 
   if (!pronto || !jogador) return <EsqueletoTela formato="jogo" />;
@@ -50,5 +61,12 @@ export default function Jogar() {
     );
   }
 
-  return <Partida key={`${missao.id}:${atividade ?? "mapa"}`} missao={missao} atividadeId={atividade} />;
+  return (
+    <Partida
+      key={`${missao.id}:${atividade ?? "mapa"}`}
+      missao={missao}
+      atividadeId={atividade}
+      publicacaoId={enviada?.publicacaoId}
+    />
+  );
 }

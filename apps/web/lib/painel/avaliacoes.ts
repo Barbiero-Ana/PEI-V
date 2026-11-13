@@ -1,6 +1,7 @@
 import "server-only";
 import { chamarApi, usandoApi } from "./api";
 import { tokenDaApi } from "./dados";
+import type { DadosAtividade } from "@modolume/core";
 
 export interface AvaliacaoProfessor {
   id: string;
@@ -15,6 +16,8 @@ export interface DetalheAvaliacao {
   habilidade: string | null;
   jogadas: {
     id: string;
+    publicacao: { numero: number; conteudo: DadosAtividade } | null;
+    titulo: string;
     percentualAcerto: number;
     tentativas: number;
     rodadas: number;

@@ -23,8 +23,9 @@ Professor publica atividades com prazo opcional. O painel distingue início e co
 - [apps/web/app/professor/(painel)/atividades](../../../apps/web/app/professor/%28painel%29/atividades)
 - [apps/api/src/professor.ts](../../../apps/api/src/professor.ts)
 - [apps/api/src/aluno.ts](../../../apps/api/src/aluno.ts)
+- [apps/api/src/publicacoes.ts](../../../apps/api/src/publicacoes.ts)
 
-**Persistência** atividade_professor, atividade_turma, questao_atividade, opcao_questao, jogada.
+**Persistência** atividade_professor, atividade_publicacao, atividade_turma, questao_atividade, opcao_questao, jogada.
 
 ## Regras de negócio
 
@@ -56,3 +57,4 @@ verificar-consolidacao.ts valida início, prazo, encerramento e reenvio. Homolog
 - [MOD-ATI-013](mod-ati-013.md) O professor pré-visualiza a atividade como o aluno vai vê-la.
 - [MOD-ATI-014](mod-ati-014.md) A atividade pode ser vinculada a um plano de aula.
 - [MOD-ATI-015](mod-ati-015.md) A exclusão de uma atividade pede confirmação.
+- [MOD-ATI-016](mod-ati-016.md) Preservar cada publicação e vincular início, resposta offline e avaliação ao conteúdo respondido, sem substituir o histórico.

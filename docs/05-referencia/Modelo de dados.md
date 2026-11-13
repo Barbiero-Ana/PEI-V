@@ -16,7 +16,7 @@ as entidades. O schema e as migrações são a referência para colunas, relaç�
 | 2. Escola | `instituicao` | `materia`, `professor`, `turma`, `professor_turma` (vínculo N:N), `aluno` |
 | 3. Aluno | `aluno` | `avatar_aluno` (1:1), `progresso_missao`, `ponto_mapa`, `constelacao_conquistada`, `desafio_concluido`, `compra_loja`, `importacao_progresso`, `leitura_aviso_aluno` |
 | 4. Histórico | `aluno`, `missao`, `atividade_professor`, `formato_atividade` | `jogada` |
-| 5. Atividades | `atividade_professor` | `atividade_turma` (N:N com turma), `questao_atividade` → `opcao_questao`, `atividade_inicio`, `avaliacao_atividade` |
+| 5. Atividades | `atividade_professor` | `atividade_turma` (N:N com turma), `questao_atividade` → `opcao_questao`, `atividade_publicacao`, `atividade_inicio`, `avaliacao_atividade` |
 | 6. Planejamento | `plano_aula` | `plano_habilidade`, `plano_formato`, `plano_missao`, `plano_aluno_foco` |
 
 ## Diagrama de entidades
@@ -53,6 +53,9 @@ erDiagram
   ATIVIDADE_PROFESSOR ||--o{ QUESTAO_ATIVIDADE : tem
   QUESTAO_ATIVIDADE ||--o{ OPCAO_QUESTAO : tem
   ATIVIDADE_PROFESSOR ||--o{ JOGADA : "respondida em"
+  ATIVIDADE_PROFESSOR ||--o{ ATIVIDADE_PUBLICACAO : publica
+  ATIVIDADE_PUBLICACAO |o--o{ JOGADA : "versão respondida"
+  ATIVIDADE_PUBLICACAO |o--o{ ATIVIDADE_INICIO : "versão iniciada"
   HABILIDADE_BNCC ||--o{ ATIVIDADE_PROFESSOR : trabalha
   MISSAO ||--o{ ATIVIDADE_PROFESSOR : "pronta do app"
 
@@ -71,6 +74,16 @@ erDiagram
 ```
 
 ## Dicionário de dados
+
+Revisão de 13/11/2026: a migração `20261113130000_publicacao_atividade` acrescenta
+`atividade_publicacao` (`id`, `atividade_id`, `numero`, `conteudo` JSONB, `turmas` JSONB,
+`liberar_em`, `prazo`, `publicada_em`, `legada`). O par atividade/número é único. Conteúdo e destinatários
+são imutáveis para o papel da API; somente `prazo` admite atualização. `jogada.publicacao_id` e
+`atividade_inicio.publicacao_id` usam uma chave estrangeira composta que impede referenciar outra
+atividade. O início passa a ter uma chave técnica e unicidade aluno/atividade/publicação. As respostas
+históricas permanecem com referência nula; a migração observa as atividades atualmente publicadas,
+sem reconstruir versões antigas. Ver [ADR 0026](../03-decisoes/0026-publicacoes-imutaveis-de-atividade.md).
+Responsável pela decisão: Ana Barbiero — Líder de projeto.
 
 ### 1. Catálogos
 
@@ -172,7 +185,7 @@ O app envia o progresso e a API **junta** com o do banco: fica sempre o maior va
 | `importacao_progresso` | Chave aluno/instalação impede reaplicar o retrato legado. O identificador é aleatório e local ao app, sem uso publicitário. |
 | `atividade_professor.prazo` | Data opcional com CHECK que impede prazo anterior à liberação. |
 | `atividade_professor.arquivada` | Retira a atividade do uso sem apagar avaliações históricas. |
-| `atividade_inicio` | Primeiro início por aluno/atividade, independente da entrega concluída. |
+| `atividade_inicio` | Primeiro início por aluno/atividade/publicação, independente da entrega concluída. Registros anteriores preservam publicação nula. |
 | `jogada.fases` | Medidas validadas por fase nas novas entregas. Nulo nos registros antigos que não as possuíam. |
 | `avaliacao_atividade` | Versão da avaliação com resultado, texto, percepção, título e habilidade do momento. Rascunho privado e publicação não vazia. Papel da API não pode atualizar, apagar ou truncar. |
 | `leitura_aviso_aluno` | Leitura por aluno/ID do aviso. Marcações repetidas são idempotentes. |

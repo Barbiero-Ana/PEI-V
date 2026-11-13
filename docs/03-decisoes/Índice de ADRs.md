@@ -33,6 +33,9 @@ alternativas consideradas e as consequências. Juntos, contam como o projeto che
 | [0024](0024-progresso-por-operacoes-confirmadas.md) | Progresso por operações confirmadas | Aceita; homologação física pendente | 11/11/2026 |
 | [0025](0025-ciclo-de-atividades-e-devolutivas.md) | Ciclo de atividades e devolutivas | Aceita; homologação física pendente | 11/11/2026 |
 
+| [0026](0026-publicacoes-imutaveis-de-atividade.md) | Publicações imutáveis de atividade | Aceita; homologação física pendente | 13/11/2026 |
+| [0027](0027-homologacao-isolada-e-diagnostico.md) | Homologação isolada e diagnóstico antes do APK | Aceita; ativação externa acompanhada | 13/11/2026 |
+
 Os ADRs dizem **como** e **por que** o sistema foi construído assim. O **que** o sistema faz está nos PRDs de módulo
 (`docs/02-modulos/`).
 

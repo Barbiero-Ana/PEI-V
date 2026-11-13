@@ -46,6 +46,7 @@ export function questoesParaBanco(questoes: Questao[]): Prisma.QuestaoAtividadeC
 }
 
 export const incluirAtividade = {
+  publicacoes: { orderBy: { numero: "desc" }, take: 1, select: { id: true, numero: true } },
   turmas: { select: { turmaId: true } },
   questoes: { orderBy: { ordem: "asc" }, include: { opcoes: { orderBy: { ordem: "asc" } } } },
 } satisfies Prisma.AtividadeProfessorInclude;
@@ -85,6 +86,8 @@ export function questoesDoBanco(linhas: AtividadeDoBanco["questoes"]): Questao[]
 /** Atividade do banco → formato do núcleo (o que painel e app recebem). */
 export function atividadeDoBanco(a: AtividadeDoBanco): AtividadeProfessor {
   return {
+    publicacaoId: a.status === "enviada" ? a.publicacoes?.[0]?.id : undefined,
+    publicacaoNumero: a.status === "enviada" ? a.publicacoes?.[0]?.numero : undefined,
     id: a.id,
     professorId: a.professorId,
     titulo: a.titulo,

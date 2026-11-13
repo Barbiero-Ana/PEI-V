@@ -14,9 +14,10 @@ Origem: [PRD-17 — Qualidade, segurança e restrições](../../02-modulos/PRD-1
 
 ## Regras, histórias e critérios de aceite
 
-O PRD não mapeia uma história individual a este requisito.
+- HU-QUA-06 Como **equipe**, quero regras num lugar só e código tipado, para evoluir sem quebrar.
 
-Use a descrição da seção 5 como cenário de verificação. O PRD não associa um critério de aceite individual a este item.
+- **HU-QUA-06** CA-01: Pontos, estrelas, constelações, domínio e indicadores SMART são calculados no `packages/core` e têm testes automatizados.
+- **HU-QUA-06** CA-02: O TypeScript roda em modo estrito no app, na web e no núcleo.
 
 Consulte as regras transversais no PRD-17.
 

@@ -14,9 +14,10 @@ Origem: [PRD-17 — Qualidade, segurança e restrições](../../02-modulos/PRD-1
 
 ## Regras, histórias e critérios de aceite
 
-O PRD não mapeia uma história individual a este requisito.
+- HU-QUA-02 Como **aluno**, quero que o app abra e responda rápido, mesmo num celular simples.
 
-Use a descrição da seção 5 como cenário de verificação. O PRD não associa um critério de aceite individual a este item.
+- **HU-QUA-02** CA-01: Medido em aparelho intermediário, o Início aparece em até 3 segundos.
+- **HU-QUA-02** CA-02: Jogos 3D mantêm 30 quadros por segundo ou mais.
 
 Consulte as regras transversais no PRD-17.
 

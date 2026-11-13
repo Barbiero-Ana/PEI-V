@@ -5,6 +5,8 @@
   },
   "build": {
     "preview": {
+      "environment": "preview",
+      "env": { "EXPO_PUBLIC_APP_ENV": "homologacao" },
       "distribution": "internal",
       "android": {
         "buildType": "apk"
@@ -13,12 +15,14 @@
     },
     "production": {
       "environment": "production",
+      "env": { "EXPO_PUBLIC_APP_ENV": "producao" },
       "distribution": "store",
       "android": {
         "buildType": "app-bundle"
       }
     },
     "play-internal": {
+      "env": { "EXPO_PUBLIC_APP_ENV": "homologacao" },
       "extends": "production",
       "environment": "preview"
     }

@@ -87,7 +87,7 @@ Veja o PRD de origem.
 - [MOD-SEG-006](mod-seg-006.md) Os dados recebidos são validados no servidor antes de serem gravados.
 - [MOD-SEG-007](mod-seg-007.md) O aluno visualiza somente as próprias avaliações e dados.
 - [MOD-SEG-008](mod-seg-008.md) O tratamento de dados de menores tem consentimento dos responsáveis ou base legal firmada com a escola, conforme a LGPD.
-- [MOD-SEG-009](mod-seg-009.md) O aplicativo do aluno coleta somente nome, turma, avatar e dados de jogo.
+- [MOD-SEG-009](mod-seg-009.md) O aplicativo coleta dados mínimos de perfil escolar e jogo; diagnósticos técnicos opcionais seguem MAN-007 e o inventário de privacidade.
 - [MOD-SEG-010](mod-seg-010.md) O aplicativo não exibe publicidade nem compartilha dados com terceiros para fins comerciais.
 - [MOD-SEG-011](mod-seg-011.md) A escola pode exportar e excluir os dados de um aluno a pedido do responsável.
 - [MOD-SEG-012](mod-seg-012.md) Ações sensíveis (entradas, permissões, desativações, vínculos, acesso dos alunos) ficam num registro que o usuário da API não consegue alterar nem apagar.
@@ -97,6 +97,8 @@ Veja o PRD de origem.
 - [MOD-MAN-004](mod-man-004.md) Componentes de interface com o mesmo comportamento são reutilizados.
 - [MOD-MAN-005](mod-man-005.md) O código é mantido em sistema de controle de versão.
 - [MOD-MAN-006](mod-man-006.md) Credenciais e endereços são definidos por ambiente, fora do código-fonte.
+- [MOD-MAN-007](mod-man-007.md) Capturar falhas técnicas com versão e contexto mínimo, sem credenciais, conteúdo escolar ou identificação deliberada do aluno; habilitar o envio externo somente com configuração válida.
+- [MOD-MAN-008](mod-man-008.md) Separar homologação e produção, com banco, contas fictícias e segredos próprios; validar a API HTTPS nos perfis distribuídos e recusar preparação em produção.
 - [MOD-POR-001](mod-por-001.md) App: gerado a partir de um único código-fonte, pronto para Android e, se contratado, iOS.
 - [MOD-POR-002](mod-por-002.md) App: se adapta a telas de 4,7 a 13 polegadas.
 - [MOD-POR-003](mod-por-003.md) Web: se adapta a larguras a partir de 768 pixels (e funciona no celular).

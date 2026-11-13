@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { EditorAtividade } from "@/components/painel/editor-atividade";
+import { FormularioPrazo } from "@/components/painel/formulario-prazo";
 import { IconeVoltar } from "@/components/painel/icones";
 import { dataCurta } from "@/components/painel/blocos";
 import { SOBRE_FORMATOS, buscarAtividade } from "@/lib/painel/atividades";
@@ -33,22 +34,27 @@ export default async function EditarAtividade({ params }: { params: Promise<{ id
         <h1 className="text-[1.75rem] leading-tight">Editar atividade</h1>
         {atividade.status === "enviada" ? (
           <p className="mt-1 text-sm text-alerta">
-            Esta atividade já foi enviada. Ao salvar, a versão nova é a que passa a valer no app.
+            Publicação {atividade.publicacaoNumero ?? "atual"}: você pode ajustar o prazo. Para mudar questões ou
+            turmas, recolha a atividade e publique uma nova versão.
           </p>
         ) : null}
       </div>
-      <EditorAtividade
-        id={atividade.id}
-        inicial={dados}
-        turmas={turmas}
-        planos={planos.map((p) => ({
-          id: p.id,
-          rotulo: `${dataCurta(p.data)} · ${turmas.find((t) => t.id === p.turmaId)?.nome} · ${p.tema}`,
-        }))}
-        habilidades={HABILIDADES_BNCC}
-        missoes={atividadesDoApp()}
-        sobre={SOBRE_FORMATOS}
-      />
+      {atividade.status === "enviada" ? (
+        <FormularioPrazo id={atividade.id} prazo={atividade.prazo ?? ""} inicio={atividade.liberarEm} />
+      ) : (
+        <EditorAtividade
+          id={atividade.id}
+          inicial={dados}
+          turmas={turmas}
+          planos={planos.map((p) => ({
+            id: p.id,
+            rotulo: `${dataCurta(p.data)} · ${turmas.find((t) => t.id === p.turmaId)?.nome} · ${p.tema}`,
+          }))}
+          habilidades={HABILIDADES_BNCC}
+          missoes={atividadesDoApp()}
+          sobre={SOBRE_FORMATOS}
+        />
+      )}
     </div>
   );
 }

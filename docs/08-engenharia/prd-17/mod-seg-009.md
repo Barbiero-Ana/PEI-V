@@ -6,7 +6,7 @@
 
 ## Objetivo e escopo
 
-O aplicativo do aluno coleta somente nome, turma, avatar e dados de jogo.
+O aplicativo coleta dados mínimos de perfil escolar e jogo; diagnósticos técnicos opcionais seguem MAN-007 e o inventário de privacidade.
 
 Origem: [PRD-17 — Qualidade, segurança e restrições](../../02-modulos/PRD-17%20%E2%80%94%20Qualidade%2C%20seguran%C3%A7a%20e%20restri%C3%A7%C3%B5es.md), seção 5. Prioridade **E**, método **N**. Situação declarada na origem **Implementado**.
 
@@ -14,9 +14,13 @@ Origem: [PRD-17 — Qualidade, segurança e restrições](../../02-modulos/PRD-1
 
 ## Regras, histórias e critérios de aceite
 
-O PRD não mapeia uma história individual a este requisito.
+- HU-QUA-01 Como **escola**, quero que os dados dos alunos sejam protegidos e só acessados por quem tem vínculo, para cumprir a LGPD.
 
-Use a descrição da seção 5 como cenário de verificação. O PRD não associa um critério de aceite individual a este item.
+- **HU-QUA-01** CA-01: O app não pede nem guarda e-mail, telefone, endereço ou foto do aluno.
+- **HU-QUA-01** CA-02: Nenhuma tela exibe publicidade.
+- **HU-QUA-01** CA-03: Senhas e PINs ficam em hash adaptativo (bcrypt) no banco.
+- **HU-QUA-01** CA-04: Em produção, todo acesso por HTTP é redirecionado para HTTPS.
+- **HU-QUA-01** CA-05: Dado um pedido do responsável, a escola exporta e exclui os dados do aluno.
 
 Consulte as regras transversais no PRD-17.
 

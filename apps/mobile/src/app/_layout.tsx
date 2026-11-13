@@ -1,7 +1,8 @@
-import { Fragment, type ReactNode } from "react";
-import { Stack } from "expo-router";
+import { Fragment, useEffect, type ReactNode } from "react";
+import { monitorarRaiz, registrarFalha } from "@/lib/monitoramento";
+import { Stack, type ErrorBoundaryProps } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { Platform, View } from "react-native";
+import { Platform, View, Text, Pressable } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useFonts } from "expo-font";
@@ -23,8 +24,8 @@ if (Platform.OS === "web" && typeof document !== "undefined") {
   document.head.appendChild(css);
 }
 
-export default function RaizLayout() {
-  const [fontesProntas] = useFonts({
+function RaizLayout() {
+  const [fontesProntas, erroFontes] = useFonts({
     Poppins_600SemiBold,
     Poppins_700Bold,
     Inter_400Regular,
@@ -35,6 +36,7 @@ export default function RaizLayout() {
     Lexend_600SemiBold,
     Lexend_700Bold,
   });
+  if (erroFontes) throw erroFontes;
 
   if (!fontesProntas) {
     return (
@@ -63,6 +65,35 @@ export default function RaizLayout() {
         </ProvedorAcessibilidade>
       </SafeAreaProvider>
     </GestureHandlerRootView>
+  );
+}
+
+export default monitorarRaiz(RaizLayout);
+
+export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
+  useEffect(() => {
+    registrarFalha(error);
+  }, [error]);
+  return (
+    <View style={{ flex: 1, backgroundColor: "#F7F6FD", padding: 32, gap: 20, justifyContent: "center" }}>
+      <Text accessibilityRole="header" style={{ fontSize: 24, color: "#1E2A78", fontWeight: "bold" }}>
+        Não conseguimos abrir esta tela
+      </Text>
+      <Text style={{ fontSize: 17, color: "#1E2A78" }}>
+        Tente novamente. Se continuar, feche e reabra o aplicativo.
+      </Text>
+      <Pressable
+        accessibilityRole="button"
+        onPress={() => {
+          void retry().catch(() => {});
+        }}
+        style={{ minHeight: 48, backgroundColor: "#7B61FF", borderRadius: 12, padding: 16 }}
+      >
+        <Text style={{ color: "#FFFFFF", textAlign: "center", fontSize: 17, fontWeight: "bold" }}>
+          Tentar novamente
+        </Text>
+      </Pressable>
+    </View>
   );
 }
 

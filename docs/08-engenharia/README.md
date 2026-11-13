@@ -6,6 +6,7 @@
 - [Implantação de 13/11/2026](implantacao-2026-11-13.md)
 - [Plano de correção e testes do app](plano-correcao-mobile.md)
 - [Publicação na Google Play](publicacao-android.md)
+- [Homologação e preparação do APK](homologacao-e-preparacao-apk.md)
 - [Matriz de rastreabilidade](matriz.md)
 
 ## Módulos
@@ -23,9 +24,9 @@
 - [PRD-11 — Análise de aprendizagem](prd-11/README.md) (9 requisitos)
 - [PRD-12 — Painel do professor](prd-12/README.md) (24 requisitos)
 - [PRD-13 — Planejamento de aulas](prd-13/README.md) (12 requisitos)
-- [PRD-14 — Atividades do professor](prd-14/README.md) (15 requisitos)
+- [PRD-14 — Atividades do professor](prd-14/README.md) (16 requisitos)
 - [PRD-15 — Avaliação e feedback](prd-15/README.md) (6 requisitos)
 - [PRD-16 — Notificações](prd-16/README.md) (6 requisitos)
-- [PRD-17 — Qualidade, segurança e restrições](prd-17/README.md) (71 requisitos)
+- [PRD-17 — Qualidade, segurança e restrições](prd-17/README.md) (73 requisitos)
 
 Regere as fichas e a matriz com `node scripts/gerar-rastreabilidade.mjs`. Os PRDs em `docs/02-modulos` são a fonte dos critérios. As evidências e pendências são mantidas no gerador.

@@ -8,19 +8,13 @@ import {
   Inject,
   NotFoundException,
   Param,
+  Patch,
   Post,
   Put,
   Query,
   UseGuards,
 } from "@nestjs/common";
-import {
-  SITUACOES_PLANO,
-  esquemaAtividade,
-  esquemaAtividadeParaEnvio,
-  esquemaPlano,
-  type DadosAtividade,
-  type DadosPlano,
-} from "@modolume/core";
+import { SITUACOES_PLANO, esquemaAtividade, esquemaPlano, type DadosAtividade, type DadosPlano } from "@modolume/core";
 import { z } from "zod";
 import {
   atividadeDoBanco,
@@ -32,6 +26,7 @@ import {
   questoesParaBanco,
 } from "./conversao.js";
 import { gerarCodigoAcesso } from "./codigo-acesso.js";
+import { exigirConteudoPreservado, publicarAtividade } from "./publicacoes.js";
 import {
   Banco,
   EquipeAtual,
@@ -307,6 +302,21 @@ export class ControladorProfessor {
     await this.conferirTurmas(eu, d.turmas);
     await this.conferirReferencias(eu, d.habilidade ? [d.habilidade] : [], d.planoId || undefined);
     return this.banco.$transaction(async (transacao) => {
+      await transacao.$queryRaw`SELECT id FROM atividade_professor WHERE id = ${id} FOR UPDATE`;
+      const atual = await transacao.atividadeProfessor.findUniqueOrThrow({ where: { id }, include: incluirAtividade });
+      if (atual.status === "enviada") {
+        exigirConteudoPreservado(atividadeDoBanco(atual), d);
+        const editada = await transacao.atividadeProfessor.update({
+          where: { id },
+          data: { prazo: d.prazo ? dataDoBanco(d.prazo) : null },
+          include: incluirAtividade,
+        });
+        const publicacao = atual.publicacoes[0];
+        if (publicacao)
+          await transacao.atividadePublicacao.update({ where: { id: publicacao.id }, data: { prazo: editada.prazo } });
+        await registrar(transacao, eu, "atividade.prazo_alterado", { tipo: "atividade", id, detalhe: atual.titulo });
+        return atividadeDoBanco(editada);
+      }
       const editada = await transacao.atividadeProfessor.update({
         where: { id },
         data: {
@@ -316,12 +326,23 @@ export class ControladorProfessor {
         },
         include: incluirAtividade,
       });
-      if (editada.status === "enviada") validar(esquemaAtividadeParaEnvio, d);
       return atividadeDoBanco(editada);
     });
   }
 
   /** Envia para o app (ou volta para rascunho). */
+  @Patch("atividades/:id/prazo")
+  async alterarPrazo(
+    @SessaoAtual() s: Sessao,
+    @EquipeAtual() eu: Equipe,
+    @Param("id") id: string,
+    @Body() corpo: unknown,
+  ) {
+    const { prazo } = validar(z.object({ prazo: z.string() }), corpo);
+    const atual = atividadeDoBanco(await this.atividadeParaEscrita(eu, id));
+    return this.editar(s, eu, id, { ...atual, prazo });
+  }
+
   @Post("atividades/:id/envio")
   async mudarEnvio(
     @SessaoAtual() s: Sessao,
@@ -332,13 +353,15 @@ export class ControladorProfessor {
     const { enviar } = validar(envio, corpo);
     await this.atividadeParaEscrita(eu, id);
     return this.banco.$transaction(async (transacao) => {
-      const a = await transacao.atividadeProfessor.update({
-        where: { id },
-        data: { status: enviar ? "enviada" : "rascunho", ...(enviar ? { enviadaEm: new Date() } : {}) },
-        include: incluirAtividade,
-      });
+      await transacao.$queryRaw`SELECT id FROM atividade_professor WHERE id = ${id} FOR UPDATE`;
+      const a = enviar
+        ? await publicarAtividade(transacao, id)
+        : await transacao.atividadeProfessor.update({
+            where: { id },
+            data: { status: enviar ? "enviada" : "rascunho", ...(enviar ? { enviadaEm: new Date() } : {}) },
+            include: incluirAtividade,
+          });
       const dados = atividadeDoBanco(a);
-      if (enviar) validar(esquemaAtividadeParaEnvio, dados);
       await registrar(transacao, eu, enviar ? "atividade.enviada" : "atividade.recolhida", {
         tipo: "atividade",
         id,
@@ -353,8 +376,10 @@ export class ControladorProfessor {
   async excluir(@SessaoAtual() s: Sessao, @EquipeAtual() eu: Equipe, @Param("id") id: string) {
     const atividade = await this.atividadeParaEscrita(eu, id);
     await this.banco.$transaction(async (transacao) => {
+      await transacao.$queryRaw`SELECT id FROM atividade_professor WHERE id = ${id} FOR UPDATE`;
       const avaliacoes = await transacao.avaliacaoAtividade.count({ where: { atividadeId: id } });
-      if (avaliacoes)
+      const publicacoes = await transacao.atividadePublicacao.count({ where: { atividadeId: id } });
+      if (avaliacoes || publicacoes)
         await transacao.atividadeProfessor.update({ where: { id }, data: { arquivada: true, status: "rascunho" } });
       else await transacao.atividadeProfessor.delete({ where: { id } });
       await registrar(transacao, eu, "atividade.excluida", { tipo: "atividade", id, detalhe: atividade.titulo });
@@ -376,6 +401,10 @@ export class ControladorProfessor {
       turmaId: { in: turmas.map((t) => t.id) },
       turma: this.turmasAutorizadas(eu),
     };
+    const publicacao = a.status === "enviada" ? a.publicacoes?.[0] : undefined;
+    const versao = publicacao
+      ? { OR: [{ publicacaoId: publicacao.id }, ...(publicacao.numero === 1 ? [{ publicacaoId: null }] : [])] }
+      : {};
     const [alunos, jogadas, inicios, avaliacoes] = await Promise.all([
       this.banco.aluno.findMany({
         where: escopoAluno,
@@ -383,13 +412,13 @@ export class ControladorProfessor {
         include: { avatar: { select: { svg: true } } },
       }),
       this.banco.jogada.findMany({
-        where: { atividadeId: id, aluno: escopoAluno },
+        where: { atividadeId: id, aluno: escopoAluno, ...versao },
         orderBy: [{ recebidaEm: "asc" }, { id: "asc" }],
       }),
-      this.banco.atividadeInicio.findMany({ where: { atividadeId: id, aluno: escopoAluno } }),
+      this.banco.atividadeInicio.findMany({ where: { atividadeId: id, aluno: escopoAluno, ...versao } }),
       this.banco.avaliacaoAtividade.findMany({
         where: { atividadeId: id, publicada: true, aluno: escopoAluno },
-        select: { alunoId: true },
+        select: { alunoId: true, jogadaId: true },
       }),
     ]);
     const ultima = new Map(jogadas.map((j) => [j.alunoId, j]));
@@ -403,7 +432,7 @@ export class ControladorProfessor {
           avatarSvg: al.avatar?.svg ?? null,
           concluiu: Boolean(j),
           situacao: j ? "concluida" : inicios.some((i) => i.alunoId === al.id) ? "em andamento" : "nao iniciada",
-          avaliada: avaliacoes.some((a) => a.alunoId === al.id),
+          avaliada: !!j && avaliacoes.some((a) => a.alunoId === al.id && a.jogadaId === j.id),
           acerto: j?.percentualAcerto ?? null,
           data: j ? dataIso(j.data) : null,
         };

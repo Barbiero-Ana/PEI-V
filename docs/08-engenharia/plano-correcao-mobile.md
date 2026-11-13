@@ -14,7 +14,7 @@ da equipe. O [roteiro da Google Play](publicacao-android.md) acompanha a prepara
 | P1 | **Credencial local.** A sessão usa SecureStore. A migração remove as cópias antigas do token e preserva a fila e o progresso local (ADR 0023). | Os testes simulam migração, interrupção e reinstalação. Validar atualização de uma instalação anterior, reabertura, logout e troca de conta em um build Android e iOS. |
 | P1 | **Falha ao buscar atividades.** A aba distingue erro, dados guardados e lista vazia confirmada. | Conferir em modo avião, com resposta 500, sessão expirada e turma sem atividades. Confirmar o botão de nova tentativa. |
 | P2 | **Prazo, andamento, devolutivas e avisos.** O ciclo foi implementado com versões privadas/publicadas e leitura dos avisos do aluno persistida no banco (ADR 0025). | A suíte de banco confirmou privacidade, publicação, prazo e início. Homologar as interfaces e conferir os aceites de [atividades](prd-14/README.md), [feedback](prd-15/README.md) e [notificações](prd-16/README.md). |
-| P2 | **Revisão publicada de uma atividade.** O envio confere turma e formato. Falta vincular a jogada à revisão efetivamente publicada. | Recusar envio referente a um rascunho e aceitar o reenvio offline de uma revisão que foi publicada e depois recolhida. |
+| P2 | **Revisão publicada de uma atividade.** Publicações preservam conteúdo e destinatários, e a jogada leva a publicação respondida. O teste PostgreSQL cobre recolhimento, republicação e arquivamento (ADR 0026); falta aceite no APK. | Recusar envio referente a um rascunho e aceitar o reenvio offline de uma revisão que foi publicada e depois recolhida. |
 
 ## Roteiro de homologação em aparelho
 
@@ -36,3 +36,7 @@ da equipe. O [roteiro da Google Play](publicacao-android.md) acompanha a prepara
 
 A validação automatizada cobre o fluxo na API e a persistência local simulada. O aceite em aparelhos físicos e
 o teste da versão assinada continuam pendentes. Use apenas contas e dados fictícios na homologação.
+
+## Preparação adicional de 13/11/2026
+
+A API e o painel de produção foram publicados na revisão anterior. A preparação atual acrescenta versões imutáveis, ambiente isolado, validação do perfil de APK e diagnóstico. Siga o [roteiro específico](homologacao-e-preparacao-apk.md); os artefatos anteriores não contêm essas alterações.

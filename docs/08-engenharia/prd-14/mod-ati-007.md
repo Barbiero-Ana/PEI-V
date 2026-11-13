@@ -15,10 +15,17 @@ Origem: [PRD-14 — Atividades do professor](../../02-modulos/PRD-14%20%E2%80%94
 ## Regras, histórias e critérios de aceite
 
 - HU-ATI-05 Como **professor**, quero corrigir uma atividade ou mudar o prazo depois de enviar.
+- HU-ATI-09 Como **aluno e professor**, quero preservar a versão respondida offline para manter resultados e devolutivas coerentes.
 
 - **HU-ATI-05** CA-01: Uma atividade enviada pode voltar para rascunho para ser editada.
 - **HU-ATI-05** CA-02: Excluir exige abrir "Excluir" e confirmar em "Excluir definitivamente".
 - **HU-ATI-05** CA-03: Depois da data limite, a atividade aparece como "Encerrada".
+- **HU-ATI-09** CA-01: Dois envios concorrentes de uma atividade publicada retornam o mesmo identificador de publicação.
+- **HU-ATI-09** CA-02: Alterar questões de uma atividade publicada é recusado; ajustar o prazo mantém o conteúdo.
+- **HU-ATI-09** CA-03: Uma resposta da publicação 1 feita offline é registrada nessa versão após recolher, editar e publicar a 2.
+- **HU-ATI-09** CA-04: Resposta sem versão, de outra atividade, de turma não destinatária ou com quantidade de fases incompatível é recusada e preservada no aparelho.
+- **HU-ATI-09** CA-05: A entrega da publicação 1 não conclui automaticamente a publicação 2; a avaliação usa o título e a habilidade da resposta.
+- **HU-ATI-09** CA-06: Arquivar preserva as publicações e permite sincronizar uma resposta offline válida.
 
 As regras de negócio aplicáveis ao contexto estão no [módulo](README.md) e na seção 5 do PRD.
 
@@ -28,7 +35,8 @@ As regras de negócio aplicáveis ao contexto estão no [módulo](README.md) e n
 - [apps/web/app/professor/(painel)/atividades](../../../apps/web/app/professor/%28painel%29/atividades)
 - [apps/api/src/professor.ts](../../../apps/api/src/professor.ts)
 - [apps/api/src/aluno.ts](../../../apps/api/src/aluno.ts)
+- [apps/api/src/publicacoes.ts](../../../apps/api/src/publicacoes.ts)
 
-**Aceite nesta auditoria** Pendente.
+**Aceite nesta auditoria** Evidência parcial.
 
-Aceite individual pendente de verificação nesta auditoria. Consulte os cenários e as evidências do módulo.
+Formulário de prazo e API recusam troca de conteúdo publicado. verificar-publicacoes.ts cobre a proteção e alteração do prazo.

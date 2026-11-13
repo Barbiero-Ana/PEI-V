@@ -61,13 +61,17 @@ Testes de validação do conteúdo (`atividadeSchema`), demonstração do envio 
 | MOD-ATI-014 | A atividade pode ser vinculada a um plano de aula. | I | T | Implementado |
 | MOD-ATI-015 | A exclusão de uma atividade pede confirmação. | E | T | Implementado |
 
+| MOD-ATI-016 | Preservar cada publicação e vincular início, resposta offline e avaliação ao conteúdo respondido, sem substituir o histórico. | E | T | Implementado |
+
 **Situação atual, em detalhe**
 
 - **ATI-001:** o editor lista as atividades prontas do app com título e conteúdo; número de fases e mapa ainda não aparecem.
 - **ATI-002:** mudou em relação à SRS v0.2, que previa atividades "compostas por uma ou mais missões do catálogo". O sistema adotou o modelo da ADR 0011: questões próprias em quatro formatos ou uma atividade pronta.
 - **ATI-005 e ATI-009:** há liberação e prazo opcional, validado também no banco. A situação encerrada é derivada depois do último dia do prazo, no calendário escolar compartilhado.
-- **ATI-007:** o editor permite mudar o prazo de uma atividade publicada; atividades enviadas também podem voltar para rascunho.
+- **ATI-007:** o formulário e a API permitem alterar somente o prazo enquanto a atividade está publicada. Recolher permite editar o rascunho; enviar novamente cria outra publicação imutável.
 - **ATI-008 e ATI-010:** as atividades ficam no banco; enviadas e liberadas, aparecem na aba "Professor" do app. A página da atividade distingue não iniciada, em andamento e concluída. Inícios offline são sincronizados separadamente dos resultados. Entregas concluídas abrem a avaliação por aluno.
+
+- **ATI-016:** cada publicação guarda conteúdo e destinatários. Início e resultado levam o identificador da publicação. O envio offline é conferido contra essa cópia, mesmo após republicação ou arquivamento. A migração observa o legado atualmente publicado e não atribui revisões a jogadas antigas. Ver [ADR 0026](../03-decisoes/0026-publicacoes-imutaveis-de-atividade.md).
 
 ### 5.2 Regras de negócio
 
@@ -94,6 +98,8 @@ Testes de validação do conteúdo (`atividadeSchema`), demonstração do envio 
 | HU-ATI-06 | Como **professor**, quero saber quem já fez, quem está fazendo e quem não começou. | ATI-010 |
 | HU-ATI-07 | Como **professor**, quero ligar a atividade ao plano da aula. | ATI-014 |
 | HU-ATI-08 | Como **professor**, quero liberar todos os mapas para a turma, quando fizer sentido. | ATI-011 |
+
+| HU-ATI-09 | Como **aluno e professor**, quero preservar a versão respondida offline para manter resultados e devolutivas coerentes. | ATI-016, ATI-007 |
 
 ## 7. Critérios de aceite
 
@@ -143,6 +149,17 @@ Critérios marcados com [x] já são atendidos pelo painel atual.
 ### HU-ATI-08 — Liberar mapas
 
 - [ ] CA-01: Dada a opção "Liberar todos os mapas" na turma, então os alunos dessa turma veem todos os mapas abertos no app.
+
+### HU-ATI-09 — Publicações preservadas
+
+- [ ] CA-01: Dois envios concorrentes de uma atividade publicada retornam o mesmo identificador de publicação.
+- [ ] CA-02: Alterar questões de uma atividade publicada é recusado; ajustar o prazo mantém o conteúdo.
+- [ ] CA-03: Uma resposta da publicação 1 feita offline é registrada nessa versão após recolher, editar e publicar a 2.
+- [ ] CA-04: Resposta sem versão, de outra atividade, de turma não destinatária ou com quantidade de fases incompatível é recusada e preservada no aparelho.
+- [ ] CA-05: A entrega da publicação 1 não conclui automaticamente a publicação 2; a avaliação usa o título e a habilidade da resposta.
+- [ ] CA-06: Arquivar preserva as publicações e permite sincronizar uma resposta offline válida.
+
+Evidência automatizada: `verificar-publicacoes.ts`. Os critérios permanecem abertos para aceite integrado no APK.
 
 ## 8. MVP e fases
 

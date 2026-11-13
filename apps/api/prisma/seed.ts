@@ -1,3 +1,4 @@
+import "reflect-metadata";
 import bcrypt from "bcryptjs";
 import { PrismaClient } from "@prisma/client";
 import {
@@ -12,6 +13,7 @@ import {
 } from "@modolume/core";
 import { gerarCodigoAcesso } from "../src/codigo-acesso.js";
 import { dataDoBanco, questoesParaBanco } from "../src/conversao.js";
+import { publicarAtividade } from "../src/publicacoes.js";
 
 /**
  * Dados iniciais do banco, em ordem de dependência (mães antes das filhas):
@@ -250,6 +252,7 @@ async function main() {
         questoes: { create: questoesParaBanco(a.questoes) },
       },
     });
+    if (a.status === "enviada") await prisma.$transaction((tx) => publicarAtividade(tx, a.id));
   }
 
   const contar = async (nome: string, n: Promise<number>) => console.log(`  ${nome}: ${await n}`);

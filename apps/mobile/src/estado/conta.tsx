@@ -20,6 +20,8 @@ export type { ContaAluno } from "./isolamento";
  */
 
 export interface AtividadeDoProfessor {
+  publicacaoId?: string;
+  publicacaoNumero?: number;
   id: string;
   titulo: string;
   formato: "objetiva" | "completar" | "associacao-visual" | "sequencia" | "pronta";
@@ -44,6 +46,7 @@ export interface DevolutivaAluno {
 }
 
 export interface JogadaParaEnviar extends ResultadoJogada {
+  publicacaoId?: string | null;
   id: string;
   recompensar?: boolean;
   motivoRecusa?: string;
@@ -52,10 +55,10 @@ export interface JogadaParaEnviar extends ResultadoJogada {
   atividadeId: string | null;
   titulo: string;
 }
-type DestinoJogada = { origem: "mapa" | "professor"; titulo: string; atividadeId?: string };
+type DestinoJogada = { origem: "mapa" | "professor"; titulo: string; atividadeId?: string; publicacaoId?: string };
 
 interface Guardado {
-  inicios: Record<string, { atividadeId: string; iniciadaEm: string }>;
+  inicios: Record<string, { atividadeId: string; publicacaoId?: string; iniciadaEm: string }>;
   avisos: AvisoAluno[];
   avaliacoes: DevolutivaAluno[];
   leiturasPendentes: string[];
@@ -63,7 +66,7 @@ interface Guardado {
   recusadas: JogadaParaEnviar[];
   atividades: AtividadeDoProfessor[];
   /** Atividades feitas neste aparelho (aparecem como feitas mesmo antes de enviar). */
-  feitas: Record<string, { percentualAcerto: number; estrelas: number; data: string }>;
+  feitas: Record<string, { percentualAcerto: number; estrelas: number; data: string; publicacaoId?: string }>;
   /** Último avatar enviado (para só reenviar quando mudar). */
   avatarEnviado: string;
   /** O aluno escolheu usar o app sem entrar numa turma (só no aparelho). */
@@ -110,7 +113,7 @@ interface Estado {
   atividades: AtividadeDoProfessor[];
   avisos: AvisoAluno[];
   avaliacoes: DevolutivaAluno[];
-  iniciarAtividade: (id: string) => Promise<void>;
+  iniciarAtividade: (id: string, publicacaoId?: string) => Promise<void>;
   marcarAvisosLidos: (ids: string[]) => void;
   carregandoAtividades: boolean;
   estadoAtividades: "aguardando" | "atualizadas" | "erro";
@@ -329,6 +332,7 @@ export function ProvedorConta({ children }: { children: ReactNode }) {
         alunoId: contaDaIdentidade.aluno.id,
         origem: destino.origem,
         atividadeId: destino.atividadeId ?? null,
+        publicacaoId: destino.publicacaoId ?? null,
         titulo: destino.titulo,
       };
       if (!jogada && !resultado) return;
@@ -339,7 +343,12 @@ export function ProvedorConta({ children }: { children: ReactNode }) {
             feitas: destino.atividadeId
               ? {
                   ...s.feitas,
-                  [destino.atividadeId]: { percentualAcerto: r.percentualAcerto, estrelas: r.estrelas, data: r.data },
+                  [destino.atividadeId]: {
+                    percentualAcerto: r.percentualAcerto,
+                    estrelas: r.estrelas,
+                    data: r.data,
+                    publicacaoId: destino.publicacaoId,
+                  },
                 }
               : s.feitas,
           }
@@ -454,11 +463,14 @@ export function ProvedorConta({ children }: { children: ReactNode }) {
   }, [rostoAtual, retrato, pronto, contaDaIdentidade, sincronizar]);
 
   const iniciarAtividade = useCallback(
-    async (id: string) => {
-      if (!contaDaIdentidade || atual.current.inicios[id]) return;
+    async (id: string, publicacaoId?: string) => {
+      if (!contaDaIdentidade || !publicacaoId || atual.current.inicios[publicacaoId]) return;
       gravar((x) => ({
         ...x,
-        inicios: { ...x.inicios, [id]: { atividadeId: id, iniciadaEm: new Date().toISOString() } },
+        inicios: {
+          ...x.inicios,
+          [publicacaoId]: { atividadeId: id, publicacaoId, iniciadaEm: new Date().toISOString() },
+        },
       }));
       await repositorio.aguardarEscritas();
       if (escopo.ativa()) setTimeout(sincronizar, 0);
@@ -494,7 +506,10 @@ export function ProvedorConta({ children }: { children: ReactNode }) {
       marcarAvisosLidos,
       carregandoAtividades,
       estadoAtividades,
-      atividades: g.atividades.map((a) => ({ ...a, feita: g.feitas[a.id] ?? a.feita })),
+      atividades: g.atividades.map((a) => ({
+        ...a,
+        feita: g.feitas[a.id]?.publicacaoId === a.publicacaoId ? (g.feitas[a.id] ?? a.feita) : a.feita,
+      })),
       identificar: (codigo) =>
         chamarApi<IdentificacaoAluno>("/auth/aluno/codigo", { metodo: "POST", corpo: { codigo } }),
       entrar: async (codigo, pin) => {

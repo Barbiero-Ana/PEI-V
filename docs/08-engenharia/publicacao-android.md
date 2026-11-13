@@ -10,6 +10,8 @@ A consolidação de 11/11 usa `versionCode` 3. Os links de código 2 abaixo são
 o novo protocolo, as avaliações e os avisos. Implantar API e painel e gerar outro build conforme o
 [roteiro de consolidação](consolidacao-funcional.md).
 
+**Revisão técnica de 13/11/2026:** API, painel e migrações da consolidação anterior já foram publicados. A preparação adicional do novo APK está no [roteiro de homologação](homologacao-e-preparacao-apk.md). O perfil `preview` também valida HTTPS, e as permissões desnecessárias foram bloqueadas na configuração; conferir o manifesto novo. Datas e links históricos abaixo foram preservados.
+
 ## Artefato anterior de teste disponível
 
 O [build AAB no EAS](https://expo.dev/accounts/anabarbiero23/projects/modolume/builds/88976f63-a409-4c91-b8f7-8f14b24700d8)

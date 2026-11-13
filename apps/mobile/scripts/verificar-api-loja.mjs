@@ -1,7 +1,12 @@
 import { isIP } from "node:net";
 
 const { EAS_BUILD_PROFILE: perfil } = process.env;
-if (perfil === "play-internal" || perfil === "production") {
+if (["preview", "play-internal", "production"].includes(perfil)) {
+  if (process.env.EXPO_PUBLIC_SENTRY_DSN?.trim()) {
+    for (const nome of ["SENTRY_ORG", "SENTRY_PROJECT", "SENTRY_AUTH_TOKEN"])
+      if (!process.env[nome]?.trim())
+        throw new Error(`Defina ${nome} no ambiente de build para habilitar o monitoramento com mapas de código.`);
+  }
   const endereco = process.env.EXPO_PUBLIC_API_URL?.trim() ?? "";
   let url;
   try {

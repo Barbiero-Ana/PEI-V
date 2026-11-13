@@ -5,6 +5,7 @@ import { Banco, GuardaAluno, SessaoAtual, validar, hojeBrasil, type Sessao } fro
 import { esquemaJogada, referenciaDaJogadaValida } from "./jogada.js";
 import { dataDoBanco } from "./conversao.js";
 import { importarProgressoLegado, lerProgressoAluno, salvarProgressoAluno } from "./progresso-aluno.js";
+import { publicacaoDoResultado } from "./publicacoes.js";
 
 const contador = z.number().int().min(0).max(10_000_000);
 const legado = z.object({
@@ -31,7 +32,13 @@ const esquema = z.object({
     .max(100),
   compras: z.array(z.string().min(1).max(60)).max(200),
   inicios: z
-    .array(z.object({ atividadeId: z.string().max(40), iniciadaEm: z.string().datetime() }))
+    .array(
+      z.object({
+        atividadeId: z.string().max(40),
+        publicacaoId: z.string().min(1).max(40).optional(),
+        iniciadaEm: z.string().datetime(),
+      }),
+    )
     .max(100)
     .default([]),
 });
@@ -63,30 +70,33 @@ export class ControladorSincronizacaoAluno {
         const iniciosConfirmados: string[] = [],
           iniciosRecusados: string[] = [];
         for (const i of entrada.inicios) {
-          const a = await tx.atividadeProfessor.findFirst({
-            where: {
-              id: i.atividadeId,
-              arquivada: false,
-              status: "enviada",
-              turmas: { some: { turmaId: s.turmaId! } },
-            },
-          });
+          const a = i.publicacaoId ? await tx.atividadePublicacao.findUnique({ where: { id: i.publicacaoId } }) : null;
           const dia = dataEscolar(new Date(i.iniciadaEm));
           if (
             !a ||
+            a.atividadeId !== i.atividadeId ||
+            !Array.isArray(a.turmas) ||
+            !a.turmas.includes(s.turmaId!) ||
             dia < a.liberarEm.toISOString().slice(0, 10) ||
             (a.prazo && dia > a.prazo.toISOString().slice(0, 10)) ||
             dia > hojeBrasil()
           ) {
-            iniciosRecusados.push(i.atividadeId);
+            iniciosRecusados.push(i.publicacaoId ?? i.atividadeId);
             continue;
           }
           await tx.atividadeInicio.upsert({
-            where: { alunoId_atividadeId: { alunoId: s.sub, atividadeId: i.atividadeId } },
-            create: { alunoId: s.sub, atividadeId: i.atividadeId, iniciadaEm: new Date(i.iniciadaEm) },
+            where: {
+              alunoId_atividadeId_publicacaoId: { alunoId: s.sub, atividadeId: i.atividadeId, publicacaoId: a.id },
+            },
+            create: {
+              alunoId: s.sub,
+              atividadeId: i.atividadeId,
+              publicacaoId: a.id,
+              iniciadaEm: new Date(i.iniciadaEm),
+            },
             update: {},
           });
-          iniciosConfirmados.push(i.atividadeId);
+          iniciosConfirmados.push(a.id);
         }
         const motivosRecusa: Record<string, string> = {};
         const recebidas: string[] = [],
@@ -107,24 +117,15 @@ export class ControladorSincronizacaoAluno {
           }
           const j = validada.data;
           const missao = await tx.missao.findUnique({ where: { id: j.missaoId }, select: { formatoId: true } });
-          const atividade = j.atividadeId
-            ? await tx.atividadeProfessor.findFirst({
-                where: { id: j.atividadeId, arquivada: false, turmas: { some: { turmaId: s.turmaId! } } },
-              })
-            : null;
+          const publicada =
+            j.origem === "professor" ? await publicacaoDoResultado(tx, j, s.turmaId!, missao ?? undefined) : null;
           if (
             j.data > hojeBrasil() ||
-            !referenciaDaJogadaValida(j, missao ?? undefined, atividade ?? undefined) ||
-            (atividade &&
-              (!atividade.enviadaEm ||
-                j.data < atividade.liberarEm.toISOString().slice(0, 10) ||
-                (atividade.prazo && j.data > atividade.prazo.toISOString().slice(0, 10))))
+            (j.origem === "professor" ? !publicada : !referenciaDaJogadaValida(j, missao ?? undefined, undefined))
           ) {
             recusadas.push(j.id);
             motivosRecusa[j.id] =
-              atividade?.prazo && j.data > atividade.prazo.toISOString().slice(0, 10)
-                ? "A entrega foi concluída depois do prazo."
-                : "A atividade mudou ou não está mais disponível para sua turma. Fale com seu professor.";
+              "Não foi possível validar a versão publicada, a turma ou o prazo. Atualize o app e fale com seu professor; a tentativa continua guardada.";
             continue;
           }
           await tx.jogada.create({
@@ -134,8 +135,9 @@ export class ControladorSincronizacaoAluno {
               origem: j.origem,
               missaoId: missao ? j.missaoId : null,
               atividadeId: j.atividadeId ?? null,
+              publicacaoId: publicada?.publicacao.id ?? null,
               formatoId: j.formato,
-              titulo: j.titulo,
+              titulo: publicada?.dados.titulo ?? j.titulo,
               rodadas: j.rodadas,
               acertosDePrimeira: j.acertosDePrimeira,
               tentativas: j.tentativas,

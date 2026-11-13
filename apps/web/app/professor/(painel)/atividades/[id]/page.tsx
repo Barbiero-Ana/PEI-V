@@ -285,15 +285,18 @@ export default async function Atividade({ params }: { params: Promise<{ id: stri
                 href={`/professor/atividades/${atividade.id}/editar`}
                 className={`${botao} inline-flex items-center justify-center border border-[#D9D4EC] text-tinta`}
               >
-                Editar
+                {atividade.status === "enviada" ? "Alterar prazo" : "Editar"}
               </Link>
               <details className="mt-1 text-sm">
                 <summary className="flex min-h-11 cursor-pointer items-center justify-center font-semibold text-texto-suave">
                   Excluir
                 </summary>
                 <form action={apagarAtividade.bind(null, atividade.id)} className="mt-2">
+                  <p className="mb-2 text-texto-suave">
+                    A atividade sairá da lista. Publicações, entregas e devolutivas já registradas serão preservadas.
+                  </p>
                   <button type="submit" className={`${botao} border border-alerta text-alerta`}>
-                    Excluir definitivamente
+                    Confirmar remoção
                   </button>
                 </form>
               </details>

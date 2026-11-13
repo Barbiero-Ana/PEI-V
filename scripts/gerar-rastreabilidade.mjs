@@ -86,8 +86,8 @@ const modulos = {
   ],
   14: [
     "Professor publica atividades com prazo opcional. O painel distingue início e conclusão e abre a avaliação individual.",
-    "packages/core/src/atividades-professor.ts apps/web/app/professor/(painel)/atividades apps/api/src/professor.ts apps/api/src/aluno.ts",
-    "atividade_professor, atividade_turma, questao_atividade, opcao_questao, jogada",
+    "packages/core/src/atividades-professor.ts apps/web/app/professor/(painel)/atividades apps/api/src/professor.ts apps/api/src/aluno.ts apps/api/src/publicacoes.ts",
+    "atividade_professor, atividade_publicacao, atividade_turma, questao_atividade, opcao_questao, jogada",
     "verificar-consolidacao.ts valida início, prazo, encerramento e reenvio. Homologação dos formatos no aparelho pendente.",
   ],
   15: [
@@ -111,6 +111,14 @@ const modulos = {
 };
 
 const evidencias = {
+  "ATI-007":
+    "Formulário de prazo e API recusam troca de conteúdo publicado. verificar-publicacoes.ts cobre a proteção e alteração do prazo.",
+  "ATI-016":
+    "verificar-publicacoes.ts cobre publicação concorrente única, imutabilidade, versão, reenvio offline, prazo, burla e arquivamento. Aceite no APK pendente.",
+  "MAN-007":
+    "Diagnóstico sanitizado e logs por identificador de requisição testados. Sentry preparado, sem envio até criar/configurar o projeto. Aceite nativo pendente.",
+  "MAN-008":
+    "Pre-deploy ensaiado duas vezes em banco descartável; produção e base existente sem marca são recusadas. Perfis distribuídos exigem API HTTPS. Implantação e aceite acompanhados no roteiro de homologação.",
   "ATI-005":
     "Prazo opcional no contrato, editor, API e CHECK no banco. verificar-consolidacao.ts cobre prazo e encerramento. Aceite visual pendente.",
   "ATI-010":
@@ -215,7 +223,13 @@ for (const nome of readdirSync(origem)
     if (ids.has(id)) throw new Error(`Requisito duplicado: ${id}`);
     ids.add(id);
     const sigla = id.replace(/^MOD-/, "");
-    const historiasVinculadas = historias.filter((historia) => historia[3].includes(sigla));
+    const historiasVinculadas = historias.filter((historia) => {
+      if (historia[3].includes(sigla)) return true;
+      const [prefixo, numeroRequisito] = sigla.split("-");
+      return [...historia[3].matchAll(/([A-Z]+)-(\d+)\s+a\s+(?:\1-)?(\d+)/g)].some(
+        (m) => m[1] === prefixo && Number(numeroRequisito) >= Number(m[2]) && Number(numeroRequisito) <= Number(m[3]),
+      );
+    });
     const criterios = historiasVinculadas.flatMap((historia) =>
       (aceite.get(historia[1]) ?? []).map((criterio) => `- **${historia[1]}** ${criterio.slice(2)}`),
     );
@@ -249,6 +263,6 @@ escrever(
 );
 escrever(
   resolve(destino, "README.md"),
-  `# Engenharia do Modolume\n\n- [Arquitetura e convenções](arquitetura.md)\n- [Relatório de auditoria](auditoria.md)\n- [Consolidação funcional e roteiro de implantação](consolidacao-funcional.md)\n- [Implantação de 13/11/2026](implantacao-2026-11-13.md)\n- [Plano de correção e testes do app](plano-correcao-mobile.md)\n- [Publicação na Google Play](publicacao-android.md)\n- [Matriz de rastreabilidade](matriz.md)\n\n## Módulos\n\n${entradas.join("\n")}\n\nRegere as fichas e a matriz com \`node scripts/gerar-rastreabilidade.mjs\`. Os PRDs em \`docs/02-modulos\` são a fonte dos critérios. As evidências e pendências são mantidas no gerador.`,
+  `# Engenharia do Modolume\n\n- [Arquitetura e convenções](arquitetura.md)\n- [Relatório de auditoria](auditoria.md)\n- [Consolidação funcional e roteiro de implantação](consolidacao-funcional.md)\n- [Implantação de 13/11/2026](implantacao-2026-11-13.md)\n- [Plano de correção e testes do app](plano-correcao-mobile.md)\n- [Publicação na Google Play](publicacao-android.md)\n- [Homologação e preparação do APK](homologacao-e-preparacao-apk.md)\n- [Matriz de rastreabilidade](matriz.md)\n\n## Módulos\n\n${entradas.join("\n")}\n\nRegere as fichas e a matriz com \`node scripts/gerar-rastreabilidade.mjs\`. Os PRDs em \`docs/02-modulos\` são a fonte dos critérios. As evidências e pendências são mantidas no gerador.`,
 );
 console.log(`${ids.size} requisitos em ${entradas.length} módulos.`);

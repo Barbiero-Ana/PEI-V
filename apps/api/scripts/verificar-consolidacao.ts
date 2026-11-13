@@ -181,13 +181,15 @@ export async function verificarConsolidacao(banco: Banco, eu: Equipe) {
     ],
   });
   assert.equal((await avisos.listar(sessao("conc-a"))).avisos.length, 0);
-  await professor.mudarEnvio({ sub: eu.id, papel: "professor" }, eu, atividade.id, { enviar: true });
+  const publicacao = await professor.mudarEnvio({ sub: eu.id, papel: "professor" }, eu, atividade.id, { enviar: true });
   assert.ok((await avisos.listar(sessao("conc-a"))).avisos.some((a) => a.tipo === "prazo"));
   await sincronizacao.sincronizar(sessao("conc-a"), {
     dispositivoId: "aparelho-a",
     jogadas: [],
     compras: [],
-    inicios: [{ atividadeId: atividade.id, iniciadaEm: new Date().toISOString() }],
+    inicios: [
+      { atividadeId: atividade.id, publicacaoId: publicacao.publicacaoId, iniciadaEm: new Date().toISOString() },
+    ],
   });
   assert.equal(
     (await professor.situacao({ sub: eu.id, papel: "professor" }, eu, atividade.id)).alunos.find(
@@ -200,6 +202,7 @@ export async function verificarConsolidacao(banco: Banco, eu: Equipe) {
     recompensar: false,
     origem: "professor",
     atividadeId: atividade.id,
+    publicacaoId: publicacao.publicacaoId,
     missaoId: atividade.id,
     formato: "objetiva",
     rodadas: 1,
@@ -261,6 +264,10 @@ export async function verificarConsolidacao(banco: Banco, eu: Equipe) {
   const ontem = new Date(`${hoje}T00:00:00Z`);
   ontem.setUTCDate(ontem.getUTCDate() - 1);
   await banco.atividadeProfessor.update({ where: { id: atividade.id }, data: { liberarEm: ontem, prazo: ontem } });
+  await banco.atividadePublicacao.update({
+    where: { id: publicacao.publicacaoId! },
+    data: { liberarEm: ontem, prazo: ontem },
+  });
   assert.equal(
     (await aluno.atividades(sessao("conc-a"))).atividades.find((a) => a.id === atividade.id)?.encerrada,
     true,
