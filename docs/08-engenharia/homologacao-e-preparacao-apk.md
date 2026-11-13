@@ -34,6 +34,9 @@ O [ADR 0027](../03-decisoes/0027-homologacao-isolada-e-diagnostico.md) descreve 
 A API está ativa em `https://modolume-api-homologacao-homologacao.up.railway.app`, no commit `a6258ce`.
 O teste HTTP integrado confirmou publicação, entrega única, consulta do professor, devolutiva e aviso.
 O painel usa o preview da branch `codex/preparacao-apk`; sua variável `API_URL` é exclusiva dessa branch.
+URL do painel: `https://pei-v-git-codex-preparacao-apk-barbiero-anas-projects.vercel.app`.
+O preview conserva a proteção de acesso Vercel: a primeira abertura exige uma conta autorizada na Vercel,
+além do login escolar. O login da professora e a tela com entrega e devolutiva foram conferidos no navegador.
 Não sincronizar segredos ou dados de produção para este ambiente.
 
 ## Verificação de 13/11/2026
@@ -52,6 +55,11 @@ Não sincronizar segredos ou dados de produção para este ambiente.
   Foi substituído pelo código 4 para incluir o isolamento de sessão e cache por ambiente.
 - A revisão de isolamento acrescenta três testes mobile (30 no módulo, 161 no total). Preserva o espaço
   histórico de produção; o APK de homologação começa com sessão própria, sem apagar o app anterior.
+- CI do commit `bc43ca1` aprovada, incluindo bundle Android e todas as verificações de integração.
+- Novo build `1.0.0`, código 4:
+  [build c94cc85f](https://expo.dev/accounts/anabarbiero23/projects/modolume/builds/c94cc85f-3f5f-43f3-b39f-ef40dccf7fa5).
+  A solicitação está na fila gratuita do EAS; não equivale a APK concluído ou manifesto validado.
+  Não distribuir o build cancelado de código 3 nem o APK antigo de código 2.
 
 As evidências privadas ficam em `tmp/auditoria-banco-pre-apk-20261113` e
 `tmp/auditoria-mobile-consolidacao`, ignorados pelo Git. O arquivo local de acessos fictícios não deve

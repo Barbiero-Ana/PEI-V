@@ -86,8 +86,25 @@ Sem endereço, a conta escolar fica indisponível e a demonstração permanece l
 computador; um túnel do Expo não publica a API. Em APK distribuído, use uma API HTTPS acessível.
 O ambiente EAS `preview` atende os perfis `preview` e `play-internal`; o ambiente `production` atende
 o perfil `production`. Configure `EXPO_PUBLIC_API_URL` em cada ambiente usado e gere outro build
-ao mudar o endereço. Os perfis de loja rejeitam endereço ausente, `auto`, HTTP ou domínio local.
+ao mudar o endereço. Os três perfis distribuídos rejeitam endereço ausente, `auto`, HTTP ou domínio local.
 O [roteiro Android](../08-engenharia/publicacao-android.md) contém o comando e os aceites.
+
+Revisão de 13/11/2026: `preview` aponta para
+`https://modolume-api-homologacao-homologacao.up.railway.app`; `production` aponta para
+`https://api.modolume.com.br`. O painel de teste usa `API_URL` exclusiva da branch
+`codex/preparacao-apk` no escopo Preview da Vercel. A configuração Production permanece separada.
+Sessão e cache nativos também são separados pelo servidor; o campo de diagnóstico
+`EXPO_PUBLIC_APP_ENV`, definido em `eas.json`, serve como identificação, sem conceder acesso.
+
+| Variável de diagnóstico | Onde | Uso |
+| --- | --- | --- |
+| `EXPO_PUBLIC_SENTRY_DSN` | EAS, opcional | DSN público; ausente mantém captura desativada. |
+| `SENTRY_ORG`, `SENTRY_PROJECT` | Build EAS, quando há DSN | Destino dos mapas de código. |
+| `SENTRY_AUTH_TOKEN` | Segredo privado de build EAS, quando há DSN | Upload dos mapas; nunca recebe prefixo `EXPO_PUBLIC_`. |
+
+A equipe ainda precisa criar o projeto Sentry. Não configurar somente o DSN sem os dados de build;
+o hook de distribuição recusa essa configuração incompleta. Provisionamento da API, variáveis privadas
+do banco e verificação externa estão no [guia de homologação](../08-engenharia/homologacao-e-preparacao-apk.md).
 
 A receita de confirmação está em [Executar localmente no Windows](Executar%20localmente%20no%20Windows.md). Não publique `.env`, URLs com credenciais, cookies, JWT ou capturas de respostas de login.
 

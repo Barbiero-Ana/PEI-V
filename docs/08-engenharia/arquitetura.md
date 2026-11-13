@@ -40,6 +40,8 @@ Em `/redefinir-senha`, a pessoa solicita um link para o e-mail cadastrado. A API
 
 No app, `estado/sessao.ts` controla a credencial e sua migração. `estado/identidade.tsx` conecta o
 repositório ao SecureStore. O cache e a fila continuam em `estado/isolamento.ts` e são lidos por identidade.
+O adaptador `estado/ambiente.ts` separa esses repositórios pelo endereço da API, inclusive no cofre;
+a produção conserva suas chaves históricas. IDs iguais em servidores distintos não compartilham dados.
 A autenticação e a persistência de progresso têm ciclos separados. [ADR 0023](../03-decisoes/0023-sessao-movel-no-cofre-nativo.md).
 
 Configure na API `RESEND_API_KEY`, `EMAIL_REMETENTE` em domínio verificado e `WEB_URL` apontando para a origem confiável da web. `REDEFINICAO_MINUTOS` aceita inteiros de 5 a 60 e tem padrão 30. Em produção a origem exige HTTPS. O fluxo responde com indisponibilidade se faltarem variáveis. O [contrato de envio do Resend](https://resend.com/docs/api-reference/emails/send-email) foi exercitado com resposta simulada. A [orientação de recuperação da OWASP](https://cheatsheetseries.owasp.org/cheatsheets/Forgot_Password_Cheat_Sheet.html) fundamenta o uso único, o prazo e a revogação.

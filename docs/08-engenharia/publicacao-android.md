@@ -6,8 +6,9 @@ Os perfis EAS `play-internal` e `production` estão preparados para gerar Androi
 com ambientes separados. O primeiro AAB de teste foi gerado e validado estruturalmente em 11/11/2026.
 A instalação e a validação do artefato na Play Console continuam pendentes.
 
-A consolidação de 11/11 usa `versionCode` 3. Os links de código 2 abaixo são históricos e não contêm
-o novo protocolo, as avaliações e os avisos. Implantar API e painel e gerar outro build conforme o
+A consolidação de 11/11 reservou `versionCode` 3. O build de código 3 foi cancelado ainda na fila em
+13/11 para incorporar isolamento por ambiente. A revisão atual usa código 4. Os links de código 2 abaixo
+são históricos e não contêm o novo protocolo, as avaliações e os avisos. Seguir o
 [roteiro de consolidação](consolidacao-funcional.md).
 
 **Revisão técnica de 13/11/2026:** API, painel e migrações da consolidação anterior já foram publicados. A preparação adicional do novo APK está no [roteiro de homologação](homologacao-e-preparacao-apk.md). O perfil `preview` também valida HTTPS, e as permissões desnecessárias foram bloqueadas na configuração; conferir o manifesto novo. Datas e links históricos abaixo foram preservados.
