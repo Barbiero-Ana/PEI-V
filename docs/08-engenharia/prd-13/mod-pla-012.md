@@ -23,7 +23,7 @@ As regras de negócio aplicáveis ao contexto estão no [módulo](README.md) e n
 
 ## Implementação e evidência
 
-- [apps/web/app/professor/(painel)/planejamento](../../../apps/web/app/professor/(painel)/planejamento)
+- [apps/web/app/professor/(painel)/planejamento](../../../apps/web/app/professor/%28painel%29/planejamento)
 - [packages/core/src/planejamento.ts](../../../packages/core/src/planejamento.ts)
 - [apps/api/src/professor.ts](../../../apps/api/src/professor.ts)
 

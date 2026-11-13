@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { readFileSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -16,6 +16,20 @@ execFileSync(process.execPath, [resolve(raiz, "scripts/gerar-rastreabilidade.mjs
 for (const [nome, texto] of antes)
   assert.equal(ler(resolve(engenharia, nome)), texto, `Rastreabilidade desatualizada: ${nome}. Regenere e versione.`);
 
+let referencias = 0;
+for (const nome of arquivos) {
+  const arquivo = resolve(engenharia, nome);
+  for (const [, endereco] of ler(arquivo).matchAll(/\]\(([^)]+)\)/g)) {
+    const caminho = endereco.split("#")[0];
+    if (!caminho || /^[a-z]+:/i.test(caminho)) continue;
+    assert.ok(
+      existsSync(resolve(dirname(arquivo), decodeURIComponent(caminho))),
+      `Referência ausente em ${nome}: ${endereco}`,
+    );
+    referencias++;
+  }
+}
+
 const decisoes = resolve(raiz, "docs/03-decisoes");
 const indice = ler(resolve(decisoes, "Índice de ADRs.md"));
 for (const nome of readdirSync(decisoes).filter((nome) => /^\d{4}-/.test(nome) && !nome.startsWith("0000"))) {
@@ -26,4 +40,6 @@ for (const nome of readdirSync(decisoes).filter((nome) => /^\d{4}-/.test(nome) &
   assert.ok(linha?.endsWith(`| ${data} |`), `Data divergente no índice: ${nome}`);
   assert.match(texto, /\*\*Assinatura de aprovação:\*\* .+/, `Aprovação documental ausente: ${nome}`);
 }
-console.log("OK: PRDs de requisitos reproduzíveis e datas originais das ADRs consistentes com o índice.");
+console.log(
+  `OK: PRDs reproduzíveis, ${referencias} referências locais válidas e datas originais consistentes com o índice.`,
+);

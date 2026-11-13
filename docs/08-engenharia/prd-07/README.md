@@ -19,7 +19,7 @@ Aluno configura avatar e preferências no app. A equipe consulta a conta e alter
 
 ## Implementação
 
-- [apps/mobile/src/app/(abas)/perfil.tsx](../../../apps/mobile/src/app/(abas)/perfil.tsx)
+- [apps/mobile/src/app/(abas)/perfil.tsx](../../../apps/mobile/src/app/%28abas%29/perfil.tsx)
 - [apps/mobile/src/estado/jogador.tsx](../../../apps/mobile/src/estado/jogador.tsx)
 - [apps/web/app/conta/senha](../../../apps/web/app/conta/senha)
 - [apps/api/src/acesso.ts](../../../apps/api/src/acesso.ts)

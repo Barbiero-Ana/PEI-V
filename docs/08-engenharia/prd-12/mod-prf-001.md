@@ -26,7 +26,7 @@ As regras de negócio aplicáveis ao contexto estão no [módulo](README.md) e n
 
 ## Implementação e evidência
 
-- [apps/web/app/professor/(painel)](../../../apps/web/app/professor/(painel))
+- [apps/web/app/professor/(painel)](../../../apps/web/app/professor/%28painel%29)
 - [apps/web/lib/painel/dados.ts](../../../apps/web/lib/painel/dados.ts)
 - [packages/core/src/indicadores-smart.ts](../../../packages/core/src/indicadores-smart.ts)
 - [apps/api/src/professor.ts](../../../apps/api/src/professor.ts)

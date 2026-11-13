@@ -20,7 +20,7 @@ A web recorta dados por professor e turma, calcula indicadores e apresenta agend
 
 ## Implementação
 
-- [apps/web/app/professor/(painel)](../../../apps/web/app/professor/(painel))
+- [apps/web/app/professor/(painel)](../../../apps/web/app/professor/%28painel%29)
 - [apps/web/lib/painel/dados.ts](../../../apps/web/lib/painel/dados.ts)
 - [packages/core/src/indicadores-smart.ts](../../../packages/core/src/indicadores-smart.ts)
 - [apps/api/src/professor.ts](../../../apps/api/src/professor.ts)

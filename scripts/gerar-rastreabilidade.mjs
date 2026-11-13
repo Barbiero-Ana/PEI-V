@@ -111,12 +111,18 @@ const modulos = {
 };
 
 const evidencias = {
-  "ATI-005": "Prazo opcional no contrato, editor, API e CHECK no banco. verificar-consolidacao.ts cobre prazo e encerramento. Aceite visual pendente.",
-  "ATI-010": "Primeiro início persistido e separado da entrega. Teste real confirma em andamento e concluída. Conferência em aparelho pendente.",
-  "AVA-003": "Avaliação versionada com rascunho privado. Publicação exige texto; percepção usa a escala do PRD. Testes reais de persistência e autorização.",
-  "AVA-005": "Somente avaliações publicadas são retornadas ao aluno. Teste real cobre ausência do rascunho e aviso de publicação.",
-  "NOT-004": "Leitura do aluno é guardada no banco, com marcação individual/todos e fila offline. Leitura da equipe continua local ao navegador.",
-  "MAN-003": "ESLint da API verifica regras e fronteiras além da tipagem. Workflow de CI executa lint, tipagem, testes, rastreabilidade, migrações, build web e bundle Android. Execução remota 43427120758 aprovada em 13/11/2026.",
+  "ATI-005":
+    "Prazo opcional no contrato, editor, API e CHECK no banco. verificar-consolidacao.ts cobre prazo e encerramento. Aceite visual pendente.",
+  "ATI-010":
+    "Primeiro início persistido e separado da entrega. Teste real confirma em andamento e concluída. Conferência em aparelho pendente.",
+  "AVA-003":
+    "Avaliação versionada com rascunho privado. Publicação exige texto; percepção usa a escala do PRD. Testes reais de persistência e autorização.",
+  "AVA-005":
+    "Somente avaliações publicadas são retornadas ao aluno. Teste real cobre ausência do rascunho e aviso de publicação.",
+  "NOT-004":
+    "Leitura do aluno é guardada no banco, com marcação individual/todos e fila offline. Leitura da equipe continua local ao navegador.",
+  "MAN-003":
+    "ESLint da API verifica regras e fronteiras além da tipagem. Workflow de CI executa lint, tipagem, testes, rastreabilidade, migrações, build web e bundle Android. Execução remota 43427120758 aprovada em 13/11/2026.",
   "AUT-007":
     "Uso único concorrente, expiração, resposta uniforme e contrato Resend simulado em verificar-banco.ts. Entrega real e análise do tempo de resposta pendentes.",
   "AUT-004":
@@ -131,20 +137,29 @@ const evidencias = {
   "ADM-010":
     "verificar-banco.ts cobre cadastro sem credencial na resposta e consumo único do link. A pessoa solicita o link em Recuperar acesso. Entrega real e convite automático no cadastro seguem pendentes.",
   "TUR-009": "leitura-professor.test.ts verifica recorte ao perder vínculo e quando turma encerra.",
-  "HIS-005": "Suíte mobile cobre gravação conjunta da recompensa e da fila, reabertura e troca de identidade. verificar-banco.ts cobre reenvio e consulta do resultado pelo professor. Queda e reconexão em celular pendentes.",
-  "HIS-006": "verificar-consolidacao.ts cobre ganhos distintos nas duas ordens, reenvio sem novo crédito, compras concorrentes e importação legada única. Aceite físico pendente.",
-  "CON-002": "Conclusão local e fila são gravadas juntas. O protocolo novo grava histórico, crédito e compras na mesma transação da API. verificar-consolidacao.ts força falha no débito e confirma rollback de tudo.",
+  "HIS-005":
+    "Suíte mobile cobre gravação conjunta da recompensa e da fila, reabertura e troca de identidade. verificar-banco.ts cobre reenvio e consulta do resultado pelo professor. Queda e reconexão em celular pendentes.",
+  "HIS-006":
+    "verificar-consolidacao.ts cobre ganhos distintos nas duas ordens, reenvio sem novo crédito, compras concorrentes e importação legada única. Aceite físico pendente.",
+  "CON-002":
+    "Conclusão local e fila são gravadas juntas. O protocolo novo grava histórico, crédito e compras na mesma transação da API. verificar-consolidacao.ts força falha no débito e confirma rollback de tudo.",
   "SEG-012": "verificar-banco.ts verifica privilégios efetivos e rollback de uma ação sensível no PostgreSQL local.",
   "SEG-006": "jogada.test.ts e validacao.test.ts exercitam incoerências no resultado e datas inválidas.",
   "PLA-004":
     "escrita-professor.test.ts confirma a recusa do registro futuro pela API. O fluxo pela interface fica pendente.",
-  "APR-002": "aprendizagem-painel.test.ts verifica as mesmas medidas e domínio, com recência estável por data/ID. A UI mantém acerto médio identificado separadamente.",
+  "APR-002":
+    "aprendizagem-painel.test.ts verifica as mesmas medidas e domínio, com recência estável por data/ID. A UI mantém acerto médio identificado separadamente.",
   "PRF-008":
     "indicadores-smart.test.ts exercita cálculos em memória. Unidade de IND-06 e viés de IND-04 permanecem em revisão.",
 };
 
 const link = (arquivo, base) =>
-  relative(base, arquivo).split("\\").join("/").split("/").map(encodeURIComponent).join("/");
+  relative(base, arquivo)
+    .split("\\")
+    .join("/")
+    .split("/")
+    .map((parte) => encodeURIComponent(parte).replaceAll("(", "%28").replaceAll(")", "%29"))
+    .join("/");
 const escrever = (arquivo, texto) => writeFileSync(arquivo, `${texto.trim()}\n`, "utf8");
 const tabela = (colunas) => colunas.map((coluna) => coluna.replaceAll("|", "\\|")).join(" | ");
 const linhasMatriz = [];
@@ -153,12 +168,24 @@ const ids = new Set();
 for (const nome of readdirSync(origem)
   .filter((nome) => /^PRD-\d+ /.test(nome))
   .sort()) {
-  const prd = readFileSync(resolve(origem, nome), "utf8").replaceAll("\r\n", "\n");
+  let prd = readFileSync(resolve(origem, nome), "utf8").replaceAll("\r\n", "\n");
   const numero = nome.slice(4, 6);
   const dataOrigem = prd.match(/^atualizado: (\d{4}-\d{2}-\d{2})$/m)?.[1];
   if (!dataOrigem) throw new Error(`Data de origem ausente: ${nome}`);
-  const historico = `**Data registrada no PRD de origem:** ${dataOrigem}. Preservada da fonte; não representa a criação desta ficha.\n\n**Revisão documental:** 13/11/2026 — Ana Barbiero — Líder de projeto. A aprovação da organização e rastreabilidade não substitui o aceite funcional.`;
+  const dataRevisao = prd.match(/^revisao_documental: (\d{4}-\d{2}-\d{2})$/m)?.[1];
+  const responsavel = prd.match(/^responsavel_revisao: (.+)$/m)?.[1];
+  const revisao =
+    dataRevisao && responsavel
+      ? `${dataRevisao.split("-").reverse().join("/")} — ${responsavel}. A aprovação da organização e rastreabilidade não substitui o aceite funcional.`
+      : "Não registrada na fonte; não se infere data ou assinatura.";
+  const historico = `**Data registrada no PRD de origem:** ${dataOrigem}. Preservada da fonte; não representa a criação desta ficha.\n\n**Revisão documental:** ${revisao}`;
   const pasta = resolve(destino, `prd-${numero}`);
+  // Critérios copiados do PRD passam a viver duas pastas abaixo da fonte.
+  prd = prd.replace(/\]\(([^)]+)\)/g, (trecho, endereco) => {
+    if (/^[a-z]+:/i.test(endereco) || endereco.startsWith("#")) return trecho;
+    const [caminho, ...fragmento] = endereco.split("#");
+    return `](${link(resolve(origem, decodeURIComponent(caminho)), pasta)}${fragmento.length ? `#${fragmento.join("#")}` : ""})`;
+  });
   mkdirSync(pasta, { recursive: true });
   const [objetivo, codigo, persistencia, teste] = modulos[numero];
   const titulo = nome.replace(/\.md$/, "");

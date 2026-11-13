@@ -20,7 +20,7 @@ Professor publica atividades com prazo opcional. O painel distingue início e co
 ## Implementação
 
 - [packages/core/src/atividades-professor.ts](../../../packages/core/src/atividades-professor.ts)
-- [apps/web/app/professor/(painel)/atividades](../../../apps/web/app/professor/(painel)/atividades)
+- [apps/web/app/professor/(painel)/atividades](../../../apps/web/app/professor/%28painel%29/atividades)
 - [apps/api/src/professor.ts](../../../apps/api/src/professor.ts)
 - [apps/api/src/aluno.ts](../../../apps/api/src/aluno.ts)
 

@@ -19,7 +19,7 @@ Professor consulta fases e salva versões de avaliação. Rascunhos são privado
 ## Implementação
 
 - [apps/api/src/avaliacoes.ts](../../../apps/api/src/avaliacoes.ts)
-- [apps/web/app/professor/(painel)/atividades](../../../apps/web/app/professor/(painel)/atividades)
+- [apps/web/app/professor/(painel)/atividades](../../../apps/web/app/professor/%28painel%29/atividades)
 - [apps/mobile/src/app/feedback](../../../apps/mobile/src/app/feedback)
 
 **Persistência** jogada, avaliacao_atividade, registro.

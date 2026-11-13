@@ -18,7 +18,7 @@ A navegação do aluno apresenta mapas, conquistas, perfil e atividades da turma
 
 ## Implementação
 
-- [apps/mobile/src/app/(abas)](../../../apps/mobile/src/app/(abas))
+- [apps/mobile/src/app/(abas)](../../../apps/mobile/src/app/%28abas%29)
 - [apps/mobile/src/componentes/BarraAbas.tsx](../../../apps/mobile/src/componentes/BarraAbas.tsx)
 
 **Persistência** missao, mapa, jogada.

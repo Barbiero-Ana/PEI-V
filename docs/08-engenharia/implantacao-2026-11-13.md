@@ -71,6 +71,8 @@ aplicativo. O resultado detalhado, sem credenciais, está no registro privado lo
 Os 17 PRDs de módulo e os 230 PRDs de requisitos possuem rastreabilidade para código, histórias,
 critérios e evidências. A aprovação documental de 13/11/2026 é separada das datas históricas e do aceite
 funcional. As ADRs 0024 e 0025 conservam 11/11/2026 e registram a aprovação atual em seção própria.
+O gerador ajusta os links relativos dos critérios para a pasta das fichas. A CI verifica a existência das
+referências locais, evitando links quebrados para ADRs ou arquivos de código após a geração.
 
 Continuam necessários o aceite em dois aparelhos, acessibilidade e revisão pedagógica, homologação
 de entrega real do Resend e definição institucional de retenção, exportação e exclusão de dados. As

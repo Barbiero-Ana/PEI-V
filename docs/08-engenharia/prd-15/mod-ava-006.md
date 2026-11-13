@@ -23,7 +23,7 @@ As regras de negócio aplicáveis ao contexto estão no [módulo](README.md) e n
 ## Implementação e evidência
 
 - [apps/api/src/avaliacoes.ts](../../../apps/api/src/avaliacoes.ts)
-- [apps/web/app/professor/(painel)/atividades](../../../apps/web/app/professor/(painel)/atividades)
+- [apps/web/app/professor/(painel)/atividades](../../../apps/web/app/professor/%28painel%29/atividades)
 - [apps/mobile/src/app/feedback](../../../apps/mobile/src/app/feedback)
 
 **Aceite nesta auditoria** Pendente.

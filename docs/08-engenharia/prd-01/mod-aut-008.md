@@ -20,7 +20,7 @@ Origem: [PRD-01 — Autenticação e controle de acesso](../../02-modulos/PRD-01
 - **HU-AUT-07** CA-02: Dado um aluno que esqueceu o PIN, quando o professor confirma "Zerar PIN", então o aluno cria um PIN novo no próximo acesso, com o mesmo código, e o progresso salvo é mantido.
 - **HU-AUT-07** CA-03: Dado um código vazado ou um celular perdido, quando o professor confirma "Novo código", então o código antigo deixa de funcionar e o aluno sai do app em todos os aparelhos.
 - **HU-AUT-07** CA-04: O professor só zera o PIN ou gera código de alunos das próprias turmas; para outro aluno, a API responde "Aluno não encontrado."
-- **HU-AUT-07** CA-05: Ao cadastrar um aluno ou gerar um novo código, o painel mostra e copia quatro letras, um hífen e quatro números, conforme o [ADR 0020](../03-decisoes/0020-codigo-do-aluno-com-letras-e-numeros.md).
+- **HU-AUT-07** CA-05: Ao cadastrar um aluno ou gerar um novo código, o painel mostra e copia quatro letras, um hífen e quatro números, conforme o [ADR 0020](../../03-decisoes/0020-codigo-do-aluno-com-letras-e-numeros.md).
 
 As regras de negócio aplicáveis ao contexto estão no [módulo](README.md) e na seção 5 do PRD.
 

@@ -23,7 +23,7 @@ Consulte as regras transversais no PRD-17.
 
 ## Implementação e evidência
 
-- [apps/mobile/src/app/(abas)](../../../apps/mobile/src/app/(abas))
+- [apps/mobile/src/app/(abas)](../../../apps/mobile/src/app/%28abas%29)
 - [apps/mobile/src/componentes/BarraAbas.tsx](../../../apps/mobile/src/componentes/BarraAbas.tsx)
 
 **Aceite nesta auditoria** Pendente.
