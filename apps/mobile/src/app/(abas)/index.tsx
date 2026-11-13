@@ -1,5 +1,6 @@
 import { useConta } from "@/estado/conta";
-import { Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from "react-native";
+import { Modal, Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from "react-native";
+import { useState } from "react";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
@@ -16,7 +17,7 @@ import { useFalarAoAbrir } from "@/estado/acessibilidade";
 import { hoje, useJogador } from "@/estado/jogador";
 import { Avatar } from "@/componentes/Avatar";
 import { Ceu } from "@/componentes/Ceu";
-import { Cadeado, Check, IconeMissao, Seta } from "@/componentes/Icones";
+import { Cadeado, Check, Fechar, IconeMissao, Seta, Sino } from "@/componentes/Icones";
 import { Lilo } from "@/componentes/Lilo";
 import { useAbrirMissao } from "@/componentes/Nuvens";
 import { useMapa } from "@/componentes/gamificacao";
@@ -48,6 +49,7 @@ const MESES = [
 
 export default function Inicio() {
   const { conta, avisos, avaliacoes } = useConta();
+  const [avisosAbertos, setAvisosAbertos] = useState(false);
   const insets = useSafeAreaInsets();
   const { jogador, progresso, preferencias, luzes, pronto } = useJogador();
   const montada = useMontagemAdiada();
@@ -79,39 +81,126 @@ export default function Inicio() {
             Oi, {jogador.nome}.
           </Titulo>
         </View>
-        <Pressable
-          onPress={() => router.push("/loja")}
-          accessibilityRole="button"
-          accessibilityLabel={`${luzes} luzes. Abrir a loja`}
-          hitSlop={6}
-          style={({ pressed }) => [e.luzes, pressed && { opacity: 0.8 }]}
-        >
-          <Texto style={{ fontFamily: fonte.tituloForte, fontSize: 15, color: cor.pessegoEscuro, lineHeight: 20 }}>
-            ✦
-          </Texto>
-          <Texto style={{ fontFamily: fonte.titulo, fontSize: 14, color: cor.tinta, lineHeight: 20 }}>{luzes}</Texto>
-        </Pressable>
+        <View style={e.acoesTopo}>
+          {conta ? (
+            <Pressable
+              onPress={() => setAvisosAbertos(true)}
+              accessibilityRole="button"
+              accessibilityLabel={`${avisos.filter((a) => !a.lida).length} avisos não lidos. Abrir avisos`}
+              accessibilityState={{ expanded: avisosAbertos }}
+              hitSlop={6}
+              style={({ pressed }) => [e.iconeAcao, pressed && { opacity: 0.75 }]}
+            >
+              <Sino />
+              {avisos.some((a) => !a.lida) ? <View style={e.pontoAviso} /> : null}
+            </Pressable>
+          ) : null}
+          <Pressable
+            onPress={() => router.push("/loja")}
+            accessibilityRole="button"
+            accessibilityLabel={`${luzes} luzes. Abrir a loja`}
+            hitSlop={6}
+            style={({ pressed }) => [e.luzes, pressed && { opacity: 0.8 }]}
+          >
+            <Texto style={{ fontFamily: fonte.tituloForte, fontSize: 15, color: cor.pessegoEscuro, lineHeight: 20 }}>
+              ✦
+            </Texto>
+            <Texto style={{ fontFamily: fonte.titulo, fontSize: 14, color: cor.tinta, lineHeight: 20 }}>{luzes}</Texto>
+          </Pressable>
+        </View>
       </View>
 
       {conta ? (
-        <View style={{ marginTop: 18, gap: 10 }}>
-          <Botao
-            titulo={`Seus avisos${avisos.some((a) => !a.lida) ? ` (${avisos.filter((a) => !a.lida).length} novos)` : ""}`}
-            onPress={() => router.push("/avisos")}
-          />
+        <View style={e.grupoAvisos}>
           {avaliacoes[0] ? (
             <Pressable
               accessibilityRole="button"
+              accessibilityLabel="Seu professor deixou uma orientação. Ler devolutiva"
               onPress={() => router.push({ pathname: "/feedback/[id]", params: { id: avaliacoes[0]!.id } })}
-              style={{ backgroundColor: cor.roxoClaro, borderRadius: 18, padding: 16, gap: 6 }}
+              style={({ pressed }) => [e.cartaoOrientacao, pressed && { opacity: 0.82 }]}
             >
-              <Titulo tamanho={17}>Seu professor deixou uma orientação</Titulo>
-              <Texto numberOfLines={2}>{avaliacoes[0].feedback}</Texto>
-              <Texto>Ler devolutiva →</Texto>
+              <Titulo tamanho={17} style={{ flexShrink: 1 }}>
+                Seu professor deixou uma orientação
+              </Titulo>
+              <Texto numberOfLines={2} style={{ flexShrink: 1 }}>
+                {avaliacoes[0].feedback}
+              </Texto>
+              <Texto style={e.linkOrientacao}>Ler devolutiva →</Texto>
             </Pressable>
           ) : null}
         </View>
       ) : null}
+      <Modal
+        visible={avisosAbertos}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setAvisosAbertos(false)}
+        statusBarTranslucent
+      >
+        <View style={e.fundoModal}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Fechar avisos"
+            style={StyleSheet.absoluteFill}
+            onPress={() => setAvisosAbertos(false)}
+          />
+          <View
+            accessibilityViewIsModal
+            style={[e.modalAvisos, { marginTop: insets.top, marginBottom: insets.bottom }]}
+          >
+            <View style={e.cabecalhoModal}>
+              <View style={{ flex: 1, gap: 3 }}>
+                <Titulo tamanho={20}>Seus avisos</Titulo>
+                <Texto style={{ color: cor.textoSuave }}>
+                  {avisos.filter((a) => !a.lida).length
+                    ? `${avisos.filter((a) => !a.lida).length} não lido${avisos.filter((a) => !a.lida).length === 1 ? "" : "s"}`
+                    : "Você está em dia"}
+                </Texto>
+              </View>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Fechar avisos"
+                onPress={() => setAvisosAbertos(false)}
+                hitSlop={10}
+                style={e.fecharModal}
+              >
+                <Fechar tamanho={18} />
+              </Pressable>
+            </View>
+            {avisos.length ? (
+              <View style={e.listaPrevia}>
+                {avisos.slice(0, 3).map((aviso) => (
+                  <View key={aviso.id} style={[e.itemPrevia, !aviso.lida && e.itemPreviaNovo]}>
+                    <View style={e.linhaPrevia}>
+                      <Titulo tamanho={15} numberOfLines={1} style={{ flex: 1 }}>
+                        {aviso.titulo}
+                      </Titulo>
+                      {!aviso.lida ? <View style={e.pontoPrevia} /> : null}
+                    </View>
+                    <Texto numberOfLines={2} style={{ color: cor.textoSuave }}>
+                      {aviso.texto}
+                    </Texto>
+                  </View>
+                ))}
+              </View>
+            ) : (
+              <View style={e.vazioPrevia}>
+                <Sino tamanho={24} cor={cor.textoSuave} />
+                <Texto style={{ textAlign: "center", color: cor.textoSuave }}>
+                  Os avisos da escola aparecerão aqui.
+                </Texto>
+              </View>
+            )}
+            <Botao
+              titulo="Ver todos"
+              onPress={() => {
+                setAvisosAbertos(false);
+                router.push("/avisos");
+              }}
+            />
+          </View>
+        </View>
+      </Modal>
       <MeuCeu numero={nivel.numero} />
 
       <TrilhaDoMapa nivel={nivel} proxima={proxima?.id} />
@@ -362,6 +451,75 @@ const DESAFIO_FUNDO = "#2A3488";
 
 const e = criarEstilos(() => ({
   topo: { flexDirection: "row", alignItems: "center", gap: 12, marginBottom: 16 },
+  acoesTopo: { flexDirection: "row", alignItems: "center", gap: 8 },
+  iconeAcao: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: cor.superficie,
+    borderWidth: 1,
+    borderColor: cor.bordaForte,
+  },
+  pontoAviso: {
+    position: "absolute",
+    top: 7,
+    right: 7,
+    width: 9,
+    height: 9,
+    borderRadius: 5,
+    backgroundColor: cor.pessegoEscuro,
+    borderWidth: 1.5,
+    borderColor: cor.superficie,
+  },
+  grupoAvisos: { marginTop: 2, marginBottom: 18, minWidth: 0 },
+  cartaoOrientacao: {
+    alignSelf: "stretch",
+    minWidth: 0,
+    backgroundColor: cor.roxoClaro,
+    borderRadius: 18,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    gap: 8,
+    borderWidth: 1,
+    borderColor: cor.borda,
+  },
+  linkOrientacao: { color: cor.roxo, fontFamily: fonte.titulo, marginTop: 2 },
+  fundoModal: {
+    flex: 1,
+    backgroundColor: "rgba(18, 20, 45, 0.48)",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingVertical: 18,
+  },
+  modalAvisos: {
+    width: "100%",
+    maxWidth: 460,
+    maxHeight: "90%",
+    backgroundColor: cor.superficie,
+    borderRadius: 24,
+    padding: 20,
+    gap: 16,
+    borderWidth: 1,
+    borderColor: cor.borda,
+  },
+  cabecalhoModal: { flexDirection: "row", alignItems: "center", gap: 12 },
+  fecharModal: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: cor.fundo,
+  },
+  listaPrevia: { gap: 8 },
+  itemPrevia: { borderRadius: 14, padding: 12, gap: 4, backgroundColor: cor.fundo },
+  itemPreviaNovo: { backgroundColor: cor.roxoClaro },
+  linhaPrevia: { flexDirection: "row", alignItems: "center", gap: 8 },
+  pontoPrevia: { width: 8, height: 8, borderRadius: 4, backgroundColor: cor.roxo },
+  vazioPrevia: { minHeight: 92, alignItems: "center", justifyContent: "center", gap: 10 },
   luzes: {
     flexDirection: "row",
     alignItems: "center",

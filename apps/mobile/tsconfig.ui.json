@@ -1,0 +1,6 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": { "types": ["jest"], "noEmit": true },
+  "include": ["tests/ui/**/*.ts", "tests/ui/**/*.tsx"],
+  "exclude": ["node_modules"]
+}

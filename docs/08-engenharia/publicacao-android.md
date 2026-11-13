@@ -7,11 +7,15 @@ com ambientes separados. O primeiro AAB de teste foi gerado e validado estrutura
 A instalação e a validação do artefato na Play Console continuam pendentes.
 
 A consolidação de 11/11 reservou `versionCode` 3. O build de código 3 foi cancelado ainda na fila em
-13/11 para incorporar isolamento por ambiente. A revisão atual usa código 4. Os links de código 2 abaixo
+13/11 para incorporar isolamento por ambiente. O código 4 foi concluído, mas o teste nativo encontrou
+um crash de `expo-gl` em release ao abrir jogos 3D. A correção está em `apps/mobile/app.json` e reserva
+o código 5; validar o novo APK antes de distribuir. Os links de código 2 abaixo
 são históricos e não contêm o novo protocolo, as avaliações e os avisos. Seguir o
 [roteiro de consolidação](consolidacao-funcional.md).
 
 **Revisão técnica de 13/11/2026:** API, painel e migrações da consolidação anterior já foram publicados. A preparação adicional do novo APK está no [roteiro de homologação](homologacao-e-preparacao-apk.md). O perfil `preview` também valida HTTPS, e as permissões desnecessárias foram bloqueadas na configuração; conferir o manifesto novo. Datas e links históricos abaixo foram preservados.
+
+**Teste nativo de 13/11/2026:** código 4 instalou e abriu em emulador Android 37.0, mas o jogo “Cubinhos escondidos” fechou o APK. O diagnóstico e a regra R8 constam no [ADR 0028](../03-decisoes/0028-retencao-do-expo-gl-no-r8.md). Código 5 compilado e instalado em 13/11/2026; tela de login abriu. Novo teste 3D continua pendente.
 
 ## Artefato anterior de teste disponível
 

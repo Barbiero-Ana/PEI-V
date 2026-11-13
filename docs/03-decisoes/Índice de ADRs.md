@@ -35,6 +35,7 @@ alternativas consideradas e as consequências. Juntos, contam como o projeto che
 
 | [0026](0026-publicacoes-imutaveis-de-atividade.md) | Publicações imutáveis de atividade | Aceita; homologação física pendente | 13/11/2026 |
 | [0027](0027-homologacao-isolada-e-diagnostico.md) | Homologação isolada e diagnóstico antes do APK | Aceita; ativação externa acompanhada | 13/11/2026 |
+| [0028](0028-retencao-do-expo-gl-no-r8.md) | Preservar expo-gl em APKs Android otimizados | Aceita; APK código 5 pendente | 13/11/2026 |
 
 Os ADRs dizem **como** e **por que** o sistema foi construído assim. O **que** o sistema faz está nos PRDs de módulo
 (`docs/02-modulos/`).

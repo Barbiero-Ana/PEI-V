@@ -9,9 +9,17 @@ allowBuilds:
   '@prisma/engines': true
   # CLI oficial usado no upload dos mapas de código dos builds assinados.
   '@sentry/cli': true
+  # Observador nativo usado pelas ferramentas de teste do Expo.
+  '@parcel/watcher': true
   esbuild: true
   prisma: true
   unrs-resolver: true
+  '@embedded-postgres/darwin-arm64': set this to true or false
+  '@embedded-postgres/darwin-x64': set this to true or false
+  '@embedded-postgres/linux-arm': set this to true or false
+  '@embedded-postgres/linux-arm64': set this to true or false
+  '@embedded-postgres/linux-ia32': set this to true or false
+  '@embedded-postgres/linux-ppc64': set this to true or false
 minimumReleaseAgeExclude:
   - expo@58.0.25
   - expo-sqlite@58.0.17

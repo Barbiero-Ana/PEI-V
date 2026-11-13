@@ -4,9 +4,10 @@ import { router, useFocusEffect } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { dataEscolar } from "@modolume/core";
 import { useConta } from "@/estado/conta";
+import { Seta } from "@/componentes/Icones";
 import { Botao, Texto, Titulo } from "@/componentes/ui";
 import { voltar } from "@/lib/navegacao";
-import { cor } from "@/tema";
+import { cor, criarEstilos } from "@/tema";
 
 export default function Avisos() {
   const insets = useSafeAreaInsets();
@@ -24,8 +25,17 @@ export default function Avisos() {
       contentContainerStyle={{ padding: 20, paddingTop: insets.top + 16, paddingBottom: insets.bottom + 30, gap: 16 }}
       refreshControl={<RefreshControl refreshing={carregandoAtividades} onRefresh={atualizarAtividades} />}
     >
-      <Botao titulo="Voltar" onPress={voltar} />
-      <Titulo tamanho={26}>Seus avisos</Titulo>
+      <View style={e.cabecalho}>
+        <Pressable onPress={voltar} accessibilityRole="button" accessibilityLabel="Voltar" hitSlop={8} style={e.voltar}>
+          <Seta tamanho={20} />
+        </Pressable>
+        <View style={{ flex: 1, gap: 2 }}>
+          <Titulo tamanho={24}>Seus avisos</Titulo>
+          <Texto style={{ color: cor.textoSuave }}>
+            {naoLidos.length ? `${naoLidos.length} não lido${naoLidos.length === 1 ? "" : "s"}` : "Tudo em dia"}
+          </Texto>
+        </View>
+      </View>
       {estadoAtividades === "erro" ? (
         <Texto>
           Não foi possível atualizar. Os avisos guardados continuam aqui. Puxe a tela para tentar novamente.
@@ -65,3 +75,17 @@ export default function Avisos() {
     </ScrollView>
   );
 }
+
+const e = criarEstilos(() => ({
+  cabecalho: { flexDirection: "row", alignItems: "center", gap: 12, marginBottom: 4 },
+  voltar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: cor.superficie,
+    borderWidth: 1,
+    borderColor: cor.borda,
+  },
+}));

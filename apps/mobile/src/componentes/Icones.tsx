@@ -46,6 +46,12 @@ export const Fechar = ({ tamanho = 20, cor: c = cor.tinta }: P) => (
   </Svg>
 );
 
+export const Sino = ({ tamanho = 21, cor: c = cor.tinta }: P) => (
+  <Svg viewBox="0 0 24 24" width={tamanho} height={tamanho}>
+    <Path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" {...traco(c, 2)} />
+  </Svg>
+);
+
 export const Check = ({ tamanho = 16, cor: c = "#fff" }: P) => (
   <Svg viewBox="0 0 24 24" width={tamanho} height={tamanho}>
     <Path d="M5 12.5 L10 17 L19 7.5" {...traco(c, 3)} />

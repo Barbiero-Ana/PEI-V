@@ -1,8 +1,12 @@
-import * as Sentry from "@sentry/react-native";
+import type * as SDK from "@sentry/react-native";
 import { sanitizarDiagnostico } from "./diagnostico-seguro";
 
 const dsn = process.env.EXPO_PUBLIC_SENTRY_DSN?.trim();
-if (dsn)
+let Sentry: typeof SDK | undefined;
+if (dsn) {
+  // O SDK opcional não pode executar módulos nem hooks antes da configuração.
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- A avaliação precisa ser condicional e síncrona.
+  Sentry = require("@sentry/react-native") as typeof SDK;
   Sentry.init({
     dsn,
     enabled: !__DEV__,
@@ -19,8 +23,9 @@ if (dsn)
     attachViewHierarchy: false,
     beforeSend: sanitizarDiagnostico,
   });
+}
 
-export const monitorarRaiz = dsn ? Sentry.wrap : <T>(componente: T): T => componente;
+export const monitorarRaiz = Sentry ? Sentry.wrap : <T>(componente: T): T => componente;
 export function registrarFalha(erro: Error) {
-  if (dsn && !__DEV__) Sentry.captureException(erro);
+  if (Sentry && !__DEV__) Sentry.captureException(erro);
 }

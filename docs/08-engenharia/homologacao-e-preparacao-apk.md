@@ -11,8 +11,8 @@ Responsável: **Ana Barbiero — Líder de projeto**. As datas históricas de PR
 | Build | URL HTTPS validada também no APK `preview`; ambiente EAS explícito | `build.test.ts` recusa ausência, HTTP, localhost, IP e credenciais na URL |
 | Erros | Tela de recuperação; Sentry preparado, desativado sem DSN; logs seguros e prontidão na API | `diagnostico.test.ts` e `observabilidade.test.ts`; envio real ao Sentry pendente de conta/projeto |
 | Homologação | Banco, API, credenciais, sessão e cache próprios; carga fictícia idempotente | Pre-deploy ensaiado duas vezes; recusa produção; testes de mesmo aluno em servidores diferentes |
-| Artefato | APK novo e manifesto conferido | Gerar após implantação de homologação e verificação integrada; não reutilizar os artefatos de código 2 |
-| Aparelhos | Jornada e acessibilidade na versão instalada | Roteiro manual abaixo; testes de código não equivalem a aceite físico |
+| Artefato | APK código 4 instalado e inspecionado | Validado no emulador; corrigir crash do GLView em release e repetir no código 5 |
+| Aparelhos | Jornada, saída, acessibilidade e jogos no emulador | Roteiro manual abaixo; ainda falta aparelho Android físico |
 
 O [ADR 0026](../03-decisoes/0026-publicacoes-imutaveis-de-atividade.md) descreve o contrato de publicação.
 O [ADR 0027](../03-decisoes/0027-homologacao-isolada-e-diagnostico.md) descreve ambientes e diagnóstico.
@@ -58,8 +58,24 @@ Não sincronizar segredos ou dados de produção para este ambiente.
 - CI do commit `bc43ca1` aprovada, incluindo bundle Android e todas as verificações de integração.
 - Novo build `1.0.0`, código 4:
   [build c94cc85f](https://expo.dev/accounts/anabarbiero23/projects/modolume/builds/c94cc85f-3f5f-43f3-b39f-ef40dccf7fa5).
-  A solicitação está na fila gratuita do EAS; não equivale a APK concluído ou manifesto validado.
-  Não distribuir o build cancelado de código 3 nem o APK antigo de código 2.
+  Concluído e instalado em emulador Android 37.0. SHA-256 e metadados ficam no diretório privado de evidências.
+  O manifesto tem apenas rede, vibração e estado da rede; `allowBackup=false`; assinatura e alinhamento 16 KB válidos.
+- O login por código/PIN, avisos e “marcar todos como lidos”, telas Início/Níveis/Professor/Conquistas/Perfil,
+  acessibilidade de texto e relatório foram abertos no APK. Uma atividade do professor foi respondida:
+  a tentativa errada mostrou a dica, o acerto mostrou “Isso mesmo!” e o resultado apareceu como 67% na lista.
+  Sair da conta uma vez levou diretamente ao login; a reentrada recuperou o perfil.
+- A fase 1 de “Ligue os pares” foi concluída com arraste nativo, dica e sucesso do Lilo.
+- Foi reproduzido um crash ao abrir “Cubinhos escondidos” no APK de release. `AndroidRuntime` registrou
+  `Didn't find a correct constructor` em `SimpleViewManagerWrapper.createViewInstance`. A falha corresponde
+  ao defeito de retenção do construtor `GLView` pelo R8 no SDK 58. A correção local adiciona uma regra
+  específica do `expo-gl` via `expo-build-properties`; o prebuild confirmou a regra no ProGuard gerado.
+  `apps/mobile/app.json` está em `versionCode` 5 para o próximo APK. O novo artefato ainda precisa ser
+  construído, instalado e retestado antes de distribuir; código 4 não serve para validar jogos 3D.
+- A suíte mobile tem 30 testes unitários e 117 testes de UI/componentes (inclui 108 fases dos 28 jogos);
+  typecheck e lint mobile passaram após a inclusão do harness. Esses testes não substituem o teste de
+  `GLView` de release, que encontrou o crash acima.
+- O relatório semanal mostrou 2 missões e 5 estrelas, mas a lista “O que jogou” estava vazia. A origem
+  desses resultados antigos precisa ser verificada; não usar esse resumo como evidência de consolidação.
 
 As evidências privadas ficam em `tmp/auditoria-banco-pre-apk-20261113` e
 `tmp/auditoria-mobile-consolidacao`, ignorados pelo Git. O arquivo local de acessos fictícios não deve
@@ -120,3 +136,9 @@ Continuam pendentes as definições da instituição sobre finalidade, responsá
 de pedidos, a política pública de privacidade, exportação/exclusão (MOD-SEG-011), entrega real do Resend
 e o aceite físico. Login Google é uma evolução separada e não substitui a autorização escolar por vínculo.
 O checklist da loja está em [publicação Android](publicacao-android.md).
+
+### Atualização de 13/11/2026 — APK 5 e acessos
+
+O build EAS 10300e0a-6245-4499-bcc5-c8563763e43d concluiu. APK 5 baixado e instalado com sucesso no emulador; tela de login aberta. O reteste nativo 3D continua pendente. Esta atualização substitui o estado de build pendente descrito acima.
+
+Os 24 alunos do mock estão no banco de homologação; os 24 códigos passaram na identificação pela API. Professora, coordenação e administração autenticaram. Os dois alunos com PIN de homologação também autenticaram. As credenciais estão nas evidências privadas ignoradas pelo Git.

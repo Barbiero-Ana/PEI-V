@@ -15,7 +15,7 @@
       "bundleIdentifier": "br.com.modolume.app"
     },
     "android": {
-      "versionCode": 4,
+      "versionCode": 5,
       "allowBackup": false,
       "blockedPermissions": [
         "android.permission.SYSTEM_ALERT_WINDOW",
@@ -39,7 +39,15 @@
       "expo-font",
       "expo-sharing",
       "expo-sqlite",
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "extraProguardRules": "-keep class expo.modules.gl.** { *; }"
+          }
+        }
+      ]
     ],
     "scheme": "modolume",
     "backgroundColor": "#F7F6FD",

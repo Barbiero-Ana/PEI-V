@@ -462,11 +462,18 @@ function ResponderAtividade({ atividade, questoes }: { atividade: AtividadeDoPro
       ) : (
         <View style={{ paddingHorizontal: 20, paddingBottom: insets.bottom + 16, gap: 8 }}>
           {retorno ? (
-            <View accessibilityLiveRegion="polite" style={e.retorno}>
+            <View accessibilityLiveRegion="polite" style={e.retornoLinha}>
               {retorno.tipo === "erro" && q.feedbackErro ? (
-                <Texto style={{ color: cor.textoSuave }}>Dica do professor</Texto>
+                <View accessible accessibilityLabel="Lilo com expressão de dúvida">
+                  <Lilo humor="curioso" tamanho={44} />
+                </View>
               ) : null}
-              <Texto style={{ fontFamily: fonte.textoForte, color: cor.tinta }}>{retorno.texto}</Texto>
+              <View style={e.retornoTexto}>
+                {retorno.tipo === "erro" && q.feedbackErro ? (
+                  <Texto style={{ color: cor.textoSuave }}>Dica do professor</Texto>
+                ) : null}
+                <Texto style={{ fontFamily: fonte.textoForte, color: cor.tinta }}>{retorno.texto}</Texto>
+              </View>
             </View>
           ) : null}
           <Acoes>
@@ -576,5 +583,13 @@ const e = criarEstilos(() => ({
     borderColor: cor.bordaForte,
     backgroundColor: cor.superficie,
   },
-  retorno: { borderRadius: raio.m, padding: 12, backgroundColor: cor.pessegoClaro },
+  retornoLinha: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    borderRadius: raio.m,
+    padding: 12,
+    backgroundColor: cor.pessegoClaro,
+  },
+  retornoTexto: { flex: 1, minWidth: 0, gap: 3 },
 }));
