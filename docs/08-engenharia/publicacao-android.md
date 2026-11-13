@@ -15,7 +15,7 @@ são históricos e não contêm o novo protocolo, as avaliações e os avisos. S
 
 **Revisão técnica de 13/11/2026:** API, painel e migrações da consolidação anterior já foram publicados. A preparação adicional do novo APK está no [roteiro de homologação](homologacao-e-preparacao-apk.md). O perfil `preview` também valida HTTPS, e as permissões desnecessárias foram bloqueadas na configuração; conferir o manifesto novo. Datas e links históricos abaixo foram preservados.
 
-**Teste nativo de 13/11/2026:** código 4 instalou e abriu em emulador Android 37.0, mas o jogo “Cubinhos escondidos” fechou o APK. O diagnóstico e a regra R8 constam no [ADR 0028](../03-decisoes/0028-retencao-do-expo-gl-no-r8.md). Código 5 compilado e instalado em 13/11/2026; tela de login abriu. Novo teste 3D continua pendente.
+**Teste nativo de 13/11/2026:** código 4 instalou e abriu em emulador Android 37.0, mas o jogo “Cubinhos escondidos” fechou o APK. O diagnóstico e a regra R8 constam no [ADR 0028](../03-decisoes/0028-retencao-do-expo-gl-no-r8.md). Código 5 compilado e instalado em 13/11/2026; tela de login abriu. Reteste 3D aprovado no emulador: quatro fases de Cubinhos escondidos concluídas, sincronização de uma jogada confirmada pela API e nenhum crash no PID atual. Aceite físico e jornada offline permanecem pendentes.
 
 ## Artefato anterior de teste disponível
 

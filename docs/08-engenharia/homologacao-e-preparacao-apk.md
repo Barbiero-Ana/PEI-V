@@ -11,7 +11,7 @@ Responsável: **Ana Barbiero — Líder de projeto**. As datas históricas de PR
 | Build | URL HTTPS validada também no APK `preview`; ambiente EAS explícito | `build.test.ts` recusa ausência, HTTP, localhost, IP e credenciais na URL |
 | Erros | Tela de recuperação; Sentry preparado, desativado sem DSN; logs seguros e prontidão na API | `diagnostico.test.ts` e `observabilidade.test.ts`; envio real ao Sentry pendente de conta/projeto |
 | Homologação | Banco, API, credenciais, sessão e cache próprios; carga fictícia idempotente | Pre-deploy ensaiado duas vezes; recusa produção; testes de mesmo aluno em servidores diferentes |
-| Artefato | APK código 4 instalado e inspecionado | Validado no emulador; corrigir crash do GLView em release e repetir no código 5 |
+| Artefato | APK código 5 compilado, instalado e inspecionado | Assinatura, permissões, API alvo 36 e alinhamento 16 KB aprovados; quatro fases de Cubinhos escondidos concluídas sem crash no emulador |
 | Aparelhos | Jornada, saída, acessibilidade e jogos no emulador | Roteiro manual abaixo; ainda falta aparelho Android físico |
 
 O [ADR 0026](../03-decisoes/0026-publicacoes-imutaveis-de-atividade.md) descreve o contrato de publicação.
@@ -34,9 +34,10 @@ O [ADR 0027](../03-decisoes/0027-homologacao-isolada-e-diagnostico.md) descreve 
 A API está ativa em `https://modolume-api-homologacao-homologacao.up.railway.app`, no commit `a6258ce`.
 O teste HTTP integrado confirmou publicação, entrega única, consulta do professor, devolutiva e aviso.
 O painel usa o preview da branch `codex/preparacao-apk`; sua variável `API_URL` é exclusiva dessa branch.
-URL do painel: `https://pei-v-git-codex-preparacao-apk-barbiero-anas-projects.vercel.app`.
-O preview conserva a proteção de acesso Vercel: a primeira abertura exige uma conta autorizada na Vercel,
-além do login escolar. O login da professora e a tela com entrega e devolutiva foram conferidos no navegador.
+URL principal do painel: `https://hom.modolume.com.br`. Domínio HTTPS e login da professora conferidos em 13/11/2026.
+O endereço gerado da branch continua disponível como alternativa técnica. A API de homologação usa
+`WEB_URL=https://hom.modolume.com.br` para os links do painel; `ORIGENS` inclui o domínio novo, o preview e localhost.
+O login escolar continua obrigatório; a proteção Vercel do preview pode exigir autenticação adicional conforme o endereço utilizado.
 Não sincronizar segredos ou dados de produção para este ambiente.
 
 ## Verificação de 13/11/2026
@@ -69,8 +70,7 @@ Não sincronizar segredos ou dados de produção para este ambiente.
   `Didn't find a correct constructor` em `SimpleViewManagerWrapper.createViewInstance`. A falha corresponde
   ao defeito de retenção do construtor `GLView` pelo R8 no SDK 58. A correção local adiciona uma regra
   específica do `expo-gl` via `expo-build-properties`; o prebuild confirmou a regra no ProGuard gerado.
-  `apps/mobile/app.json` está em `versionCode` 5 para o próximo APK. O novo artefato ainda precisa ser
-  construído, instalado e retestado antes de distribuir; código 4 não serve para validar jogos 3D.
+  O código 5 foi compilado e instalado; o reteste nativo 3D foi aprovado no emulador em 13/11/2026. Código 4 não serve para validar jogos 3D.
 - A suíte mobile tem 30 testes unitários e 117 testes de UI/componentes (inclui 108 fases dos 28 jogos);
   typecheck e lint mobile passaram após a inclusão do harness. Esses testes não substituem o teste de
   `GLView` de release, que encontrou o crash acima.
@@ -139,6 +139,10 @@ O checklist da loja está em [publicação Android](publicacao-android.md).
 
 ### Atualização de 13/11/2026 — APK 5 e acessos
 
-O build EAS 10300e0a-6245-4499-bcc5-c8563763e43d concluiu. APK 5 baixado e instalado com sucesso no emulador; tela de login aberta. O reteste nativo 3D continua pendente. Esta atualização substitui o estado de build pendente descrito acima.
+O build EAS 10300e0a-6245-4499-bcc5-c8563763e43d concluiu. APK 5 baixado e instalado com sucesso no emulador; tela de login aberta. Assinatura verificada, API alvo 36, backup desabilitado e permissões limitadas a rede, estado da rede, vibração e receptor privado. As 60 bibliotecas de 64 bits e o ZIP passaram na inspeção de alinhamento 16 KB. O bundle contém a API de homologação. A troca do domínio do painel não exige reconstruir o APK, pois o endereço da API permanece igual. O reteste nativo de Cubinhos escondidos foi concluído nas quatro fases em 13/11/2026; o aceite em aparelho físico continua pendente.
 
 Os 24 alunos do mock estão no banco de homologação; os 24 códigos passaram na identificação pela API. Professora, coordenação e administração autenticaram. Os dois alunos com PIN de homologação também autenticaram. As credenciais estão nas evidências privadas ignoradas pelo Git.
+
+### Reteste nativo 3D — 13/11/2026
+
+No APK 5 instalado, a conta de teste entrou com código e PIN na homologação. A cena de Cubinhos escondidos renderizou, aceitou rotação e separação das camadas e completou as quatro fases até a tela de recompensa (duas estrelas e dez pontos). A API confirmou exatamente uma jogada da missão para a aluna de teste, com quatro rodadas, três acertos de primeira e duas estrelas. O processo permaneceu ativo e o buffer de crash filtrado pelo PID atual não teve registros. Capturas, inspeção e confirmação de sincronização ficam nas evidências privadas. O ensaio confirma a correção do crash de inicialização observado no APK 4; não substitui o aceite em Android físico nem a jornada offline.

@@ -1,6 +1,6 @@
 # ADR 0028 — Preservar expo-gl em APKs Android otimizados
 
-- **Status:** Aceita; correção aplicada à configuração, novo APK ainda precisa ser validado
+- **Status:** Aceita; correção validada no APK 5 em emulador Android em 13/11/2026
 - **Data:** 13/11/2026
 - **Decisores:** Ana Barbiero — Líder de projeto
 - **Uso de IA:** reproduzir o crash, comparar mitigação e aplicar a regra de build.
@@ -30,11 +30,11 @@ para confirmar a abertura e a interação das cenas 3D.
 
 - **Positivas:** preserva as classes nativas usadas pelo `expo-gl` e mantém R8 ativo para o restante do APK.
 - **Negativas:** as classes do pacote `expo-gl` não serão reduzidas ou renomeadas por R8.
-- **O que fica pendente:** gerar e testar o APK código 5; repetir em aparelho físico. Testes de componente
+- **O que fica pendente:** repetir em aparelho físico. O APK código 5 concluiu as quatro fases de Cubinhos escondidos no emulador, com sincronização confirmada e sem crash do processo. Testes de componente
   não comprovam inicialização de `GLView` em release.
 
 ## Aprovação da revisão documental
 
 - **Data da revisão e aprovação:** 13/11/2026.
 - **Assinatura de aprovação:** Ana Barbiero — Líder de projeto.
-- **Escopo:** decisão e mitigação registradas; aceite do novo APK permanece pendente.
+- **Escopo:** decisão e mitigação registradas; reteste do APK 5 aprovado no emulador; aceite em aparelho físico permanece pendente.
