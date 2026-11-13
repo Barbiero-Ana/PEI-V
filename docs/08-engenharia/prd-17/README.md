@@ -24,6 +24,7 @@ Requisitos transversais de segurança, qualidade, desempenho, interfaces e porta
 - [apps/api/scripts/verificar-banco.ts](../../../apps/api/scripts/verificar-banco.ts)
 - [apps/web/middleware.ts](../../../apps/web/middleware.ts)
 - [apps/mobile/src/estado/isolamento.ts](../../../apps/mobile/src/estado/isolamento.ts)
+- [apps/mobile/src/estado/ambiente.ts](../../../apps/mobile/src/estado/ambiente.ts)
 - [packages/core](../../../packages/core)
 
 **Persistência** Todas as entidades e dados locais.
@@ -98,7 +99,7 @@ Veja o PRD de origem.
 - [MOD-MAN-005](mod-man-005.md) O código é mantido em sistema de controle de versão.
 - [MOD-MAN-006](mod-man-006.md) Credenciais e endereços são definidos por ambiente, fora do código-fonte.
 - [MOD-MAN-007](mod-man-007.md) Capturar falhas técnicas com versão e contexto mínimo, sem credenciais, conteúdo escolar ou identificação deliberada do aluno; habilitar o envio externo somente com configuração válida.
-- [MOD-MAN-008](mod-man-008.md) Separar homologação e produção, com banco, contas fictícias e segredos próprios; validar a API HTTPS nos perfis distribuídos e recusar preparação em produção.
+- [MOD-MAN-008](mod-man-008.md) Separar homologação e produção, com banco, contas fictícias, segredos, sessão e cache próprios; validar a API HTTPS nos perfis distribuídos e recusar preparação em produção.
 - [MOD-POR-001](mod-por-001.md) App: gerado a partir de um único código-fonte, pronto para Android e, se contratado, iOS.
 - [MOD-POR-002](mod-por-002.md) App: se adapta a telas de 4,7 a 13 polegadas.
 - [MOD-POR-003](mod-por-003.md) Web: se adapta a larguras a partir de 768 pixels (e funciona no celular).

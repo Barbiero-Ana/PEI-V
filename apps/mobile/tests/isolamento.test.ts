@@ -13,6 +13,7 @@ import {
   type ContaAluno,
 } from "../src/estado/isolamento";
 import { RepositorioSessao, SESSAO_ANTIGA, SESSAO_PROTEGIDA } from "../src/estado/sessao";
+import { armazenamentoDoAmbiente, armazenamentoLocalDoAmbiente, prefixoDoAmbiente } from "../src/estado/ambiente";
 
 class Memoria implements Armazenamento {
   dados = new Map<string, string>();
@@ -33,6 +34,64 @@ const conta = (id: string): ContaAluno => ({
   token: `token-de-teste-${id}`,
   aluno: { id, nome: id },
   turma: { id: "turma", nome: "Turma" },
+});
+
+describe("Isolamento entre servidores", () => {
+  it("mantém sessão e pendências de produção ao usar o mesmo aluno na homologação", async () => {
+    const local = new Memoria(),
+      cofre = new Memoria();
+    const producao = new RepositorioIdentidades(local);
+    const sessaoProducao = new RepositorioSessao(cofre, local);
+    const aluno = conta("mesmo-id");
+    await sessaoProducao.restaurar();
+    await sessaoProducao.salvar(aluno);
+    await producao.salvarJuntos(identidadeDa(aluno), { pontos: 80 }, { fila: [{ id: "pendente-prod" }] });
+    const original = [...local.dados.entries()];
+    const prefixo = prefixoDoAmbiente("https://homologacao.up.railway.app");
+    const localHom = armazenamentoLocalDoAmbiente(local, prefixo);
+    const cofreHom = armazenamentoDoAmbiente(cofre, prefixo);
+    const hom = new RepositorioIdentidades(localHom);
+    const sessaoHom = new RepositorioSessao(cofreHom, localHom);
+    assert.equal(await sessaoHom.restaurar(), null);
+    assert.deepEqual(await hom.dados("conta", identidadeDa(aluno), () => ({ fila: [] })), { fila: [] });
+    await sessaoHom.salvar({ ...aluno, token: "token-do-outro-servidor" });
+    await hom.salvarJuntos(identidadeDa(aluno), { pontos: 5 }, { fila: [{ id: "pendente-hom" }] });
+    await sessaoHom.salvar(null);
+    for (const [chave, valor] of original) assert.equal(local.dados.get(chave), valor);
+    assert.deepEqual(await new RepositorioSessao(cofre, local).restaurar(), aluno);
+    assert.deepEqual(await producao.dados("conta", identidadeDa(aluno), () => ({})), {
+      fila: [{ id: "pendente-prod" }],
+    });
+    assert.equal(await new RepositorioSessao(cofreHom, localHom).restaurar(), null);
+  });
+
+  it("a limpeza de credenciais antigas só alcança o servidor selecionado", async () => {
+    const local = new Memoria(),
+      cofre = new Memoria();
+    await local.setItem(CONTA_LEGADA, JSON.stringify({ conta: conta("producao") }));
+    const original = local.dados.get(CONTA_LEGADA);
+    const prefixo = prefixoDoAmbiente("https://homologacao.up.railway.app");
+    const isolado = armazenamentoLocalDoAmbiente(local, prefixo);
+    await isolado.setItem(CONTA_LEGADA, JSON.stringify({ conta: conta("homologacao"), fila: [] }));
+    await new RepositorioSessao(armazenamentoDoAmbiente(cofre, prefixo), isolado).restaurar();
+    assert.equal(local.dados.get(CONTA_LEGADA), original);
+    assert.deepEqual(JSON.parse((await isolado.getItem(CONTA_LEGADA))!), { fila: [] });
+    assert.ok((await armazenamentoLocalDoAmbiente(local, "").getAllKeys()).every((k) => !k.startsWith(prefixo)));
+  });
+
+  it("normaliza o endereço e separa protocolo, servidor e caminho, com chaves válidas no cofre", () => {
+    assert.equal(prefixoDoAmbiente("https://api.modolume.com.br/"), "");
+    assert.equal(prefixoDoAmbiente("https://homologacao.example/"), prefixoDoAmbiente("https://homologacao.example"));
+    const valores = [
+      "",
+      "http://api.modolume.com.br",
+      "https://homologacao.example",
+      "https://homologacao.example/v2",
+      "https://outro.example",
+    ].map(prefixoDoAmbiente);
+    assert.equal(new Set(valores).size, valores.length);
+    for (const prefixo of valores) assert.match(prefixo, /^[A-Za-z0-9._-]+$/);
+  });
 });
 const registro = (id: string) => ({
   progresso: { missao: { estrelas: id === "a" ? 3 : 1 } },

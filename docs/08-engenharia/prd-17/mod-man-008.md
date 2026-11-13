@@ -6,7 +6,7 @@
 
 ## Objetivo e escopo
 
-Separar homologação e produção, com banco, contas fictícias e segredos próprios; validar a API HTTPS nos perfis distribuídos e recusar preparação em produção.
+Separar homologação e produção, com banco, contas fictícias, segredos, sessão e cache próprios; validar a API HTTPS nos perfis distribuídos e recusar preparação em produção.
 
 Origem: [PRD-17 — Qualidade, segurança e restrições](../../02-modulos/PRD-17%20%E2%80%94%20Qualidade%2C%20seguran%C3%A7a%20e%20restri%C3%A7%C3%B5es.md), seção 5. Prioridade **E**, método **T**. Situação declarada na origem **Implementado**.
 
@@ -19,6 +19,7 @@ Origem: [PRD-17 — Qualidade, segurança e restrições](../../02-modulos/PRD-1
 - **HU-QUA-09** CA-01: O pre-deploy prepara a base fictícia duas vezes sem duplicar contas e recusa produção e bases existentes sem a marca.
 - **HU-QUA-09** CA-02: APK e painel de teste usam a mesma API HTTPS e o banco isolado; a produção continua disponível.
 - **HU-QUA-09** CA-03: O perfil de APK recusa API ausente, local ou HTTP e a prontidão retorna 503 quando o banco está indisponível.
+- **HU-QUA-09** CA-04: O mesmo ID de aluno em servidores diferentes mantém sessão, progresso e pendências independentes; a limpeza de credenciais não alcança outro ambiente.
 
 Consulte as regras transversais no PRD-17.
 
@@ -29,8 +30,9 @@ Consulte as regras transversais no PRD-17.
 - [apps/api/scripts/verificar-banco.ts](../../../apps/api/scripts/verificar-banco.ts)
 - [apps/web/middleware.ts](../../../apps/web/middleware.ts)
 - [apps/mobile/src/estado/isolamento.ts](../../../apps/mobile/src/estado/isolamento.ts)
+- [apps/mobile/src/estado/ambiente.ts](../../../apps/mobile/src/estado/ambiente.ts)
 - [packages/core](../../../packages/core)
 
 **Aceite nesta auditoria** Evidência parcial.
 
-Pre-deploy ensaiado duas vezes em banco descartável; produção e base existente sem marca são recusadas. Perfis distribuídos exigem API HTTPS. Implantação e aceite acompanhados no roteiro de homologação.
+Pre-deploy ensaiado duas vezes; API isolada validada no percurso integrado. Perfis distribuídos exigem API HTTPS. Testes preservam sessão e filas ao trocar servidores com o mesmo aluno. Aceite do APK e painel acompanhado no roteiro de homologação.

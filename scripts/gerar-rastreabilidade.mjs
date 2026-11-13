@@ -104,7 +104,7 @@ const modulos = {
   ],
   17: [
     "Requisitos transversais de segurança, qualidade, desempenho, interfaces e portabilidade.",
-    "apps/api/src/infra.ts apps/api/prisma/schema.prisma apps/api/scripts/verificar-banco.ts apps/web/middleware.ts apps/mobile/src/estado/isolamento.ts packages/core",
+    "apps/api/src/infra.ts apps/api/prisma/schema.prisma apps/api/scripts/verificar-banco.ts apps/web/middleware.ts apps/mobile/src/estado/isolamento.ts apps/mobile/src/estado/ambiente.ts packages/core",
     "Todas as entidades e dados locais",
     "Suítes do núcleo, API e app e verificação em PostgreSQL. Medições, validação institucional e ambiente real pendentes.",
   ],
@@ -118,7 +118,7 @@ const evidencias = {
   "MAN-007":
     "Diagnóstico sanitizado e logs por identificador de requisição testados. Sentry preparado, sem envio até criar/configurar o projeto. Aceite nativo pendente.",
   "MAN-008":
-    "Pre-deploy ensaiado duas vezes em banco descartável; produção e base existente sem marca são recusadas. Perfis distribuídos exigem API HTTPS. Implantação e aceite acompanhados no roteiro de homologação.",
+    "Pre-deploy ensaiado duas vezes; API isolada validada no percurso integrado. Perfis distribuídos exigem API HTTPS. Testes preservam sessão e filas ao trocar servidores com o mesmo aluno. Aceite do APK e painel acompanhado no roteiro de homologação.",
   "ATI-005":
     "Prazo opcional no contrato, editor, API e CHECK no banco. verificar-consolidacao.ts cobre prazo e encerramento. Aceite visual pendente.",
   "ATI-010":

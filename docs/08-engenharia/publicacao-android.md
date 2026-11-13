@@ -45,13 +45,15 @@ O teste fechado segue as exigências próprias da Play Console. [Faixas de teste
 
 ## 1. Homologação técnica
 
-- [ ] Disponibilizar API e painel em HTTPS. Aplicar as migrações em uma base de homologação isolada com
-  dados fictícios. Verificar logs, alertas de falha, backup e restauração.
+- [x] Disponibilizar API de homologação em HTTPS, com migrações e dados fictícios em banco isolado.
+- [ ] Concluir o aceite do painel de homologação, dos alertas e do backup recorrente. O backup manual
+  foi restaurado e ensaiado; agendamento no Railway depende do plano Pro ou de outra solução aprovada.
 - [ ] Executar o [roteiro móvel](plano-correcao-mobile.md) em Android físico e em iOS para a entrega iOS.
   No Android, repetir o percurso na versão assinada instalada pela faixa de testes da loja.
 - [ ] Validar no aparelho a migração para SecureStore, o logout e a troca de aluno.
-- [ ] Concluir a consolidação de pontos, tentativas e compras entre aparelhos.
-- [ ] Preparar uma conta escolar fictícia para revisão com código, PIN criado e atividade liberada.
+- [x] Implementar a consolidação de pontos, tentativas e compras, com testes automatizados.
+- [ ] Confirmar a consolidação em dois aparelhos físicos e no APK instalado.
+- [x] Preparar uma conta escolar fictícia para revisão com código, PIN criado e atividade liberada.
   Fornecer as instruções na seção **Acesso ao app** da Play Console. A demonstração local cobre as missões
   sem turma. [Acesso para revisão](https://support.google.com/googleplay/android-developer/answer/9859455).
 
@@ -62,7 +64,7 @@ O teste fechado segue as exigências próprias da Play Console. [Faixas de teste
    homologação e `production` deve apontar para a API HTTPS de produção. O endereço é público.
    As chaves de serviço, credenciais do banco e o segredo JWT ficam na API.
    O hook `eas-build-pre-install` rejeita URL ausente, `auto`, HTTP e endereços de desenvolvimento evidentes
-   nos dois perfis de loja. Confirmar a conectividade real da API em uma rede externa.
+   nos perfis `preview`, `play-internal` e `production`. Confirmar a conectividade real da API em uma rede externa.
 3. Usar um `android.versionCode` em `apps/mobile/app.json` superior ao de qualquer artefato já enviado
    para o pacote, incluindo a faixa de testes. O versionamento do EAS neste projeto usa a configuração local.
 4. Na raiz do repositório, executar para o primeiro teste interno:
@@ -70,7 +72,7 @@ O teste fechado segue as exigências próprias da Play Console. [Faixas de teste
    ```powershell
    Set-Location apps/mobile
    npx eas-cli@latest whoami
-   npx eas-cli@latest env:set --environment preview --name EXPO_PUBLIC_API_URL --value https://api.modolume.com.br --visibility plaintext --scope project --non-interactive
+   npx eas-cli@latest env:set --environment preview --name EXPO_PUBLIC_API_URL --value https://modolume-api-homologacao-homologacao.up.railway.app --visibility plaintext --scope project --non-interactive
    npx eas-cli@latest build --platform android --profile play-internal
    ```
 
@@ -86,8 +88,10 @@ O teste fechado segue as exigências próprias da Play Console. [Faixas de teste
    de produção com dados fictícios antes de liberar a versão pública.
    [Perfis de build do EAS](https://docs.expo.dev/eas/json/).
 
-O perfil `play-internal` usa atualmente a API publicada em `https://api.modolume.com.br`. A validação inicial deve
-usar as contas e turmas fictícias já provisionadas. Antes de liberar dados reais, cumprir os critérios da seção 1.
+Desde 13/11/2026, `preview` e `play-internal` usam a API isolada
+`https://modolume-api-homologacao-homologacao.up.railway.app`. Somente `production` usa
+`https://api.modolume.com.br`. A validação inicial usa as contas e turmas fictícias já provisionadas.
+Antes de liberar dados reais, cumprir os critérios da seção 1.
 
 ## 3. Dados e ficha da loja
 

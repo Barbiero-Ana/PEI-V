@@ -10,7 +10,7 @@ Responsável: **Ana Barbiero — Líder de projeto**. As datas históricas de PR
 | Persistência | Migração `20261113130000_publicacao_atividade`, com observação do legado e preservação das jogadas | PostgreSQL descartável e ensaio sobre backup antes de alterar o banco principal |
 | Build | URL HTTPS validada também no APK `preview`; ambiente EAS explícito | `build.test.ts` recusa ausência, HTTP, localhost, IP e credenciais na URL |
 | Erros | Tela de recuperação; Sentry preparado, desativado sem DSN; logs seguros e prontidão na API | `diagnostico.test.ts` e `observabilidade.test.ts`; envio real ao Sentry pendente de conta/projeto |
-| Homologação | Banco, API e credenciais próprios; carga fictícia idempotente | Pre-deploy ensaiado duas vezes; recusa ambiente principal e banco existente sem marca |
+| Homologação | Banco, API, credenciais, sessão e cache próprios; carga fictícia idempotente | Pre-deploy ensaiado duas vezes; recusa produção; testes de mesmo aluno em servidores diferentes |
 | Artefato | APK novo e manifesto conferido | Gerar após implantação de homologação e verificação integrada; não reutilizar os artefatos de código 2 |
 | Aparelhos | Jornada e acessibilidade na versão instalada | Roteiro manual abaixo; testes de código não equivalem a aceite físico |
 
@@ -31,8 +31,31 @@ O [ADR 0027](../03-decisoes/0027-homologacao-isolada-e-diagnostico.md) descreve 
   `AMBIENTE_DADOS_FICTICIOS=true` habilita a preparação exclusivamente no ambiente nomeado.
 - Arquivo privado local: `apps/api/.env.homologacao.local`, ignorado pelo Git. Não anexar seu conteúdo a relatórios.
 
-As URLs finais e a implantação são registradas depois da verificação; a criação de um ambiente vazio não
-significa que a API já esteja funcionando. Não sincronizar segredos ou dados de produção para este ambiente.
+A API está ativa em `https://modolume-api-homologacao-homologacao.up.railway.app`, no commit `a6258ce`.
+O teste HTTP integrado confirmou publicação, entrega única, consulta do professor, devolutiva e aviso.
+O painel usa o preview da branch `codex/preparacao-apk`; sua variável `API_URL` é exclusiva dessa branch.
+Não sincronizar segredos ou dados de produção para este ambiente.
+
+## Verificação de 13/11/2026
+
+- CI do commit `a6258ce`: formatação, lint, tipagem, 158 testes, documentação, migrações em PostgreSQL,
+  build do painel, proteção de rotas e bundle Android aprovados.
+- Backup consistente anterior à nova migração: 10 migrações e 33 tabelas, SHA-256
+  `d7d45320863f3ffe5dd425c1e7b7b7d8f3267c569f3845be61d6346337ff70b2`.
+- Restauração local conferida e migração ensaiada: 11 migrações e 34 tabelas, registros originais preservados.
+- Migração aplicada em produção com conferência de contagens e permissões: a API não altera o conteúdo
+  de publicações nem apaga auditoria; pode atualizar somente o prazo da publicação.
+- API e painel de produção implantados; acesso ao banco, login, permissões, páginas protegidas e saída
+  conferidos nos três perfis da equipe, com contas fictícias.
+- O APK `1.0.0`, código 3, foi cancelado ainda na fila:
+  [build e98d473b](https://expo.dev/accounts/anabarbiero23/projects/modolume/builds/e98d473b-d2e7-4579-885a-5073d363ae3a).
+  Foi substituído pelo código 4 para incluir o isolamento de sessão e cache por ambiente.
+- A revisão de isolamento acrescenta três testes mobile (30 no módulo, 161 no total). Preserva o espaço
+  histórico de produção; o APK de homologação começa com sessão própria, sem apagar o app anterior.
+
+As evidências privadas ficam em `tmp/auditoria-banco-pre-apk-20261113` e
+`tmp/auditoria-mobile-consolidacao`, ignorados pelo Git. O arquivo local de acessos fictícios não deve
+ser anexado a issues, PRs ou documentos públicos.
 
 ## Backups e disponibilidade
 

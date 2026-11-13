@@ -6,15 +6,22 @@ import { Botao, Texto, Titulo } from "@/componentes/ui";
 import { cor, criarEstilos } from "@/tema";
 import { EscopoIdentidade, RepositorioIdentidades, identidadeDa, type ContaAluno } from "./isolamento";
 import { RepositorioSessao } from "./sessao";
+import { API_URL } from "@/lib/api";
+import { armazenamentoDoAmbiente, armazenamentoLocalDoAmbiente, prefixoDoAmbiente } from "./ambiente";
 
-const repositorio = new RepositorioIdentidades(AsyncStorage);
+const prefixo = prefixoDoAmbiente(API_URL);
+const local = armazenamentoLocalDoAmbiente(AsyncStorage, prefixo);
+const repositorio = new RepositorioIdentidades(local);
 const sessoes = new RepositorioSessao(
-  {
-    getItem: SecureStore.getItemAsync,
-    setItem: (chave, valor) =>
-      SecureStore.setItemAsync(chave, valor, { keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY }),
-  },
-  AsyncStorage,
+  armazenamentoDoAmbiente(
+    {
+      getItem: SecureStore.getItemAsync,
+      setItem: (chave, valor) =>
+        SecureStore.setItemAsync(chave, valor, { keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY }),
+    },
+    prefixo,
+  ),
+  local,
 );
 interface Identidade {
   legadoPreservado: boolean;

@@ -31,6 +31,7 @@ Consulte as regras transversais no PRD-17.
 - [apps/api/scripts/verificar-banco.ts](../../../apps/api/scripts/verificar-banco.ts)
 - [apps/web/middleware.ts](../../../apps/web/middleware.ts)
 - [apps/mobile/src/estado/isolamento.ts](../../../apps/mobile/src/estado/isolamento.ts)
+- [apps/mobile/src/estado/ambiente.ts](../../../apps/mobile/src/estado/ambiente.ts)
 - [packages/core](../../../packages/core)
 
 **Aceite nesta auditoria** Pendente.

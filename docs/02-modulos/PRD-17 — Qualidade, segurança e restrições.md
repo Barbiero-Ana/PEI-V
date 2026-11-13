@@ -143,7 +143,7 @@ Banco (ADR 0016): chaves estrangeiras, `ENUM`, datas e restrições `CHECK` recu
 | MOD-MAN-006 | Credenciais e endereços são definidos por ambiente, fora do código-fonte. | E | N | Implementado |
 
 | MOD-MAN-007 | Capturar falhas técnicas com versão e contexto mínimo, sem credenciais, conteúdo escolar ou identificação deliberada do aluno; habilitar o envio externo somente com configuração válida. | I | T | Parcial |
-| MOD-MAN-008 | Separar homologação e produção, com banco, contas fictícias e segredos próprios; validar a API HTTPS nos perfis distribuídos e recusar preparação em produção. | E | T | Implementado |
+| MOD-MAN-008 | Separar homologação e produção, com banco, contas fictícias, segredos, sessão e cache próprios; validar a API HTTPS nos perfis distribuídos e recusar preparação em produção. | E | T | Implementado |
 
 MAN-006: segredo da sessão e senha de demonstração vêm do ambiente; em desenvolvimento há valores padrão, recusados em produção no caso do segredo.
 
@@ -275,9 +275,10 @@ Critérios marcados com [x] já são atendidos pelo sistema atual.
 
 ### HU-QUA-09 — Homologação isolada
 
-- [ ] CA-01: O pre-deploy prepara a base fictícia duas vezes sem duplicar contas e recusa produção e bases existentes sem a marca.
+- [x] CA-01: O pre-deploy prepara a base fictícia duas vezes sem duplicar contas e recusa produção e bases existentes sem a marca.
 - [ ] CA-02: APK e painel de teste usam a mesma API HTTPS e o banco isolado; a produção continua disponível.
-- [ ] CA-03: O perfil de APK recusa API ausente, local ou HTTP e a prontidão retorna 503 quando o banco está indisponível.
+- [x] CA-03: O perfil de APK recusa API ausente, local ou HTTP e a prontidão retorna 503 quando o banco está indisponível.
+- [x] CA-04: O mesmo ID de aluno em servidores diferentes mantém sessão, progresso e pendências independentes; a limpeza de credenciais não alcança outro ambiente.
 
 Evidência automatizada: `verificar-banco.ts`, `build.test.ts`, `diagnostico.test.ts` e `observabilidade.test.ts`. Ativação real do Sentry e aceite físico pendentes.
 

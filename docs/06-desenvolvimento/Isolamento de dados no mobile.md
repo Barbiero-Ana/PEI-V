@@ -6,6 +6,12 @@ O estado do jogador e a sincronização usam a identidade do aluno retornada pel
 
 ## Armazenamento
 
+Revisão de 13/11/2026 (ADR 0027): sessão, cache e filas passam pelo adaptador
+`apps/mobile/src/estado/ambiente.ts`. A produção em `https://api.modolume.com.br` mantém as chaves
+históricas abaixo. Outros servidores recebem um prefixo derivado sem perda do endereço canônico;
+o prefixo usa somente caracteres válidos no SecureStore. A enumeração e a limpeza de credenciais
+alcançam somente o ambiente atual. Nada é copiado ou apagado da produção ao instalar o APK de homologação.
+
 - `modolume.sessao.v3`, no SecureStore, guarda a sessão e a identificação mínima de aluno e turma.
 - `modolume:isolado:v3:aluno:<id codificado>`, no AsyncStorage, reúne o estado do jogador e da conta em um
   envelope. O jogador contém perfil, avatar, progresso, resultados, compras e preferências. A seção da conta
@@ -75,6 +81,6 @@ Em aparelho/emulador de teste, com alunos fictícios A e B e cópia de seguranç
 6. Retorne à rede e confira no servidor que somente as jogadas do aluno autenticado foram enviadas. O app deve reenviar eventuais IDs não confirmados sem duplicá-los.
 
 O aceite em aparelho deve cobrir AsyncStorage, SecureStore, suspensão, encerramento abrupto, navegação,
-latência e persistência na API. A identidade continua baseada no ID do aluno. Trocar ambientes de API com IDs
-reutilizados exige limpeza controlada de dados fictícios ou uma identificação estável do ambiente. Uma eventual
-mistura já enviada ao servidor por versões antigas exige apuração própria.
+latência e persistência na API. A identidade combina o servidor e o ID do aluno. Trocar entre produção e
+homologação não exige limpar o armazenamento; as sessões e pendências de cada ambiente permanecem
+separadas. Misturas eventualmente enviadas por versões anteriores à revisão de 13/11 exigem apuração própria.

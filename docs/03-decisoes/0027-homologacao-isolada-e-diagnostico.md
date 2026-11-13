@@ -19,6 +19,11 @@ recusa produção e bases preexistentes sem a marca. Migrações, papel mínimo 
 Os segredos ficam nas variáveis do serviço e em arquivos locais ignorados. Não são copiados do ambiente
 principal. O painel de homologação deve usar a mesma API que o APK de teste.
 
+Sessão, cache e filas locais também são separados pelo endereço canônico da API. A API de produção
+`https://api.modolume.com.br` conserva o espaço histórico para preservar a atualização de instalações
+anteriores. Outros servidores usam prefixos próprios, inclusive no SecureStore, sem importar nem limpar
+dados de produção. Assim, IDs fictícios iguais em bases distintas não compartilham progresso ou credenciais.
+
 `preview` e `play-internal` usam o ambiente EAS `preview`; `production` usa `production`. Todos os perfis
 distribuídos exigem URL HTTPS pública. Bloquear permissões Android de sobreposição, armazenamento externo
 legado e biometria que não são usadas pelos fluxos atuais; conferir novamente o manifesto do artefato final.
