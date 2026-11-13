@@ -230,7 +230,10 @@ export class ControladorProfessor {
   // ─────────────────────────── atividades ───────────────────────────
 
   private async atividadeDoProfessor(professorId: string, id: string) {
-    const a = await this.banco.atividadeProfessor.findFirst({ where: { id, professorId }, include: incluirAtividade });
+    const a = await this.banco.atividadeProfessor.findFirst({
+      where: { id, professorId, arquivada: false },
+      include: incluirAtividade,
+    });
     if (!a) throw new NotFoundException("Atividade não encontrada.");
     return a;
   }
@@ -255,13 +258,14 @@ export class ControladorProfessor {
       missaoId: d.formato === "pronta" ? d.missaoId : null,
       planoId: d.planoId || null,
       liberarEm: dataDoBanco(d.liberarEm),
+      prazo: d.prazo ? dataDoBanco(d.prazo) : null,
     };
   }
 
   @Get("atividades")
   async atividades(@SessaoAtual() s: Sessao, @Query("planoId") planoId?: string) {
     const lista = await this.banco.atividadeProfessor.findMany({
-      where: { professorId: s.sub, ...(planoId ? { planoId } : {}) },
+      where: { professorId: s.sub, arquivada: false, ...(planoId ? { planoId } : {}) },
       include: incluirAtividade,
       orderBy: { liberarEm: "desc" },
     });
@@ -330,7 +334,7 @@ export class ControladorProfessor {
     return this.banco.$transaction(async (transacao) => {
       const a = await transacao.atividadeProfessor.update({
         where: { id },
-        data: { status: enviar ? "enviada" : "rascunho", enviadaEm: enviar ? new Date() : null },
+        data: { status: enviar ? "enviada" : "rascunho", ...(enviar ? { enviadaEm: new Date() } : {}) },
         include: incluirAtividade,
       });
       const dados = atividadeDoBanco(a);
@@ -349,7 +353,10 @@ export class ControladorProfessor {
   async excluir(@SessaoAtual() s: Sessao, @EquipeAtual() eu: Equipe, @Param("id") id: string) {
     const atividade = await this.atividadeParaEscrita(eu, id);
     await this.banco.$transaction(async (transacao) => {
-      await transacao.atividadeProfessor.delete({ where: { id } });
+      const avaliacoes = await transacao.avaliacaoAtividade.count({ where: { atividadeId: id } });
+      if (avaliacoes)
+        await transacao.atividadeProfessor.update({ where: { id }, data: { arquivada: true, status: "rascunho" } });
+      else await transacao.atividadeProfessor.delete({ where: { id } });
       await registrar(transacao, eu, "atividade.excluida", { tipo: "atividade", id, detalhe: atividade.titulo });
     });
     return { ok: true };
@@ -369,7 +376,7 @@ export class ControladorProfessor {
       turmaId: { in: turmas.map((t) => t.id) },
       turma: this.turmasAutorizadas(eu),
     };
-    const [alunos, jogadas] = await Promise.all([
+    const [alunos, jogadas, inicios, avaliacoes] = await Promise.all([
       this.banco.aluno.findMany({
         where: escopoAluno,
         orderBy: { nome: "asc" },
@@ -377,7 +384,12 @@ export class ControladorProfessor {
       }),
       this.banco.jogada.findMany({
         where: { atividadeId: id, aluno: escopoAluno },
-        orderBy: { data: "asc" },
+        orderBy: [{ recebidaEm: "asc" }, { id: "asc" }],
+      }),
+      this.banco.atividadeInicio.findMany({ where: { atividadeId: id, aluno: escopoAluno } }),
+      this.banco.avaliacaoAtividade.findMany({
+        where: { atividadeId: id, publicada: true, aluno: escopoAluno },
+        select: { alunoId: true },
       }),
     ]);
     const ultima = new Map(jogadas.map((j) => [j.alunoId, j]));
@@ -390,6 +402,8 @@ export class ControladorProfessor {
           turmaId: al.turmaId,
           avatarSvg: al.avatar?.svg ?? null,
           concluiu: Boolean(j),
+          situacao: j ? "concluida" : inicios.some((i) => i.alunoId === al.id) ? "em andamento" : "nao iniciada",
+          avaliada: avaliacoes.some((a) => a.alunoId === al.id),
           acerto: j?.percentualAcerto ?? null,
           data: j ? dataIso(j.data) : null,
         };

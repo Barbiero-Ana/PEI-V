@@ -26,6 +26,7 @@ export const JEITOS = {
   "exploracao-3d": { jeito: "Espacial", frase: "girando e construindo formas no espaço" },
 } as const satisfies Record<FormatoId, { jeito: string; frase: string }>;
 
+export type JeitoAprendizagem = (typeof JEITOS)[FormatoId]["jeito"];
 export type Confianca = "nenhuma" | "pouca" | "boa";
 export type Tendencia = "subindo" | "estavel" | "caindo" | null;
 export type NivelAprendizagem = "forte" | "crescendo" | "treinar" | "novo";
@@ -33,7 +34,7 @@ export type NivelAprendizagem = "forte" | "crescendo" | "treinar" | "novo";
 export interface AnaliseFormato {
   formato: FormatoId;
   rotulo: string;
-  jeito: string;
+  jeito: JeitoAprendizagem;
   jogadas: number;
   fases: number;
   /** Acerto de primeira, com mais peso para as jogadas recentes (0–100). */
@@ -52,7 +53,7 @@ export interface AnaliseFormato {
 export interface AnaliseAprendizagem {
   formatos: AnaliseFormato[];
   /** Jeito em que o aluno vai melhor (só com dado suficiente). */
-  jeitoPrincipal: { jeito: string; frase: string } | null;
+  jeitoPrincipal: { jeito: JeitoAprendizagem; frase: string } | null;
   fortes: AnaliseFormato[];
   crescendo: AnaliseFormato[];
   treinar: AnaliseFormato[];
@@ -94,7 +95,10 @@ export function analisarAprendizagem(resultados: ResultadoJogada[]): AnaliseApre
 
   const formatos: AnaliseFormato[] = tipos.map((f) => {
     // as últimas 10 jogadas do tipo, em ordem de data
-    const rs = resultados.filter((r) => r.formato === f.id).slice(-10);
+    const rs = resultados
+      .filter((r) => r.formato === f.id)
+      .sort((a, b) => a.data.localeCompare(b.data) || (a.id ?? "").localeCompare(b.id ?? ""))
+      .slice(-10);
     const base = { formato: f.id, rotulo: f.rotulo, jeito: JEITOS[f.id].jeito };
     if (!rs.length) {
       return {
@@ -142,7 +146,7 @@ export function analisarAprendizagem(resultados: ResultadoJogada[]): AnaliseApre
   const novos = formatos.filter((f) => f.nivel === "novo");
 
   // jeito principal: o grupo com maior domínio médio, entre os que têm dado suficiente
-  const grupos = new Map<string, number[]>();
+  const grupos = new Map<JeitoAprendizagem, number[]>();
   for (const f of jogados.filter((x) => x.confianca === "boa")) {
     grupos.set(f.jeito, [...(grupos.get(f.jeito) ?? []), f.dominio!]);
   }

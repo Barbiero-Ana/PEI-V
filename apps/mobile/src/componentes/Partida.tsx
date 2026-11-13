@@ -49,7 +49,7 @@ export function Partida({ missao, atividadeId }: { missao: Missao; atividadeId?:
   const insets = useSafeAreaInsets();
   const { height: altura } = useWindowDimensions();
   const { vibrar, desafios } = useJogador();
-  const { concluirMissao } = useConta();
+  const { concluirMissao, iniciarAtividade } = useConta();
   const { falar, voz, animacoesReduzidas } = useAcessibilidade();
   const [indice, setIndice] = useState(0);
   const [erros, setErros] = useState<number[]>(() => missao.rodadas.map(() => 0));
@@ -62,12 +62,16 @@ export function Partida({ missao, atividadeId }: { missao: Missao; atividadeId?:
   const [dicaAberta, setDicaAberta] = useState(false);
   const [fasesComDica, definirFasesComDica] = useState<number[]>([]);
   const inicio = useRef(0);
+  const inicioFase = useRef(0);
+  const tempos = useRef<number[]>([]);
   const concluindo = useRef(false);
   const [balanco] = useState(() => new Animated.Value(0));
   const [brilhoLampada] = useState(() => new Animated.Value(0));
   useEffect(() => {
-    inicio.current = Date.now();
-  }, []);
+    if (inicio.current) return;
+    inicio.current = inicioFase.current = Date.now();
+    if (atividadeId) void iniciarAtividade(atividadeId).catch(() => {});
+  }, [atividadeId, iniciarAtividade]);
 
   const total = missao.rodadas.length;
   const ultima = indice === total - 1;
@@ -102,6 +106,7 @@ export function Partida({ missao, atividadeId }: { missao: Missao; atividadeId?:
   }
 
   function onAcerto(msg?: string) {
+    tempos.current[indice] = (Date.now() - inicioFase.current) / 1000;
     const elogio = ELOGIOS[(indice + erros.reduce((a, b) => a + b, 0)) % ELOGIOS.length]!;
     falar(msg ? `${elogio} ${msg}` : elogio);
     setTituloRetorno(elogio);
@@ -130,6 +135,7 @@ export function Partida({ missao, atividadeId }: { missao: Missao; atividadeId?:
   async function continuar() {
     setDicaAberta(false);
     if (!ultima) {
+      inicioFase.current = Date.now();
       setIndice((i) => i + 1);
       setStatus("jogando");
       setMensagem("");
@@ -142,6 +148,8 @@ export function Partida({ missao, atividadeId }: { missao: Missao; atividadeId?:
       errosPorRodada: erros,
       tempoSegundos: (Date.now() - inicio.current) / 1000,
       dicas: fasesComDica.length,
+      temposPorRodada: tempos.current,
+      fasesComDica,
     });
     try {
       const premio = await concluirMissao(r, {
@@ -168,7 +176,8 @@ export function Partida({ missao, atividadeId }: { missao: Missao; atividadeId?:
     definirFasesComDica([]);
     setDicaAberta(false);
     setRodadaJogo((n) => n + 1);
-    inicio.current = Date.now();
+    tempos.current = [];
+    inicio.current = inicioFase.current = Date.now();
   }
 
   const humor: HumorLilo = status === "erro" ? "pensativo" : status === "acerto" ? "animado" : "normal";

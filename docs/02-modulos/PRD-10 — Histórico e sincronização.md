@@ -1,7 +1,9 @@
 ---
 modulo: HIS
 prd: PRD-10
-atualizado: 2026-11-05
+atualizado: 2026-11-11
+revisao_documental: 2026-11-13
+responsavel_revisao: Ana Barbiero — Líder de projeto
 status: para revisão
 ---
 
@@ -48,9 +50,15 @@ Testes de queda e volta de conexão, de envio repetido e de troca de aparelho.
 | MOD-HIS-003 | O aluno consulta o próprio histórico. | I | D | Parcial |
 | MOD-HIS-004 | As missões podem ser jogadas sem conexão com a internet, com o progresso salvo no aparelho. | E | T | Implementado |
 | MOD-HIS-005 | As jogadas feitas sem conexão são enviadas ao servidor quando a conexão é restabelecida. | E | T | Implementado |
-| MOD-HIS-006 | Ao entrar em outro aparelho, o aluno recupera o progresso e preserva as jogadas e os ganhos feitos nos dois aparelhos. | I | T | Parcial |
+| MOD-HIS-006 | Ao entrar em outro aparelho, o aluno recupera o progresso e preserva as jogadas e os ganhos feitos nos dois aparelhos. | I | T | Implementado |
 
-**Situação atual:** o app salva a recompensa da missão e a jogada pendente juntas no aparelho (ADR 0022). A API confirma a fila por ID, inclusive no reenvio. O progresso de gamificação é restaurado do servidor ao abrir o app. A mesclagem mantém os maiores totais e reúne conquistas. Dois aparelhos podem acumular pontos ou gastos distintos offline e enviar totais que se sobrepõem. A consolidação desses casos segue pendente. A lista detalhada para o aluno também segue parcial (HIS-003).
+**Situação atual:** a conclusão local grava recompensa e fila juntas. O protocolo novo confirma jogada,
+crédito e compras na mesma transação do servidor. Cada jogada é contabilizada por ID; a mesma compra
+permanente não é debitada novamente. O app concilia a revisão confirmada com as operações ainda pendentes,
+inclusive as produzidas durante o envio. O histórico remoto alimenta também a análise de aprendizagem.
+A importação legada é um piso histórico por instalação, e não reconstrói ganhos que já tenham sido perdidos
+antes da migração. Ver [ADR 0024](../03-decisoes/0024-progresso-por-operacoes-confirmadas.md). A lista detalhada
+para o aluno segue parcial (HIS-003). O aceite em dois aparelhos físicos ainda precisa ser registrado.
 
 ### 5.2 Regras de negócio
 
@@ -89,8 +97,8 @@ Critérios marcados com [x] já são atendidos pelo sistema atual.
 
 ### HU-HIS-03 — Troca de aparelho
 
-- [x] CA-01: Dado um aluno que entra em outro aparelho com o código pessoal e o PIN, então vê as mesmas estrelas, constelações e luzes.
-- [x] CA-02: Um aparelho com progresso desatualizado não apaga o que o aluno conquistou em outro (fica o maior valor).
+- [ ] CA-01: Dado um aluno que entra em outro aparelho com o código pessoal e o PIN, então vê as mesmas estrelas, constelações e luzes, preservando também ganhos distintos feitos offline nos dois aparelhos.
+- [x] CA-02: Um aparelho com progresso desatualizado não apaga ganhos de outro: o servidor confirma operações por ID e revisão, e o app reaplica as pendências locais (ADR 0024).
 
 ### HU-HIS-04 — Histórico para o professor
 
@@ -108,7 +116,7 @@ Critérios marcados com [x] já são atendidos pelo sistema atual.
 | --- | --- | --- |
 | 1 | Progresso no aparelho e uso sem conexão. | Implementado |
 | 4 | Envio ao servidor, sem duplicidade, e avatar recuperado em outro aparelho. | Implementado |
-| 4 | Estrelas, constelações, luzes e compras recuperadas em outro aparelho. | Implementado |
+| 4 | Estrelas, constelações, luzes e compras recuperadas em outro aparelho, preservando ganhos concorrentes. | Implementado; aceite em dois aparelhos pendente |
 
 ## 9. Diretrizes do produto
 
@@ -131,3 +139,10 @@ Critérios marcados com [x] já são atendidos pelo sistema atual.
 - [[PRD — Modolume]]
 - [[PRD-17 — Qualidade, segurança e restrições]]
 - [[0003-progresso-local-e-uso-sem-conexao|ADR 0003]] · [[0007-back-end-node-postgresql-railway|ADR 0007]]
+
+## 13. Controle da revisão documental
+
+A data `atualizado` do histórico foi preservada. A revisão documental de **13/11/2026** foi aprovada por
+**Ana Barbiero — Líder de projeto**, para organização, consistência e rastreabilidade. Essa aprovação não
+substitui o aceite funcional: cenários sem evidência ou dependentes de validação pedagógica, institucional
+e de aparelhos continuam pendentes na matriz de engenharia. Não foi inferida uma data de criação.

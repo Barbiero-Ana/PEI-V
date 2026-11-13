@@ -1,7 +1,9 @@
 ---
 modulo: AUT
 prd: PRD-01
-atualizado: 2026-11-09
+atualizado: 2026-11-10
+revisao_documental: 2026-11-13
+responsavel_revisao: Ana Barbiero — Líder de projeto
 status: para revisão
 ---
 
@@ -50,7 +52,7 @@ Testes funcionais de cada perfil (acesso permitido e negado), teste de expiraç�
 | MOD-AUT-004 | Restringir telas, funções e operações conforme o perfil autenticado. | E | T | Implementado |
 | MOD-AUT-005 | Permitir que o usuário encerre sua sessão. | E | T | Implementado |
 | MOD-AUT-006 | Manter a sessão ativa entre aberturas do aplicativo enquanto a autenticação for válida. | E | T | Implementado |
-| MOD-AUT-007 | Permitir a redefinição de senha por e-mail para professor, gestão e administrador. | I | T | Pendente |
+| MOD-AUT-007 | Permitir a redefinição de senha por e-mail para professor, gestão e administrador. | I | T | Parcial |
 | MOD-AUT-008 | Permitir que o professor redefina o acesso de um aluno (zerar o PIN ou gerar novo código). | I | T | Implementado |
 | MOD-AUT-009 | Permitir o acesso do aluno por um código pessoal (passado pelo professor ou coordenação) e um PIN de 4 números criado no primeiro acesso, sem exigir e-mail e sem escolher nome numa lista. Códigos novos têm quatro letras e quatro números, como `BDFH-2468`, conforme o ADR 0020. | E | T | Implementado |
 
@@ -59,6 +61,9 @@ Testes funcionais de cada perfil (acesso permitido e negado), teste de expiraç�
 - **API (ADR 0015):** o professor entra com e-mail e senha (guardada com bcrypt) e recebe um token de 8 horas; o aluno entra com o código pessoal e o PIN, sem e-mail, e recebe um token de 180 dias (ADR 0017). O PIN fica só como hash; 5 PINs errados seguidos bloqueiam o acesso por 15 minutos; um código novo invalida as sessões antigas do aluno. Toda rota confere o papel (professor ou aluno) e o vínculo com a turma no servidor.
 - **Painel (web):** a entrada é comum a administrador, coordenação e professor. O token fica no cookie de sessão (`httpOnly`, 8 horas). Token recusado leva de volta à tela de entrada.
 - **App:** a entrada na turma usa código e PIN. Quem não tem código pode tocar em **Experimentar demonstração** e usar as missões com progresso local separado. O Perfil oferece a entrada na turma e a saída da sessão escolar.
+- **Definição e recuperação de senha:** a equipe solicita o link em **Recuperar acesso**. A API usa Resend,
+  resumo do token, uso único e prazo configurável de 30 minutos. Os testes cobrem o contrato de envio simulado.
+  A entrega real e o percurso pelo e-mail aguardam homologação.
 
 ### 5.2 Regras de negócio
 
@@ -127,7 +132,7 @@ Critérios marcados com [x] já são atendidos pelo sistema atual (com dados de 
 ### HU-AUT-06 — Redefinir a senha
 
 - [ ] CA-01: Dado um e-mail cadastrado, quando o professor pede a redefinição, então recebe um link de uso único com validade limitada.
-- [ ] CA-02: A tela mostra a mesma mensagem para e-mails cadastrados ou não.
+- [x] CA-02: A tela mostra a mesma mensagem para e-mails cadastrados ou não.
 
 ### HU-AUT-07 — Redefinir o acesso de um aluno
 
@@ -144,7 +149,7 @@ Critérios marcados com [x] já são atendidos pelo sistema atual (com dados de 
 | 3 | Login de demonstração do professor, sessão de 8 horas, páginas protegidas e recorte de dados por professor. | Implementado |
 | 4 | Login real pela API (senha em hash) e acesso do aluno por código pessoal + PIN, com redefinição pelo professor. | Implementado |
 | 5 | Papéis coordenação e administrador, cada um com a sua área (ADR 0019); senha provisória com troca obrigatória; mudança de papel ou desativação encerram a sessão na hora. | Implementado |
-| 5 | Redefinição de senha por e-mail (hoje, o administrador cria uma senha provisória). | Pendente |
+| 5 | Definição e redefinição por link privado. Implementação disponível, entrega real aguardando homologação. | Parcial |
 
 ## 9. Diretrizes do produto
 
@@ -163,10 +168,17 @@ Critérios marcados com [x] já são atendidos pelo sistema atual (com dados de 
 ## 11. Pendências para aprovação
 
 - Definir quem da coordenação terá acesso ao painel para consultar os códigos (hoje, o professor da turma).
-- Definir a validade do link de redefinição de senha.
+- Homologar o prazo padrão de 30 minutos e a entrega real do link pelo Resend.
 
 ## 12. Documentos vinculados
 
 - [[PRD — Modolume]]
 - [[PRD-02 — Administração de usuários]] · [[PRD-03 — Gestão de turmas]] · [[PRD-17 — Qualidade, segurança e restrições]]
 - [[0007-back-end-node-postgresql-railway|ADR 0007]] · [[0009-painel-construido-por-etapas|ADR 0009]]
+
+## 13. Controle da revisão documental
+
+A data `atualizado` do histórico foi preservada. A revisão documental de **13/11/2026** foi aprovada por
+**Ana Barbiero — Líder de projeto**, para organização, consistência e rastreabilidade. Essa aprovação não
+substitui o aceite funcional: cenários sem evidência ou dependentes de validação pedagógica, institucional
+e de aparelhos continuam pendentes na matriz de engenharia. Não foi inferida uma data de criação.

@@ -1,20 +1,22 @@
 ---
-atualizado: 2026-11-04
+atualizado: 2026-11-11
 ---
 
 # Modelo de dados
 
-Banco PostgreSQL (UTF-8) da API do Modolume. O esquema fica em `apps/api/prisma/schema.prisma`, e as mudanças são feitas por **migrações versionadas** em `apps/api/prisma/migrations` (ADR 0016). São 27 tabelas, 41 chaves estrangeiras e 24 restrições `CHECK`.
+Banco PostgreSQL (UTF-8) da API do Modolume. O esquema fica em `apps/api/prisma/schema.prisma`, e as mudanças
+são feitas por **migrações versionadas** em `apps/api/prisma/migrations` (ADR 0016). O dicionário abaixo resume
+as entidades. O schema e as migrações são a referência para colunas, relações, índices e restrições vigentes.
 
 ## Organização
 
 | Grupo | Tabelas mães | Tabelas filhas |
 | --- | --- | --- |
 | 1. Catálogos | `formato_atividade`, `mapa`, `habilidade_bncc`, `unidade_tematica` | `missao` (filha de mapa e de formato) |
-| 2. Escola | `instituicao` | `professor`, `turma`, `professor_turma` (vínculo N:N), `aluno` |
-| 3. Aluno | `aluno` | `avatar_aluno` (1:1), `progresso_missao`, `ponto_mapa`, `constelacao_conquistada`, `desafio_concluido`, `compra_loja` |
+| 2. Escola | `instituicao` | `materia`, `professor`, `turma`, `professor_turma` (vínculo N:N), `aluno` |
+| 3. Aluno | `aluno` | `avatar_aluno` (1:1), `progresso_missao`, `ponto_mapa`, `constelacao_conquistada`, `desafio_concluido`, `compra_loja`, `importacao_progresso`, `leitura_aviso_aluno` |
 | 4. Histórico | `aluno`, `missao`, `atividade_professor`, `formato_atividade` | `jogada` |
-| 5. Atividades | `atividade_professor` | `atividade_turma` (N:N com turma), `questao_atividade` → `opcao_questao` |
+| 5. Atividades | `atividade_professor` | `atividade_turma` (N:N com turma), `questao_atividade` → `opcao_questao`, `atividade_inicio`, `avaliacao_atividade` |
 | 6. Planejamento | `plano_aula` | `plano_habilidade`, `plano_formato`, `plano_missao`, `plano_aluno_foco` |
 
 ## Diagrama de entidades
@@ -22,6 +24,8 @@ Banco PostgreSQL (UTF-8) da API do Modolume. O esquema fica em `apps/api/prisma/
 ```mermaid
 erDiagram
   INSTITUICAO ||--o{ PROFESSOR : emprega
+  INSTITUICAO ||--o{ MATERIA : oferece
+  MATERIA |o--o{ PROFESSOR : classifica
   INSTITUICAO ||--o{ TURMA : tem
   PROFESSOR ||--o{ PROFESSOR_TURMA : leciona
   TURMA ||--o{ PROFESSOR_TURMA : recebe
@@ -29,7 +33,7 @@ erDiagram
 
   ALUNO ||--o| AVATAR_ALUNO : usa
   ALUNO ||--o{ PROGRESSO_MISSAO : conquista
-  ALUNO ||--o{ PONTOS_MAPA : acumula
+  ALUNO ||--o{ PONTO_MAPA : acumula
   ALUNO ||--o{ CONSTELACAO_CONQUISTADA : completa
   ALUNO ||--o{ DESAFIO_CONCLUIDO : cumpre
   ALUNO ||--o{ COMPRA_LOJA : compra
@@ -39,7 +43,7 @@ erDiagram
   FORMATO_ATIVIDADE ||--o{ MISSAO : classifica
   MISSAO ||--o{ JOGADA : "jogada em"
   MISSAO ||--o{ PROGRESSO_MISSAO : "progresso de"
-  MAPA ||--o{ PONTOS_MAPA : "pontos em"
+  MAPA ||--o{ PONTO_MAPA : "pontos em"
   MAPA ||--o{ CONSTELACAO_CONQUISTADA : "constelação de"
   FORMATO_ATIVIDADE ||--o{ JOGADA : "formato de"
 
@@ -85,12 +89,14 @@ Os catálogos são carregados do núcleo (`packages/core`) pelo seed, que os atu
 | Tabela | Chave | Colunas principais | Observação |
 | --- | --- | --- | --- |
 | `instituicao` | `id` | `nome`, `criado_em` | Escola. |
+| `materia` | `id` | `instituicao_id`, `nome`, `chave` | Catálogo da escola. `(instituicao_id, chave)` é único. Professores podem referenciar uma matéria. |
 | `professor` | `id` | `instituicao_id`, `nome`, `email` (único, minúsculo), `senha_hash` (bcrypt), `papel` (`professor`, `coordenacao` ou `admin`), `disciplina` (só professor), `ativo`, `senha_provisoria`, `ultimo_acesso`, `versao_acesso`, `redefinicao_hash`, `redefinicao_expira_em` | Guarda a equipe da escola (ADR 0019). `versao_acesso` invalida sessões anteriores. O resumo e o prazo do link são preenchidos ou limpos juntos. A desativação preserva o histórico (RN-16). |
-| `turma` | `id` | `instituicao_id`, `nome`, `serie`, `periodo` (enum), `ano_letivo`, `codigo` (único, `[A-Z0-9]{4,10}`), `ativa` | Código da turma (organização interna); o aluno entra com o código pessoal (ADR 0017). |
+| `turma` | `id` | `instituicao_id`, `nome`, `segmento`, `serie`, `periodo` (enum), `ano_letivo`, `codigo` (único), `ativa` | Segmento e série classificam a turma. O código é gerado na criação. O aluno entra com o código pessoal (ADR 0017). |
 | `professor_turma` | `(professor_id, turma_id)` | `responsavel`, `desde` | Uma turma pode ter mais de um professor (MOD-TUR-003). |
 | `aluno` | `id` | `turma_id`, `nome`, `matricula`, `ativo`, `luzes_gastas`, `codigo_acesso` (único, 8 caracteres sem O/0/I/1/L), `pin_hash` (bcrypt, nulo até o 1º acesso), `pin_falhas` (0 a 10), `bloqueado_ate`, `versao_acesso` (≥ 1), `ultimo_acesso` | `(turma_id, matricula)` é único. Códigos novos têm quatro letras e quatro números, guardados sem hífen (ADR 0020). Gerar outro código aumenta `versao_acesso` e revoga as sessões antigas (ADR 0017). Sem e-mail, telefone ou foto (MOD-SEG-009). |
 
-| `registro` | `id` (sequencial) | `instituicao_id`, `usuario_id`, `usuario_nome`, `papel`, `acao`, `alvo_tipo`, `alvo_id`, `detalhe`, `criado_em` | Registro de atividades (auditoria, ADR 0019). Só cresce: o usuário da API inclui e lê, mas não altera nem apaga. |
+Em `professor`, `materia_id` associa o docente ao catálogo de matérias e `segmento` limita o recorte da coordenação.
+
 
 ### 3. Aluno (tabelas filhas)
 
@@ -156,3 +162,21 @@ O app envia o progresso e a API **junta** com o do banco: fica sempre o maior va
 3. Revise o SQL e aplique: `pnpm --filter @modolume/api db:migrar` (usa a `DIRECT_URL`, do administrador; a API
    roda com o usuário `modolume_api`, que não altera tabelas).
 4. Nunca use `prisma migrate reset` nem `db push` no banco do Railway: eles apagam ou alteram dados sem histórico.
+
+## Consolidação e avaliação — 11/11/2026
+
+| Persistência | Responsabilidade e restrições |
+| --- | --- |
+| `aluno.progresso_revisao` | Revisão monotônica da projeção confirmada. A sincronização bloqueia a linha do aluno e grava os eventos, o crédito e o débito na mesma transação. |
+| `aluno.ajustes_progresso` | Discrimina bônus diário e complementos do mapa para independer da ordem de reconexão. |
+| `importacao_progresso` | Chave aluno/instalação impede reaplicar o retrato legado. O identificador é aleatório e local ao app, sem uso publicitário. |
+| `atividade_professor.prazo` | Data opcional com CHECK que impede prazo anterior à liberação. |
+| `atividade_professor.arquivada` | Retira a atividade do uso sem apagar avaliações históricas. |
+| `atividade_inicio` | Primeiro início por aluno/atividade, independente da entrega concluída. |
+| `jogada.fases` | Medidas validadas por fase nas novas entregas. Nulo nos registros antigos que não as possuíam. |
+| `avaliacao_atividade` | Versão da avaliação com resultado, texto, percepção, título e habilidade do momento. Rascunho privado e publicação não vazia. Papel da API não pode atualizar, apagar ou truncar. |
+| `leitura_aviso_aluno` | Leitura por aluno/ID do aviso. Marcações repetidas são idempotentes. |
+
+As migrações são aditivas e foram aplicadas a bancos descartáveis com verificação dos dados anteriores.
+O [roteiro de implantação](../08-engenharia/consolidacao-funcional.md) separa essa evidência da aplicação no
+banco publicado e do aceite em aparelhos.

@@ -1,4 +1,10 @@
-# MOD-AUT-009
+# PRD do requisito MOD-AUT-009
+
+**Data registrada no PRD de origem:** 2026-11-10. Preservada da fonte; não representa a criação desta ficha.
+
+**Revisão documental:** 13/11/2026 — Ana Barbiero — Líder de projeto. A aprovação da organização e rastreabilidade não substitui o aceite funcional.
+
+## Objetivo e escopo
 
 Permitir o acesso do aluno por um código pessoal (passado pelo professor ou coordenação) e um PIN de 4 números criado no primeiro acesso, sem exigir e-mail e sem escolher nome numa lista. Códigos novos têm quatro letras e quatro números, como `BDFH-2468`, conforme o ADR 0020.
 

@@ -1,5 +1,9 @@
 # PRD-09 — Relatório para a família
 
+**Data registrada no PRD de origem:** 2026-11-05. Preservada da fonte; não representa a criação desta ficha.
+
+**Revisão documental:** 13/11/2026 — Ana Barbiero — Líder de projeto. A aprovação da organização e rastreabilidade não substitui o aceite funcional.
+
 O app gera PDF A4 a partir do progresso disponível localmente e abre o compartilhamento do sistema.
 
 [PRD de origem](../../02-modulos/PRD-09%20%E2%80%94%20Relat%C3%B3rio%20para%20a%20fam%C3%ADlia.md) · [Matriz de rastreabilidade](../matriz.md) · [Qualidade e permissões](../prd-17/README.md)
@@ -25,7 +29,7 @@ Sem regras numeradas próprias no PRD. Consulte a seção 5 da origem.
 
 ## Testes e limites
 
-Geração, compartilhamento e tempo no aparelho pendentes. Histórico remoto detalhado ainda não é restaurado.
+Histórico remoto é restaurado para a análise. Geração, compartilhamento e tempo no aparelho pendentes.
 
 ## Dependências
 

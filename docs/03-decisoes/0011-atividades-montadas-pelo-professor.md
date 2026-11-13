@@ -2,7 +2,7 @@
 
 - **Status:** Aceita
 - **Data:** 28/10/2026
-- **Decisores:** a preencher pela equipe
+- **Decisores originais:** não identificados no registro histórico.
 - **Uso de IA:** auxílio na escrita do código e na organização dos campos do editor, a partir da necessidade descrita
   pela equipe. A decisão de o professor montar atividades e o que elas devem conter é da equipe.
 
@@ -43,3 +43,11 @@ app em cada dia; e os resultados das atividades alimentam o desempenho, o pentag
 - **Negativas:** até a integração (ADR 0009, etapa 5), as atividades ficam em memória no servidor e não chegam ao app.
 - **O que fica pendente:** tabela de atividades na API (ADR 0007), o app ler e exibir as atividades enviadas, e o
   retorno das respostas como resultados.
+
+## Aprovação da revisão documental
+
+- **Data da revisão e aprovação:** 13/11/2026.
+- **Assinatura de aprovação:** Ana Barbiero — Líder de projeto.
+- **Registro:** aprovação expressa nesta conversa para organizar e consolidar a documentação.
+- **Histórico:** a data original da decisão no cabeçalho foi preservada. Esta assinatura não atribui
+  participação retroativa nem reativa decisões substituídas; evidências de homologação continuam separadas.

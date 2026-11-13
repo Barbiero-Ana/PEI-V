@@ -2,7 +2,7 @@
 
 - **Status:** Aceita
 - **Data:** 04/11/2026
-- **Decisores:** a preencher pela equipe, conforme orientação do professor orientador
+- **Decisores originais:** não identificados no registro histórico.
 - **Uso de IA:** auxílio na divisão dos requisitos por módulo, na redação das histórias de usuário e dos critérios de
   aceite e na conferência de cada requisito com o código. A estrutura do PRD foi definida pela equipe.
 
@@ -34,3 +34,11 @@ critérios de aceite, para que a SRS deixasse de ser necessária. A pasta `docs`
   critérios marcados mostram o que o sistema já faz.
 - **Negativas:** requisitos transversais ficam num PRD à parte e precisam ser consultados junto com os módulos.
 - **O que fica pendente:** manter a coluna "Situação" atualizada a cada entrega e revisar os PRDs com a equipe.
+
+## Aprovação da revisão documental
+
+- **Data da revisão e aprovação:** 13/11/2026.
+- **Assinatura de aprovação:** Ana Barbiero — Líder de projeto.
+- **Registro:** aprovação expressa nesta conversa para organizar e consolidar a documentação.
+- **Histórico:** a data original da decisão no cabeçalho foi preservada. Esta assinatura não atribui
+  participação retroativa nem reativa decisões substituídas; evidências de homologação continuam separadas.

@@ -26,6 +26,9 @@ DO $$ BEGIN
   IF to_regclass('public._prisma_migrations') IS NOT NULL THEN
     REVOKE ALL ON TABLE public._prisma_migrations FROM modolume_api;
   END IF;
+  IF to_regclass('public.avaliacao_atividade') IS NOT NULL THEN
+    REVOKE UPDATE, DELETE, TRUNCATE ON TABLE public.avaliacao_atividade FROM modolume_api;
+  END IF;
   IF to_regclass('public.registro') IS NOT NULL THEN
     REVOKE UPDATE, DELETE, TRUNCATE ON TABLE public.registro FROM modolume_api;
   END IF;

@@ -1,7 +1,9 @@
 ---
 modulo: NOT
 prd: PRD-16
-atualizado: 2026-11-05
+atualizado: 2026-11-11
+revisao_documental: 2026-11-13
+responsavel_revisao: Ana Barbiero — Líder de projeto
 status: para revisão
 ---
 
@@ -40,14 +42,19 @@ Demonstração dos alertas do painel; na fase 4, teste de recebimento no app.
 
 | ID | Comportamento esperado | Prior. | Verif. | Situação |
 | --- | --- | :---: | :---: | :---: |
-| MOD-NOT-001 | Avisar o aluno quando uma atividade for publicada para sua turma. | I | T | Pendente |
-| MOD-NOT-002 | Avisar o aluno quando uma atividade for avaliada. | I | T | Pendente |
-| MOD-NOT-003 | O sistema pode lembrar o aluno de atividades com prazo próximo. | D | T | Pendente |
+| MOD-NOT-001 | Avisar o aluno quando uma atividade for publicada para sua turma. | I | T | Implementado |
+| MOD-NOT-002 | Avisar o aluno quando uma atividade for avaliada. | I | T | Implementado |
+| MOD-NOT-003 | O sistema pode lembrar o aluno de atividades com prazo próximo. | D | T | Implementado |
 | MOD-NOT-004 | Oferecer uma central de notificações, distinguindo lidas e não lidas. | I | D | Parcial |
-| MOD-NOT-005 | O sistema pode avisar o professor sobre avaliações pendentes. | D | T | Pendente |
+| MOD-NOT-005 | O sistema pode avisar o professor sobre avaliações pendentes. | D | T | Implementado |
 | MOD-NOT-006 | O painel mostra os alertas do dia do professor: aula hoje, plano de amanhã em rascunho, aula sem registro, atividade liberada hoje, atividade com data passada não enviada, aluno em queda e alunos que pedem atenção. | I | D | Implementado |
 
-**Situação atual:** o sino no topo do painel mostra o total de alertas não lidos. O professor marca um alerta ao abrir seu link e pode marcar todos de uma vez. O estado de leitura é guardado por conta e dia no navegador (NOT-004 parcial). O envio de avisos ao app está pendente.
+**Situação atual:** o app tem central de avisos de atividade publicada, prazo no dia seguinte e avaliação
+publicada, com marcação individual ou de todos como lidos. A leitura do aluno é guardada no banco e a fila
+local permite sincronizar depois de ficar offline. O aviso abre a atividade ou a devolutiva. O sino da equipe
+mantém os alertas anteriores e inclui avaliações pendentes. O estado de leitura da equipe continua por conta
+e dia no navegador; por isso NOT-004 permanece parcial. Os avisos móveis são internos ao app, atualizados
+com conexão; push em segundo plano não faz parte desta entrega (ADR 0025). Homologação em aparelho pendente.
 
 ### Fora do escopo atual
 
@@ -94,7 +101,7 @@ Critérios marcados com [x] já são atendidos pelo sistema atual.
 | Fase | Entrega | Situação |
 | --- | --- | --- |
 | 3 | Alertas do dia no painel. | Implementado |
-| 4 | Avisos no app e central com lidas e não lidas. | Pendente |
+| 4 | Avisos no app e central com lidas e não lidas. | Implementado para aluno; leitura da equipe entre aparelhos pendente |
 
 ## 9. Diretrizes do produto
 
@@ -110,9 +117,16 @@ Critérios marcados com [x] já são atendidos pelo sistema atual.
 
 ## 11. Pendências para aprovação
 
-- Decidir se haverá notificação push no celular ou apenas a central no app.
+- Homologar a central no app desta entrega. Uma eventual adoção de push terá decisão e implementação próprias.
 
 ## 12. Documentos vinculados
 
 - [[PRD — Modolume]]
 - [[PRD-12 — Painel do professor]] · [[PRD-14 — Atividades do professor]] · [[PRD-15 — Avaliação e feedback]]
+
+## 13. Controle da revisão documental
+
+A data `atualizado` do histórico foi preservada. A revisão documental de **13/11/2026** foi aprovada por
+**Ana Barbiero — Líder de projeto**, para organização, consistência e rastreabilidade. Essa aprovação não
+substitui o aceite funcional: cenários sem evidência ou dependentes de validação pedagógica, institucional
+e de aparelhos continuam pendentes na matriz de engenharia. Não foi inferida uma data de criação.

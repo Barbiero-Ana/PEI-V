@@ -1527,6 +1527,9 @@ export function missaoPorId(id: string): Missao | undefined {
 
 /** Resultado de uma jogada, no mesmo formato que alimenta os indicadores do professor. */
 export interface ResultadoJogada {
+  fases?: { ordem: number; tentativas: number; tempoSegundos: number; dica: boolean }[];
+  /** Identidade estável também usada para ordenar jogadas da mesma data. */
+  id?: string;
   missaoId: string;
   formato: FormatoId;
   rodadas: number;
@@ -1547,6 +1550,8 @@ export function calcularResultado(input: {
   errosPorRodada: number[];
   tempoSegundos: number;
   dicas?: number;
+  temposPorRodada?: number[];
+  fasesComDica?: number[];
 }): ResultadoJogada {
   const rodadas = input.errosPorRodada.length;
   const acertosDePrimeira = input.errosPorRodada.filter((e) => e === 0).length;
@@ -1554,6 +1559,16 @@ export function calcularResultado(input: {
   const percentualAcerto = rodadas === 0 ? 0 : Math.round((acertosDePrimeira / rodadas) * 100);
   const estrelas: 1 | 2 | 3 = percentualAcerto >= 90 ? 3 : percentualAcerto >= 60 ? 2 : 1;
   return {
+    ...(input.temposPorRodada
+      ? {
+          fases: input.errosPorRodada.map((e, i) => ({
+            ordem: i + 1,
+            tentativas: e + 1,
+            tempoSegundos: Math.max(0, Math.floor(input.temposPorRodada![i] ?? 0)),
+            dica: input.fasesComDica?.includes(i) ?? false,
+          })),
+        }
+      : {}),
     missaoId: input.missao.id,
     formato: input.missao.formato,
     rodadas,
@@ -1564,7 +1579,7 @@ export function calcularResultado(input: {
     tempoSegundos: Math.round(input.tempoSegundos),
     estrelas,
     dicas: input.dicas ?? 0,
-    data: dataLocal(),
+    data: dataEscolar(),
   };
 }
 
@@ -1675,3 +1690,15 @@ export function proximaMissao(concluidas: Concluidas, liberarTodos = false): Mis
   }
   return null;
 }
+
+/** Calendário escolar compartilhado com a API; evita encerramento antecipado em hosts UTC. */
+export const dataEscolar = (data = new Date()) => {
+  const partes = new Intl.DateTimeFormat("en", {
+    timeZone: "America/Sao_Paulo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(data);
+  const valor = (tipo: Intl.DateTimeFormatPartTypes) => partes.find((p) => p.type === tipo)!.value;
+  return `${valor("year")}-${valor("month")}-${valor("day")}`;
+};

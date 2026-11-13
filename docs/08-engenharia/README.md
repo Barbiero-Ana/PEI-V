@@ -2,6 +2,8 @@
 
 - [Arquitetura e convenções](arquitetura.md)
 - [Relatório de auditoria](auditoria.md)
+- [Consolidação funcional e roteiro de implantação](consolidacao-funcional.md)
+- [Implantação de 13/11/2026](implantacao-2026-11-13.md)
 - [Plano de correção e testes do app](plano-correcao-mobile.md)
 - [Publicação na Google Play](publicacao-android.md)
 - [Matriz de rastreabilidade](matriz.md)

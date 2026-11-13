@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { esquemaAtividadeParaEnvio } from "@modolume/core";
-import { Avatar, LIMITE_ATENCAO, dataCompleta, dataCurta, isoLocal } from "@/components/painel/blocos";
+import { dataEscolar, esquemaAtividadeParaEnvio } from "@modolume/core";
+import { Avatar, LIMITE_ATENCAO, dataCompleta, dataCurta } from "@/components/painel/blocos";
 import { IconeVoltar } from "@/components/painel/icones";
 import { CelularPrevia, PreviaQuestao } from "@/components/painel/previa-atividade";
 import { SOBRE_FORMATOS, buscarAtividade, missaoDa, situacaoDaAtividade, type Questao } from "@/lib/painel/atividades";
@@ -68,11 +68,12 @@ export default async function Atividade({ params }: { params: Promise<{ id: stri
     atividade.status === "enviada" ? situacaoDaAtividade(atividade.id) : null,
   ]);
   const fizeram = situacao?.alunos.filter((a) => a.concluiu) ?? [];
-  const faltam = situacao?.alunos.filter((a) => !a.concluiu) ?? [];
+  const emAndamento = situacao?.alunos.filter((a) => a.situacao === "em andamento") ?? [];
+  const faltam = situacao?.alunos.filter((a) => !a.concluiu && a.situacao !== "em andamento") ?? [];
   const missao = missaoDa(atividade);
   const enviada = atividade.status === "enviada";
   const podeEnviar = esquemaAtividadeParaEnvio.safeParse(atividade).success;
-  const hoje = isoLocal(new Date());
+  const hoje = dataEscolar();
   const botao = "h-11 w-full rounded-full text-sm font-semibold";
 
   return (
@@ -95,13 +96,20 @@ export default async function Atividade({ params }: { params: Promise<{ id: stri
             {atividade.instrucao ? <p className="mt-1 text-texto">{atividade.instrucao}</p> : null}
           </header>
 
+          {atividade.prazo ? (
+            <p className="text-sm text-texto">
+              {atividade.prazo < hoje ? "Encerrada em" : "Prazo:"} {dataCompleta(atividade.prazo)}
+            </p>
+          ) : null}
           {/* situação do envio e o que acontece depois */}
           <section className={`rounded-2xl px-5 py-4 ${enviada ? "bg-[#EEF8F2]" : "bg-[#F3F1FA]"}`}>
             <p className={`font-semibold ${enviada ? "text-[#24704A]" : "text-tinta"}`}>
               {enviada
-                ? atividade.liberarEm <= hoje
-                  ? `No app desde ${dataCompleta(atividade.liberarEm)}`
-                  : `Enviada · aparece no app em ${dataCompleta(atividade.liberarEm)}`
+                ? atividade.prazo && atividade.prazo < hoje
+                  ? `Encerrada em ${dataCompleta(atividade.prazo)}`
+                  : atividade.liberarEm <= hoje
+                    ? `No app desde ${dataCompleta(atividade.liberarEm)}`
+                    : `Enviada · aparece no app em ${dataCompleta(atividade.liberarEm)}`
                 : "Rascunho · os alunos ainda não veem esta atividade"}
             </p>
             <p className="mt-1 text-sm text-texto">
@@ -137,11 +145,16 @@ export default async function Atividade({ params }: { params: Promise<{ id: stri
                         {fizeram.map((a) => (
                           <li key={a.id}>
                             <Link
-                              href={`/professor/alunos/${a.id}`}
+                              href={`/professor/atividades/${atividade.id}/alunos/${a.id}`}
                               className="flex min-h-11 items-center gap-2.5 rounded-xl px-2 text-sm text-tinta"
                             >
                               <Avatar nome={a.nome} tamanho={28} svg={a.avatarSvg} />
-                              <span className="min-w-0 flex-1 truncate">{a.nome}</span>
+                              <span className="min-w-0 flex-1 truncate">
+                                {a.nome}
+                                <span className="ml-2 text-xs text-texto-suave">
+                                  {a.avaliada ? "Avaliada · revisar" : "Avaliar"}
+                                </span>
+                              </span>
                               <span
                                 className={`tnum font-semibold ${a.acerto !== null && a.acerto < LIMITE_ATENCAO ? "text-alerta" : "text-tinta"}`}
                               >
@@ -154,7 +167,15 @@ export default async function Atividade({ params }: { params: Promise<{ id: stri
                     )}
                   </div>
                   <div>
-                    <h3 className="text-sm font-semibold text-tinta">Ainda não fizeram ({faltam.length})</h3>
+                    <h3 className="text-sm font-semibold text-tinta">Em andamento ({emAndamento.length})</h3>
+                    <ul className="my-2 flex flex-wrap gap-2">
+                      {emAndamento.map((a) => (
+                        <li key={a.id} className="rounded-full bg-roxo-claro px-3 py-1 text-sm">
+                          {a.nome}
+                        </li>
+                      ))}
+                    </ul>
+                    <h3 className="text-sm font-semibold text-tinta">Não começaram ({faltam.length})</h3>
                     <ul className="mt-2 flex flex-wrap gap-1.5">
                       {faltam.map((a) => (
                         <li key={a.id} className="rounded-full bg-[#F3F1FA] px-3 py-1 text-sm text-texto">

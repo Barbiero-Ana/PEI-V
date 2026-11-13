@@ -1,7 +1,9 @@
 ---
 modulo: APR
 prd: PRD-11
-atualizado: 2026-11-04
+atualizado: 2026-11-11
+revisao_documental: 2026-11-13
+responsavel_revisao: Ana Barbiero — Líder de projeto
 status: para revisão
 ---
 
@@ -55,8 +57,13 @@ Testes automatizados em `packages/core/src/aprendizagem.test.ts` e `indicators.t
 
 **Situação atual, em detalhe**
 
-- **App:** o cálculo completo da RN-07 (domínio) roda no núcleo (`packages/core/src/aprendizagem.ts`) e aparece na aba Conquistas.
-- **Painel:** o pentagrama do aluno e da turma e os insights já existem, mas usam o **acerto médio** por jeito, porque os dados de demonstração não têm dicas nem acertos de primeira. Com a API (fase 4), o painel passa a receber o `ResultadoJogada` completo e a usar o domínio (APR-008 e APR-006 ficam completos).
+- **App e painel:** chamam o cálculo de domínio do núcleo com rodadas, acertos de primeira, tentativas
+  e dicas preservados. As últimas dez jogadas por formato são ordenadas por data e ID estável.
+- **Apresentação:** o app mostra formatos; o painel agrupa os formatos nos cinco jeitos. A confiança e a
+  indicação de predominância usam as condições do núcleo. Acerto médio permanece nas tabelas identificado
+  como acerto. Registros antigos sem medidas suficientes não geram autonomia inventada.
+- **Validação:** testes verificam a adaptação entre as interfaces. A conferência visual com o mesmo aluno
+  no app e no painel permanece no roteiro de homologação.
 
 ### 5.2 Regras de negócio
 
@@ -111,7 +118,7 @@ Critérios marcados com [x] já são atendidos pelo sistema atual.
 
 ### HU-APR-06 — Mesmo cálculo em todo lugar
 
-- [x] CA-01: Dadas 10 jogadas com 80% de acerto de primeira, 100% de autonomia e precisão máxima, então o domínio é calculado pela RN-07 no núcleo, usado pelo app e pelo painel.
+- [ ] CA-01: Dadas 10 jogadas com 80% de acerto de primeira, 100% de autonomia e precisão máxima, então o domínio é calculado pela RN-07 no núcleo, usado pelo app e pelo painel.
 - [ ] CA-02: Dada uma nova jogada sincronizada, então o pentagrama do painel se atualiza na próxima consulta (fase 4).
 - [ ] CA-03: O painel usa o domínio (RN-07), e não só o acerto médio, quando receber jogadas reais (fase 4).
 
@@ -121,7 +128,7 @@ Critérios marcados com [x] já são atendidos pelo sistema atual.
 | --- | --- | --- |
 | 1 | Cálculo do domínio e análise no app. | Implementado |
 | 3 | Pentagrama, insights e evolução no painel (acerto médio, dados de demonstração). | Implementado |
-| 4 | Painel com o domínio calculado sobre as jogadas reais. | Pendente |
+| 4 | Painel com o domínio calculado sobre as jogadas reais. | Implementado; aceite visual pendente |
 
 ## 9. Diretrizes do produto
 
@@ -144,3 +151,10 @@ Critérios marcados com [x] já são atendidos pelo sistema atual.
 - [[PRD — Modolume]]
 - [[PRD-12 — Painel do professor]] · [[PRD-04 — Missões do aluno]]
 - [[0006-analise-de-aprendizagem-por-dominio|ADR 0006]]
+
+## 13. Controle da revisão documental
+
+A data `atualizado` do histórico foi preservada. A revisão documental de **13/11/2026** foi aprovada por
+**Ana Barbiero — Líder de projeto**, para organização, consistência e rastreabilidade. Essa aprovação não
+substitui o aceite funcional: cenários sem evidência ou dependentes de validação pedagógica, institucional
+e de aparelhos continuam pendentes na matriz de engenharia. Não foi inferida uma data de criação.

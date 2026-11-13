@@ -1,4 +1,10 @@
-# MOD-IU-002
+# PRD do requisito MOD-IU-002
+
+**Data registrada no PRD de origem:** 2026-11-04. Preservada da fonte; não representa a criação desta ficha.
+
+**Revisão documental:** 13/11/2026 — Ana Barbiero — Líder de projeto. A aprovação da organização e rastreabilidade não substitui o aceite funcional.
+
+## Objetivo e escopo
 
 As telas de jogo apresentam enunciado, botão de dica, área de interação e ações fixas no rodapé.
 

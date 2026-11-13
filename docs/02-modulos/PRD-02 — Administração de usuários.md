@@ -1,7 +1,9 @@
 ---
 modulo: ADM
 prd: PRD-02
-atualizado: 2026-11-05
+atualizado: 2026-11-10
+revisao_documental: 2026-11-13
+responsavel_revisao: Ana Barbiero — Líder de projeto
 status: para revisão
 ---
 
@@ -49,7 +51,7 @@ Testes funcionais de cada operação e demonstração do cadastro de uma turma d
 | MOD-ADM-006 | O administrador deve poder ativar e desativar usuários, preservando o histórico. | E | T | Implementado |
 | MOD-ADM-007 | A lista de usuários deve identificar usuários ativos e inativos por texto. | I | N | Implementado |
 | MOD-ADM-009 | O sistema guarda um registro de atividades (quem fez o quê e quando), que o administrador consulta com filtros e que ninguém altera nem apaga. | E | T | Implementado |
-| MOD-ADM-010 | Quem é cadastrado ou tem a senha redefinida recebe uma senha provisória e precisa criar a própria senha antes de usar o painel. | E | T | Implementado |
+| MOD-ADM-010 | A pessoa cadastrada solicita um link privado em Recuperar acesso e define a própria senha. A revogação administrativa exige uma nova recuperação, sem revelar a senha ao administrador. | E | T | Parcial |
 | MOD-ADM-011 | O administrador cria e edita turmas, encerra e reabre, e cadastra, edita, troca de turma, desativa e reativa alunos. | E | T | Implementado |
 | MOD-ADM-012 | O administrador não pode desativar nem tirar o próprio papel, e a escola nunca fica sem um administrador ativo. | E | T | Implementado |
 | MOD-ADM-008 | O administrador pode importar usuários a partir de planilha CSV. | D | T | Pendente |
@@ -57,6 +59,10 @@ Testes funcionais de cada operação e demonstração do cadastro de uma turma d
 **Situação atual:** a administração gerencia equipe, turmas, alunos e o catálogo de matérias em `/admin`. No cadastro de um professor, seleciona a matéria e pode atribuir uma turma ativa. Para a coordenação, define Fundamental I, Fundamental II ou Ensino Médio. A página de permissões pode ser filtrada por perfil, grupo e ação e apresenta atividade recente da equipe. O registro agrupa eventos por dia e permite filtrar por grupo de ação, pessoa, perfil, dia e busca. A API aplica o recorte por instituição.
 
 ### 5.2 Regras de negócio
+
+A criação grava uma credencial aleatória inacessível ao administrador e marca a senha como a definir. O painel
+orienta a pessoa a solicitar o link. A revogação invalida a credencial anterior. O disparo automático de um convite
+ao cadastrar a pessoa e a homologação da entrega real do e-mail seguem pendentes.
 
 | Regra | Síntese |
 | --- | --- |
@@ -136,3 +142,10 @@ Testes funcionais de cada operação e demonstração do cadastro de uma turma d
 
 - [[PRD — Modolume]]
 - [[PRD-01 — Autenticação e controle de acesso]] · [[PRD-03 — Gestão de turmas]] · [[PRD-17 — Qualidade, segurança e restrições]]
+
+## 13. Controle da revisão documental
+
+A data `atualizado` do histórico foi preservada. A revisão documental de **13/11/2026** foi aprovada por
+**Ana Barbiero — Líder de projeto**, para organização, consistência e rastreabilidade. Essa aprovação não
+substitui o aceite funcional: cenários sem evidência ou dependentes de validação pedagógica, institucional
+e de aparelhos continuam pendentes na matriz de engenharia. Não foi inferida uma data de criação.

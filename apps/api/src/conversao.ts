@@ -95,6 +95,7 @@ export function atividadeDoBanco(a: AtividadeDoBanco): AtividadeProfessor {
     questoes: questoesDoBanco(a.questoes),
     turmas: a.turmas.map((t) => t.turmaId),
     liberarEm: dataIso(a.liberarEm),
+    prazo: a.prazo ? dataIso(a.prazo) : "",
     planoId: a.planoId ?? "",
     status: a.status,
     enviadaEm: a.enviadaEm ? dataIso(a.enviadaEm) : "",

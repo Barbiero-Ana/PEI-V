@@ -4,6 +4,8 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import {
   ProvedorDadosDemonstracao,
+  jogadasDeAprendizagem,
+  analisarAprendizagem,
   desempenhoPorAluno,
   evolucaoMensal,
   desempenhoPorFormato,
@@ -16,7 +18,6 @@ import {
   type Professor,
 } from "@modolume/core";
 import { ErroApi, chamarApi, usandoApi } from "./api";
-import { jeitosConfiaveis } from "./insights";
 import { pentagrama } from "./pentagrama";
 import { COOKIE_SESSAO, lerSessao } from "./sessao";
 
@@ -52,6 +53,10 @@ interface DadosDaApi {
     missaoId: string;
     titulo: string;
     formato: FormatoId;
+    rodadas: number;
+    acertosDePrimeira: number;
+    dicas: number;
+    estrelas: 1 | 2 | 3;
     tentativas: number;
     percentualConclusao: number;
     percentualAcerto: number;
@@ -91,6 +96,10 @@ function converter(api: DadosDaApi): DadosModolume {
       id: j.id,
       aplicacaoId: idAplicacao,
       alunoId: j.alunoId,
+      rodadas: j.rodadas,
+      acertosDePrimeira: j.acertosDePrimeira,
+      dicas: j.dicas,
+      estrelas: j.estrelas,
       tentativas: j.tentativas,
       percentualConclusao: j.percentualConclusao,
       percentualAcerto: j.percentualAcerto,
@@ -311,6 +320,11 @@ export async function detalheDoAluno(professor: Professor, alunoId: string) {
   const idsAplic = new Set(proprio.resultados.map((r) => r.aplicacaoId));
   return {
     ...perfil,
+    jeitoPrincipal: analisarAprendizagem(jogadasDeAprendizagem(meus, alunoId)).jeitoPrincipal?.jeito ?? null,
+    pontas: pentagrama(
+      [jogadasDeAprendizagem(meus, alunoId)],
+      meus.alunos.filter((a) => a.turmaId === turma.id).map((a) => jogadasDeAprendizagem(meus, a.id)),
+    ),
     turma,
     mediaTurma,
     mediaTurmaPorFormato,
@@ -380,20 +394,22 @@ export async function habilidadesDaTurma(professor: Professor, turmaId: string) 
   const meus = await meusDados(professor);
   const turma = meus.turmas.find((t) => t.id === turmaId);
   if (!turma) return null;
-  const formatosTurma = desempenhoPorFormato(meus, { turmaId });
-  const porFormato = (lista: { formato: string; acertoMedio: number }[]) =>
-    Object.fromEntries(lista.map((f) => [f.formato, f.acertoMedio])) as Record<string, number>;
-  const daTurma = porFormato(formatosTurma);
+  const jogadasDaTurma = meus.alunos.filter((a) => a.turmaId === turmaId).map((a) => jogadasDeAprendizagem(meus, a.id));
+  const todas = meus.alunos.map((a) => jogadasDeAprendizagem(meus, a.id));
   const alunos = desempenhoPorAluno(meus, { turmaId })
     .sort((a, b) => a.nome.localeCompare(b.nome))
     .map((linha) => {
-      const pontas = pentagrama(perfilDoAluno(meus, linha.alunoId)?.porFormato ?? [], daTurma);
-      return { ...linha, pontas, forte: jeitosConfiaveis(pontas)[0]?.jeito ?? null };
+      const pontas = pentagrama([jogadasDeAprendizagem(meus, linha.alunoId)], jogadasDaTurma);
+      return {
+        ...linha,
+        pontas,
+        forte: analisarAprendizagem(jogadasDeAprendizagem(meus, linha.alunoId)).jeitoPrincipal?.jeito ?? null,
+      };
     });
   return {
     turma,
     // no pentagrama da turma, a comparação é com a média de todas as turmas do professor
-    pontas: pentagrama(formatosTurma, porFormato(desempenhoPorFormato(meus))),
+    pontas: pentagrama(jogadasDaTurma, todas),
     alunos,
   };
 }

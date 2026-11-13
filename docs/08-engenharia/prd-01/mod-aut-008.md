@@ -1,4 +1,10 @@
-# MOD-AUT-008
+# PRD do requisito MOD-AUT-008
+
+**Data registrada no PRD de origem:** 2026-11-10. Preservada da fonte; não representa a criação desta ficha.
+
+**Revisão documental:** 13/11/2026 — Ana Barbiero — Líder de projeto. A aprovação da organização e rastreabilidade não substitui o aceite funcional.
+
+## Objetivo e escopo
 
 Permitir que o professor redefina o acesso de um aluno (zerar o PIN ou gerar novo código).
 

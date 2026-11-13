@@ -135,7 +135,10 @@ O segundo comando depende do sucesso do primeiro. Configure `SESSAO_SEGREDO` par
 4. Com a web ainda aberta, pare apenas a API no terminal B com `Ctrl+C`. Tente um novo login ou uma consulta que dependa da API. O esperado é falha de comunicação, não uma entrada automática em demonstração. Reinicie a API e repita. O teste de novo login evita confundir uma tela já renderizada com nova consulta.
 5. Para homologação de persistência, em uma base local destinada a testes, altere pelo painel um dado de teste permitido ao papel, recarregue a página e reinicie API/web. O dado deve continuar disponível. Registre a alteração e a verificação; este passo escreve no banco e não foi executado nesta revisão.
 
-`apps/web/lib/painel/api.ts` decide pelo uso de API apenas quando `API_URL` não está vazia. `dados.ts` usa `MockDataProvider` no modo demonstrativo; falha de rede com API configurada não é o mecanismo de seleção de demonstração. As chamadas são feitas pelo servidor Next.js: não espere necessariamente requisições diretas do navegador à porta 3333. O cookie de sessão é httpOnly e não deve ser copiado.
+`apps/web/lib/painel/api.ts` usa API quando `API_URL` não está vazia e exige essa configuração em produção.
+`dados.ts` usa `ProvedorDadosDemonstracao` no modo demonstrativo local; falha de rede com API configurada
+não seleciona demonstração. As chamadas são feitas pelo servidor Next.js: não espere necessariamente
+requisições diretas do navegador à porta 3333. O cookie de sessão é httpOnly e não deve ser copiado.
 
 ## 8. Erros comuns
 

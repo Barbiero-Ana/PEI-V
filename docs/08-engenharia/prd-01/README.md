@@ -1,5 +1,9 @@
 # PRD-01 — Autenticação e controle de acesso
 
+**Data registrada no PRD de origem:** 2026-11-10. Preservada da fonte; não representa a criação desta ficha.
+
+**Revisão documental:** 13/11/2026 — Ana Barbiero — Líder de projeto. A aprovação da organização e rastreabilidade não substitui o aceite funcional.
+
 Equipe e aluno autenticam por canais diferentes. As guardas consultam papel, vínculo e versão da sessão no banco.
 
 [PRD de origem](../../02-modulos/PRD-01%20%E2%80%94%20Autentica%C3%A7%C3%A3o%20e%20controle%20de%20acesso.md) · [Matriz de rastreabilidade](../matriz.md) · [Qualidade e permissões](../prd-17/README.md)

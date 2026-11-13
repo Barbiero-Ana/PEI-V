@@ -1,4 +1,10 @@
-# MOD-NOT-006
+# PRD do requisito MOD-NOT-006
+
+**Data registrada no PRD de origem:** 2026-11-11. Preservada da fonte; não representa a criação desta ficha.
+
+**Revisão documental:** 13/11/2026 — Ana Barbiero — Líder de projeto. A aprovação da organização e rastreabilidade não substitui o aceite funcional.
+
+## Objetivo e escopo
 
 O painel mostra os alertas do dia do professor: aula hoje, plano de amanhã em rascunho, aula sem registro, atividade liberada hoje, atividade com data passada não enviada, aluno em queda e alunos que pedem atenção.
 
@@ -20,6 +26,8 @@ Consulte as regras transversais no PRD-17.
 
 ## Implementação e evidência
 
+- [apps/api/src/avisos-aluno.ts](../../../apps/api/src/avisos-aluno.ts)
+- [apps/mobile/src/app/avisos.tsx](../../../apps/mobile/src/app/avisos.tsx)
 - [apps/web/lib/painel/alertas.ts](../../../apps/web/lib/painel/alertas.ts)
 - [apps/web/components/painel/alertas.tsx](../../../apps/web/components/painel/alertas.tsx)
 

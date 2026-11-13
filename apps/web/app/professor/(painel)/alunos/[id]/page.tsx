@@ -1,3 +1,4 @@
+import { historicoAvaliacoes } from "@/lib/painel/avaliacoes";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -30,7 +31,6 @@ import {
   avataresDosAlunos,
 } from "@/lib/painel/dados";
 import { insightsDoAluno } from "@/lib/painel/insights";
-import { pentagrama } from "@/lib/painel/pentagrama";
 import { listarPlanos } from "@/lib/painel/planejamento";
 
 export const metadata: Metadata = { title: "Aluno · Painel do professor · Modolume" };
@@ -66,6 +66,7 @@ export default async function Aluno({
   if (!detalhe) notFound();
 
   const { aluno, turma, resumo, porFormato, tendencia, mediaTurma, mediaTurmaPorFormato, periodo, recentes } = detalhe;
+  const avaliacoes = await historicoAvaliacoes(id);
   const aba = ABAS.some((a) => a.id === abaPedida) ? abaPedida! : "geral";
   const cor = corDaTurma(turmas.findIndex((t) => t.turma.id === turma.id));
   const planos = (await listarPlanos(professor, { turmaId: turma.id })).filter((p) => p.alunosFoco.includes(aluno.id));
@@ -75,13 +76,17 @@ export default async function Aluno({
   const diferenca = Math.round(resumo.acertoMedio - mediaTurma);
 
   // pentagrama: jeitos com dados suficientes entram na leitura
-  const pontas = pentagrama(porFormato, mediaTurmaPorFormato);
-  const insights = insightsDoAluno(pontas, {
-    tentativas: resumo.tentativasMedia,
-    conclusao: resumo.conclusaoMedia,
-    tendencia,
-    nome: aluno.nome,
-  });
+  const pontas = detalhe.pontas;
+  const insights = insightsDoAluno(
+    pontas,
+    {
+      tentativas: resumo.tentativasMedia,
+      conclusao: resumo.conclusaoMedia,
+      tendencia,
+      nome: aluno.nome,
+    },
+    detalhe.jeitoPrincipal,
+  );
 
   // leitura organizada em tópicos, cada um com o número por trás
   const leitura: { titulo: string; texto: string; tom?: "alerta" }[] = [
@@ -235,7 +240,7 @@ export default async function Aluno({
                               <span className="font-semibold text-tinta">{p.jeito}</span>
                               <span className="block text-xs text-texto-suave">
                                 {p.formatos.join(", ") || "sem atividades"}
-                                {p.atividades > 0 && p.atividades < MINIMO_ATIVIDADES ? " · poucos dados" : ""}
+                                {p.aluno !== null && p.confianca !== "boa" ? " · poucos dados" : ""}
                               </span>
                             </td>
                             <td
@@ -335,6 +340,26 @@ export default async function Aluno({
 
           {aba === "atividades" ? (
             <section className="sombra-suave rounded-2xl bg-superficie p-5">
+              <h2 className="text-lg">Avaliações e devolutivas</h2>
+              <ul className="my-4 flex flex-col gap-3">
+                {avaliacoes.map((a) => (
+                  <li key={a.id} className="border-b border-[#E8E4F2] pb-3">
+                    <p className="text-sm font-semibold">
+                      {a.atividade.titulo} · {a.publicada ? "Publicada" : "Rascunho"}
+                    </p>
+                    <p className="mt-1 whitespace-pre-wrap text-sm">{a.feedback}</p>
+                    <Link
+                      href={`/professor/atividades/${a.atividadeId}/alunos/${id}`}
+                      className="text-sm text-roxo-escuro"
+                    >
+                      Abrir avaliação
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+              {!avaliacoes.length ? (
+                <p className="mb-4 text-sm text-texto-suave">Nenhuma avaliação registrada.</p>
+              ) : null}
               <h2 className="text-lg">Atividades recentes</h2>
               <ul className="mt-3">
                 {[...recentes].reverse().map((r, i) => (

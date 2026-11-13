@@ -2,6 +2,10 @@
 
 > Documento de contexto para quem vai ajudar na documentação (pessoa ou IA). Reúne o que é o projeto, o problema, a solução, o estado atual, as decisões já tomadas e o que ainda está em aberto. Atualizado em 04/11/2026.
 
+> **Referência histórica de 04/11/2026.** Os trechos de tecnologia e acesso descrevem aquela versão.
+> Para o estado vigente, consulte a [arquitetura](../08-engenharia/arquitetura.md), os PRDs de módulo e a
+> [matriz de rastreabilidade](../08-engenharia/matriz.md).
+
 ---
 
 ## 1. Identificação

@@ -2,7 +2,7 @@
 
 - **Status:** Aceita
 - **Data:** 09/10/2026
-- **Decisores:** _preencher com os nomes da equipe_
+- **Decisores originais:** não identificados no registro histórico.
 
 ## Contexto
 
@@ -27,3 +27,11 @@ completas sem o mapa concluído são corrigidas.
   professor; repetir missões continua valendo como treino.
 - **Negativas:** a regra precisa ser explicada na tela ("a última estrela acende ao terminar o mapa").
 - **Verificação:** coberta pelos testes em `packages/core/src/constelacoes.test.ts`.
+
+## Aprovação da revisão documental
+
+- **Data da revisão e aprovação:** 13/11/2026.
+- **Assinatura de aprovação:** Ana Barbiero — Líder de projeto.
+- **Registro:** aprovação expressa nesta conversa para organizar e consolidar a documentação.
+- **Histórico:** a data original da decisão no cabeçalho foi preservada. Esta assinatura não atribui
+  participação retroativa nem reativa decisões substituídas; evidências de homologação continuam separadas.

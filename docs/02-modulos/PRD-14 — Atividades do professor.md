@@ -1,7 +1,9 @@
 ---
 modulo: ATI
 prd: PRD-14
-atualizado: 2026-11-09
+atualizado: 2026-11-11
+revisao_documental: 2026-11-13
+responsavel_revisao: Ana Barbiero — Líder de projeto
 status: para revisão
 ---
 
@@ -47,11 +49,11 @@ Testes de validação do conteúdo (`atividadeSchema`), demonstração do envio 
 | MOD-ATI-002 | O professor cria atividades com questões próprias, nos formatos objetiva, completar, associação e sequência, ou escolhe uma atividade pronta do app. | E | T | Implementado |
 | MOD-ATI-003 | Toda atividade tem título; instrução e orientações são opcionais. | E | T | Implementado |
 | MOD-ATI-004 | O professor seleciona as turmas que recebem a atividade. | E | T | Implementado |
-| MOD-ATI-005 | O professor define data de início e data limite. | I | T | Parcial |
+| MOD-ATI-005 | O professor define data de início e data limite. | I | T | Implementado |
 | MOD-ATI-006 | A atividade fica associada ao seu formato e, quando informada, a uma habilidade da BNCC. | I | T | Implementado |
-| MOD-ATI-007 | O professor edita atividades em rascunho e o prazo de atividades publicadas. | E | T | Parcial |
+| MOD-ATI-007 | O professor edita atividades em rascunho e o prazo de atividades publicadas. | E | T | Implementado |
 | MOD-ATI-008 | O professor publica (envia) a atividade para os alunos. | E | T | Implementado |
-| MOD-ATI-009 | Exibir a situação da atividade: rascunho, publicada ou encerrada. | E | D | Parcial |
+| MOD-ATI-009 | Exibir a situação da atividade: rascunho, publicada ou encerrada. | E | D | Implementado |
 | MOD-ATI-010 | O professor vê, por atividade, os alunos que concluíram, que estão em andamento e que não iniciaram. | E | D | Implementado |
 | MOD-ATI-011 | O professor pode liberar todos os mapas de uma turma, dispensando a ordem de desbloqueio. | D | T | Pendente |
 | MOD-ATI-012 | O servidor valida o conteúdo de cada questão e exige uma orientação para resposta errada antes de publicar atividades com questões próprias. | E | T | Implementado |
@@ -63,9 +65,9 @@ Testes de validação do conteúdo (`atividadeSchema`), demonstração do envio 
 
 - **ATI-001:** o editor lista as atividades prontas do app com título e conteúdo; número de fases e mapa ainda não aparecem.
 - **ATI-002:** mudou em relação à SRS v0.2, que previa atividades "compostas por uma ou mais missões do catálogo". O sistema adotou o modelo da ADR 0011: questões próprias em quatro formatos ou uma atividade pronta.
-- **ATI-005 e ATI-009:** hoje há só a data de liberação e as situações "rascunho" e "enviada"; falta a data limite e a situação "encerrada".
-- **ATI-007:** atividades enviadas podem voltar para rascunho para serem editadas.
-- **ATI-008 e ATI-010:** as atividades ficam no banco; enviadas e liberadas, aparecem na aba "Professor" do app. A página da atividade no painel mostra quem já fez (com o acerto) e quem ainda não fez.
+- **ATI-005 e ATI-009:** há liberação e prazo opcional, validado também no banco. A situação encerrada é derivada depois do último dia do prazo, no calendário escolar compartilhado.
+- **ATI-007:** o editor permite mudar o prazo de uma atividade publicada; atividades enviadas também podem voltar para rascunho.
+- **ATI-008 e ATI-010:** as atividades ficam no banco; enviadas e liberadas, aparecem na aba "Professor" do app. A página da atividade distingue não iniciada, em andamento e concluída. Inícios offline são sincronizados separadamente dos resultados. Entregas concluídas abrem a avaliação por aluno.
 
 ### 5.2 Regras de negócio
 
@@ -148,7 +150,7 @@ Critérios marcados com [x] já são atendidos pelo painel atual.
 | --- | --- | --- |
 | 3 | Editor com quatro formatos e atividades prontas, prévia, vínculo com plano, envio em memória. | Implementado |
 | 4 | Envio real ao app e acompanhamento por aluno. | Implementado |
-| 5 | Data limite e situação "encerrada". | Pendente |
+| 5 | Data limite e situação "encerrada". | Implementado; homologação física pendente |
 
 ## 9. Diretrizes do produto
 
@@ -165,10 +167,17 @@ Critérios marcados com [x] já são atendidos pelo painel atual.
 ## 11. Pendências para aprovação
 
 - Confirmar a mudança do ATI-002 em relação à SRS v0.2.
-- Definir se a atividade terá data limite obrigatória.
+- Homologar o prazo opcional, o calendário escolar e o tratamento das revisões de conteúdo após execução offline (ADR 0025).
 
 ## 12. Documentos vinculados
 
 - [[PRD — Modolume]]
 - [[PRD-13 — Planejamento de aulas]] · [[PRD-04 — Missões do aluno]] · [[PRD-15 — Avaliação e feedback]]
 - [[0011-atividades-montadas-pelo-professor|ADR 0011]]
+
+## 13. Controle da revisão documental
+
+A data `atualizado` do histórico foi preservada. A revisão documental de **13/11/2026** foi aprovada por
+**Ana Barbiero — Líder de projeto**, para organização, consistência e rastreabilidade. Essa aprovação não
+substitui o aceite funcional: cenários sem evidência ou dependentes de validação pedagógica, institucional
+e de aparelhos continuam pendentes na matriz de engenharia. Não foi inferida uma data de criação.

@@ -2,6 +2,10 @@
 
 Toda a documentação do projeto fica nesta pasta, separada por tipo. Os links internos usam o formato `[[nome do documento]]`, do Obsidian.
 
+Os PRDs em `02-modulos` definem os requisitos. A [arquitetura](08-engenharia/arquitetura.md) e a
+[matriz](08-engenharia/matriz.md) descrevem implementação e evidência. Os ADRs preservam o histórico das
+decisões. Documentos de contexto e inventários datados devem ser lidos na versão indicada.
+
 ## Como está organizada
 
 | Pasta | Tipo | O que contém |

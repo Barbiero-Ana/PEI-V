@@ -2,7 +2,7 @@ import { useCallback } from "react";
 import { Pressable, RefreshControl, ScrollView, View } from "react-native";
 import { router, useFocusEffect } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { SOBRE_FORMATOS } from "@modolume/core";
+import { dataEscolar, SOBRE_FORMATOS } from "@modolume/core";
 import { useFalarAoAbrir } from "@/estado/acessibilidade";
 import { useConta, type AtividadeDoProfessor } from "@/estado/conta";
 import { CabecalhoTela } from "@/componentes/blocos";
@@ -27,8 +27,11 @@ function abrir(a: AtividadeDoProfessor) {
 
 function Cartao({ a }: { a: AtividadeDoProfessor }) {
   const feita = a.feita;
+  const encerrada = !!(a.prazo && a.prazo < dataEscolar());
   return (
     <Pressable
+      disabled={encerrada}
+      accessibilityState={{ disabled: encerrada }}
       onPress={() => abrir(a)}
       accessibilityRole="button"
       accessibilityLabel={`${a.titulo}. ${feita ? `Feita, ${feita.percentualAcerto}% de acerto` : "Nova"}. Abrir.`}
@@ -42,13 +45,14 @@ function Cartao({ a }: { a: AtividadeDoProfessor }) {
           {SOBRE_FORMATOS[a.formato]?.nome ?? "Atividade"} · desde {dataCurta(a.liberarEm)}
         </Texto>
         <Texto style={e.titulo}>{a.titulo}</Texto>
+        {a.prazo ? <Texto>Prazo: {dataCurta(a.prazo)}</Texto> : null}
         {a.instrucao ? (
           <Texto style={e.instrucao} numberOfLines={2}>
             {a.instrucao}
           </Texto>
         ) : null}
         <Texto style={[e.situacao, feita ? { color: cor.roxoEscuro } : { color: cor.pessegoEscuro }]}>
-          {feita ? `Feita · ${feita.percentualAcerto}% de acerto` : "Nova · toque para fazer"}
+          {encerrada ? "Encerrada" : feita ? `Feita · ${feita.percentualAcerto}% de acerto` : "Nova · toque para fazer"}
         </Texto>
       </View>
       <Seta tamanho={18} cor={cor.textoFraco} direcao="direita" />
@@ -67,6 +71,7 @@ export default function Professor() {
     atualizarAtividades,
     pendentes,
     recusadas,
+    resultadosRecusados,
   } = useConta();
   useFalarAoAbrir("Atividades do professor.");
 
@@ -91,6 +96,19 @@ export default function Professor() {
       }
     >
       <CabecalhoTela rotulo={conta ? conta.turma.nome : undefined} titulo="Do professor" />
+      {conta && recusadas > 0 ? (
+        <View style={e.aviso} accessibilityLiveRegion="polite">
+          <Texto style={e.avisoTexto}>
+            {recusadas} {recusadas === 1 ? "resultado precisa" : "resultados precisam"} de revisão. As tentativas
+            continuam guardadas.
+          </Texto>
+          {resultadosRecusados.slice(-3).map((r) => (
+            <Texto key={r.id} style={e.avisoTexto}>
+              {r.titulo}: {r.motivoRecusa ?? "Fale com seu professor para conferir o envio."}
+            </Texto>
+          ))}
+        </View>
+      ) : null}
 
       {!temServidor || !conta ? (
         <View style={e.vazio}>

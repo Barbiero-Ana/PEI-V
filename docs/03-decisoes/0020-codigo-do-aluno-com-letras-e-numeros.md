@@ -28,3 +28,11 @@ O banco continua guardando oito caracteres sem separador. Códigos antigos conti
 - O formato convive com códigos antigos durante a transição. As telas de acesso explicam o novo padrão, e a API continua aceitando credenciais anteriores.
 
 Relacionados: [ADR 0017](0017-acesso-individual-do-aluno.md) e [PRD-01](../02-modulos/PRD-01%20%E2%80%94%20Autentica%C3%A7%C3%A3o%20e%20controle%20de%20acesso.md), requisitos MOD-AUT-008 e MOD-AUT-009.
+
+## Aprovação da revisão documental
+
+- **Data da revisão e aprovação:** 13/11/2026.
+- **Assinatura de aprovação:** Ana Barbiero — Líder de projeto.
+- **Registro:** aprovação expressa nesta conversa para organizar e consolidar a documentação.
+- **Histórico:** a data original da decisão no cabeçalho foi preservada. Esta assinatura não atribui
+  participação retroativa nem reativa decisões substituídas; evidências de homologação continuam separadas.

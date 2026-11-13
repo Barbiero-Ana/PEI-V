@@ -2,6 +2,8 @@
 modulo: GAM
 prd: PRD-05
 atualizado: 2026-11-04
+revisao_documental: 2026-11-13
+responsavel_revisao: Ana Barbiero — Líder de projeto
 status: para revisão
 ---
 
@@ -66,7 +68,7 @@ Testes automatizados das regras (`packages/core/src/constelacoes.test.ts`), regi
 | RN-04 | A última estrela só acende com todas as missões do mapa concluídas; a constelação vai para o álbum. |
 | RN-05 | O próximo mapa é liberado ao concluir o anterior, salvo liberação pelo professor. |
 | RN-10 | Itens comprados são permanentes; luzes gastas não voltam. |
-| RN-11 | O desafio do dia é igual para todos na data e dobra os pontos uma vez por dia. |
+| RN-11 | O desafio do dia é igual para todos na data. O bônus diário é único e corresponde à melhor recompensa base desse desafio no dia, conforme ADR 0024, para independer da ordem de reconexão. |
 
 ### Fora do escopo atual
 
@@ -105,7 +107,7 @@ Critérios marcados com [x] já são atendidos pelo app atual.
 ### HU-GAM-03 — Desafio do dia
 
 - [x] CA-01: Dados dois alunos no mesmo dia, então os dois veem o mesmo desafio.
-- [x] CA-02: Ao concluir o desafio, os pontos dobram só na primeira vez no dia (RN-11).
+- [x] CA-02: A primeira conclusão recebe o bônus diário. Uma tentativa melhor ajusta apenas a diferença desse único bônus, sem multiplicá-lo por aparelho (RN-11; ADR 0024).
 
 ### HU-GAM-04 — Dias de luz
 
@@ -161,3 +163,10 @@ Critérios marcados com [x] já são atendidos pelo app atual.
 - [[PRD — Modolume]]
 - [[PRD-04 — Missões do aluno]] · [[PRD-07 — Perfil e personalização]]
 - [[0004-ultima-estrela-so-com-o-mapa-completo|ADR 0004]]
+
+## 13. Controle da revisão documental
+
+A data `atualizado` do histórico foi preservada. A revisão documental de **13/11/2026** foi aprovada por
+**Ana Barbiero — Líder de projeto**, para organização, consistência e rastreabilidade. Essa aprovação não
+substitui o aceite funcional: cenários sem evidência ou dependentes de validação pedagógica, institucional
+e de aparelhos continuam pendentes na matriz de engenharia. Não foi inferida uma data de criação.

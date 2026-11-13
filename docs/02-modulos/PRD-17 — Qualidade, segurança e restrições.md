@@ -1,7 +1,9 @@
 ---
 modulo: QUA
 prd: PRD-17
-atualizado: 2026-11-05
+atualizado: 2026-11-11
+revisao_documental: 2026-11-13
+responsavel_revisao: Ana Barbiero — Líder de projeto
 status: para revisão
 ---
 
@@ -105,7 +107,7 @@ DES-007: a lista de Alunos do painel já tem páginas de 20; falta aplicar às d
 | ID | Critério | Prior. | Verif. | Situação |
 | --- | --- | :---: | :---: | :---: |
 | MOD-CON-001 | Falhas de comunicação não fecham o aplicativo nem causam perda de progresso. | E | T | Implementado |
-| MOD-CON-002 | O registro do resultado e a atualização dos pontos ocorrem de forma atômica. | E | T | Parcial |
+| MOD-CON-002 | O registro do resultado e a atualização dos pontos ocorrem de forma atômica. | E | T | Implementado |
 | MOD-CON-003 | Um mesmo resultado não é registrado mais de uma vez no servidor. | I | T | Implementado |
 | MOD-CON-004 | Dados salvos por versões anteriores do aplicativo continuam legíveis após atualizações. | I | T | Parcial |
 | MOD-CON-005 | Web: disponibilidade mínima de 99% no horário escolar. | I | A | A medir |
@@ -290,3 +292,10 @@ Critérios marcados com [x] já são atendidos pelo sistema atual.
 - [[PRD — Modolume]]
 - [[Diretrizes de usabilidade do painel]]
 - [[0001-monorepo-com-nucleo-compartilhado|ADR 0001]] · [[0003-progresso-local-e-uso-sem-conexao|ADR 0003]] · [[0007-back-end-node-postgresql-railway|ADR 0007]]
+
+## 13. Controle da revisão documental
+
+A data `atualizado` do histórico foi preservada. A revisão documental de **13/11/2026** foi aprovada por
+**Ana Barbiero — Líder de projeto**, para organização, consistência e rastreabilidade. Essa aprovação não
+substitui o aceite funcional: cenários sem evidência ou dependentes de validação pedagógica, institucional
+e de aparelhos continuam pendentes na matriz de engenharia. Não foi inferida uma data de criação.

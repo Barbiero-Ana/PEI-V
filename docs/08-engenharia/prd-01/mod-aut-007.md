@@ -1,8 +1,14 @@
-# MOD-AUT-007
+# PRD do requisito MOD-AUT-007
+
+**Data registrada no PRD de origem:** 2026-11-10. Preservada da fonte; não representa a criação desta ficha.
+
+**Revisão documental:** 13/11/2026 — Ana Barbiero — Líder de projeto. A aprovação da organização e rastreabilidade não substitui o aceite funcional.
+
+## Objetivo e escopo
 
 Permitir a redefinição de senha por e-mail para professor, gestão e administrador.
 
-Origem: [PRD-01 — Autenticação e controle de acesso](../../02-modulos/PRD-01%20%E2%80%94%20Autentica%C3%A7%C3%A3o%20e%20controle%20de%20acesso.md), seção 5. Prioridade **I**, método **T**. Situação declarada na origem **Pendente**.
+Origem: [PRD-01 — Autenticação e controle de acesso](../../02-modulos/PRD-01%20%E2%80%94%20Autentica%C3%A7%C3%A3o%20e%20controle%20de%20acesso.md), seção 5. Prioridade **I**, método **T**. Situação declarada na origem **Parcial**.
 
 [Módulo, fluxo, perfis e entidades](README.md). [Requisitos transversais](../prd-17/README.md).
 

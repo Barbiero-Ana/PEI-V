@@ -1,7 +1,9 @@
 ---
 modulo: AVA
 prd: PRD-15
-atualizado: 2026-11-04
+atualizado: 2026-11-11
+revisao_documental: 2026-11-13
+responsavel_revisao: Ana Barbiero — Líder de projeto
 status: para revisão
 ---
 
@@ -41,14 +43,21 @@ Teste ponta a ponta: professor avalia no painel → aluno vê o feedback no app.
 
 | ID | Comportamento esperado | Prior. | Verif. | Situação |
 | --- | --- | :---: | :---: | :---: |
-| MOD-AVA-001 | O professor visualiza as atividades concluídas pelos alunos. | E | D | Parcial |
-| MOD-AVA-002 | O professor visualiza o detalhe de cada aluno: fases, tentativas, tempo e dicas por missão. | E | D | Pendente |
-| MOD-AVA-003 | O professor registra uma avaliação e um feedback escrito. | I | T | Pendente |
-| MOD-AVA-004 | O professor pode registrar sua percepção do desempenho nas habilidades da atividade. | D | T | Pendente |
-| MOD-AVA-005 | O professor conclui a avaliação, tornando o feedback visível ao aluno. | I | T | Pendente |
-| MOD-AVA-006 | Manter o histórico das avaliações. | I | T | Pendente |
+| MOD-AVA-001 | O professor visualiza as atividades concluídas pelos alunos. | E | D | Implementado |
+| MOD-AVA-002 | O professor visualiza o detalhe de cada aluno: fases, tentativas, tempo e dicas por missão. | E | D | Implementado |
+| MOD-AVA-003 | O professor registra uma avaliação e um feedback escrito. | I | T | Implementado |
+| MOD-AVA-004 | O professor pode registrar sua percepção do desempenho nas habilidades da atividade. | D | T | Implementado |
+| MOD-AVA-005 | O professor conclui a avaliação, tornando o feedback visível ao aluno. | I | T | Implementado |
+| MOD-AVA-006 | Manter o histórico das avaliações. | I | T | Implementado |
 
-**Situação atual:** a ficha do aluno no painel mostra os resultados recentes (atividade, data e acerto). O detalhe por fase e o feedback dependem das jogadas reais e da API (fase 4).
+**Situação atual:** a página da atividade abre a avaliação individual, com agregados e medidas por fase
+nas novas entregas. O professor salva versões em rascunho ou publica uma devolutiva não vazia, com percepção
+opcional sobre a habilidade informada. Rascunhos são privados; o aluno recebe apenas versões publicadas,
+visíveis no Início e na central de avisos. O histórico preserva as versões, o título e a habilidade da época.
+Avaliações são imutáveis para o papel de execução no banco. A exclusão de atividade com avaliação arquiva
+seu conteúdo para preservar o histórico. Entregas antigas sem medidas por fase indicam essa ausência.
+A orientação imediata ao errar uma questão continua pertencendo ao PRD-14. O fluxo completo no aparelho
+aguarda homologação, conforme o [ADR 0025](../03-decisoes/0025-ciclo-de-atividades-e-devolutivas.md).
 
 ### 5.2 Regras de negócio
 
@@ -103,7 +112,7 @@ Critérios marcados com [x] já são atendidos pelo painel atual.
 | Fase | Entrega | Situação |
 | --- | --- | --- |
 | 3 | Resultados recentes na ficha do aluno. | Implementado |
-| 4 | Detalhe por fase, avaliação, feedback no app e histórico. | Pendente |
+| 4 | Detalhe por fase, avaliação, feedback no app e histórico. | Implementado; aceite em aparelho pendente |
 
 ## 9. Diretrizes do produto
 
@@ -118,9 +127,16 @@ Critérios marcados com [x] já são atendidos pelo painel atual.
 
 ## 11. Pendências para aprovação
 
-- Definir a escala da percepção sobre habilidades (AVA-004).
+- Homologar a escala implementada conforme HU-AVA-04 e o texto das devolutivas com a equipe pedagógica.
 
 ## 12. Documentos vinculados
 
 - [[PRD — Modolume]]
 - [[PRD-06 — Experiência do aluno]] · [[PRD-14 — Atividades do professor]] · [[PRD-16 — Notificações]]
+
+## 13. Controle da revisão documental
+
+A data `atualizado` do histórico foi preservada. A revisão documental de **13/11/2026** foi aprovada por
+**Ana Barbiero — Líder de projeto**, para organização, consistência e rastreabilidade. Essa aprovação não
+substitui o aceite funcional: cenários sem evidência ou dependentes de validação pedagógica, institucional
+e de aparelhos continuam pendentes na matriz de engenharia. Não foi inferida uma data de criação.

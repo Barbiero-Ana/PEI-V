@@ -1,8 +1,14 @@
-# MOD-MIS-013
+# PRD do requisito MOD-MIS-013
+
+**Data registrada no PRD de origem:** 2026-11-11. Preservada da fonte; não representa a criação desta ficha.
+
+**Revisão documental:** 13/11/2026 — Ana Barbiero — Líder de projeto. A aprovação da organização e rastreabilidade não substitui o aceite funcional.
+
+## Objetivo e escopo
 
 Exibir o prazo das atividades publicadas pelo professor.
 
-Origem: [PRD-04 — Missões do aluno](../../02-modulos/PRD-04%20%E2%80%94%20Miss%C3%B5es%20do%20aluno.md), seção 5. Prioridade **I**, método **D**. Situação declarada na origem **Parcial**.
+Origem: [PRD-04 — Missões do aluno](../../02-modulos/PRD-04%20%E2%80%94%20Miss%C3%B5es%20do%20aluno.md), seção 5. Prioridade **I**, método **D**. Situação declarada na origem **Implementado**.
 
 [Módulo, fluxo, perfis e entidades](README.md). [Requisitos transversais](../prd-17/README.md).
 

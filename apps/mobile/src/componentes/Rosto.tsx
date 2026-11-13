@@ -1,3 +1,4 @@
+import { PRECOS_LOJA } from "@modolume/core";
 import { memo, useMemo } from "react";
 import { View } from "react-native";
 import Svg, { Circle, G, Path, SvgXml } from "react-native-svg";
@@ -146,17 +147,19 @@ export interface ItemLoja {
   valor: string | number;
 }
 
-export const ITENS_LOJA: ItemLoja[] = [
-  { id: "acessorio:sailormoonCrown", nome: "Coroa", preco: 20, slot: "acessorio", valor: "sailormoonCrown" },
-  { id: "acessorio:catEars", nome: "Orelhas de gato", preco: 14, slot: "acessorio", valor: "catEars" },
-  { id: "acessorio:sunglasses", nome: "Óculos escuros", preco: 12, slot: "acessorio", valor: "sunglasses" },
-  { id: "acessorio:sleepMask", nome: "Máscara de dormir", preco: 10, slot: "acessorio", valor: "sleepMask" },
-  { id: "acessorio:clownNose", nome: "Nariz de palhaço", preco: 8, slot: "acessorio", valor: "clownNose" },
-  { id: "acessorio:mustache", nome: "Bigode", preco: 8, slot: "acessorio", valor: "mustache" },
-  { id: "fundo:6", nome: "Fundo galáxia", preco: 15, slot: "fundo", valor: 6 },
-  { id: "fundo:7", nome: "Fundo aurora", preco: 12, slot: "fundo", valor: 7 },
-  { id: "fundo:8", nome: "Fundo pôr do sol", preco: 10, slot: "fundo", valor: 8 },
+const catalogo: Omit<ItemLoja, "preco">[] = [
+  { id: "acessorio:sailormoonCrown", nome: "Coroa", slot: "acessorio", valor: "sailormoonCrown" },
+  { id: "acessorio:catEars", nome: "Orelhas de gato", slot: "acessorio", valor: "catEars" },
+  { id: "acessorio:sunglasses", nome: "Óculos escuros", slot: "acessorio", valor: "sunglasses" },
+  { id: "acessorio:sleepMask", nome: "Máscara de dormir", slot: "acessorio", valor: "sleepMask" },
+  { id: "acessorio:clownNose", nome: "Nariz de palhaço", slot: "acessorio", valor: "clownNose" },
+  { id: "acessorio:mustache", nome: "Bigode", slot: "acessorio", valor: "mustache" },
+  { id: "fundo:6", nome: "Fundo galáxia", slot: "fundo", valor: 6 },
+  { id: "fundo:7", nome: "Fundo aurora", slot: "fundo", valor: 7 },
+  { id: "fundo:8", nome: "Fundo pôr do sol", slot: "fundo", valor: 8 },
 ];
+
+export const ITENS_LOJA: ItemLoja[] = catalogo.map((i) => ({ ...i, preco: PRECOS_LOJA[i.id]! }));
 
 export function itemDe(slot: Slot, valor: string | number) {
   return ITENS_LOJA.find((i) => i.slot === slot && i.valor === valor);

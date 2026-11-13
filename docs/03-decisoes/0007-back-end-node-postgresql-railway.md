@@ -2,7 +2,7 @@
 
 - **Status:** Aceita (implementada em 04/11/2026; detalhes da integração no ADR 0015) (banco e hospedagem definidos pela equipe; framework da API a confirmar)
 - **Data:** 14/10/2026
-- **Decisores:** _preencher com os nomes da equipe_
+- **Decisores originais:** não identificados no registro histórico.
 
 ## Contexto
 
@@ -32,3 +32,11 @@ calcular os indicadores.
 - **Negativas:** a equipe passa a manter o servidor (deploy, backups, segurança).
 - **Pendente:** confirmar o framework da API; definir o esquema do banco, a autenticação (código da turma para o
   aluno, e-mail e senha para o professor) e a sincronização das jogadas feitas sem conexão.
+
+## Aprovação da revisão documental
+
+- **Data da revisão e aprovação:** 13/11/2026.
+- **Assinatura de aprovação:** Ana Barbiero — Líder de projeto.
+- **Registro:** aprovação expressa nesta conversa para organizar e consolidar a documentação.
+- **Histórico:** a data original da decisão no cabeçalho foi preservada. Esta assinatura não atribui
+  participação retroativa nem reativa decisões substituídas; evidências de homologação continuam separadas.

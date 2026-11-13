@@ -1,5 +1,9 @@
 # PRD-06 — Experiência do aluno
 
+**Data registrada no PRD de origem:** 2026-11-04. Preservada da fonte; não representa a criação desta ficha.
+
+**Revisão documental:** 13/11/2026 — Ana Barbiero — Líder de projeto. A aprovação da organização e rastreabilidade não substitui o aceite funcional.
+
 A navegação do aluno apresenta mapas, conquistas, perfil e atividades da turma em abas.
 
 [PRD de origem](../../02-modulos/PRD-06%20%E2%80%94%20Experi%C3%AAncia%20do%20aluno.md) · [Matriz de rastreabilidade](../matriz.md) · [Qualidade e permissões](../prd-17/README.md)
@@ -25,7 +29,7 @@ Sem regras numeradas próprias no PRD. Consulte a seção 5 da origem.
 
 ## Testes e limites
 
-Teste de tarefa em celular pendente. Feedback recente depende do PRD-15.
+Início mostra a devolutiva publicada e acesso aos avisos. Teste de tarefa e acessibilidade em celular pendentes.
 
 ## Dependências
 

@@ -1,0 +1,55 @@
+name: Qualidade e migrações
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+concurrency:
+  group: qualidade-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verificacoes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CI: "1"
+      EXPO_NO_TELEMETRY: "1"
+      NEXT_TELEMETRY_DISABLED: "1"
+      API_URL: http://127.0.0.1:3333
+      SESSAO_SEGREDO: somente-ci-sem-credenciais-reais-para-build-local
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: pnpm/setup@v3
+        with:
+          runtime: node@24
+          require-lockfile: true
+      - name: Gerar cliente do banco
+        run: pnpm --filter @modolume/api db:generate
+      - name: Gerar tipos das rotas nativas
+        run: pnpm --filter @modolume/mobile exec expo customize tsconfig.json
+      - name: Formatação, lint e tipagem
+        run: |
+          pnpm format:check
+          pnpm -r lint
+          pnpm -r typecheck
+          pnpm --filter @modolume/mobile test:typecheck
+      - name: Testes automatizados
+        run: |
+          pnpm -r --if-present test
+          pnpm test:web
+      - name: Rastreabilidade documental e datas das decisões
+        run: node scripts/verificar-documentacao.mjs
+      - name: Migrações, concorrência e permissões em PostgreSQL descartável
+        run: pnpm --filter @modolume/api test:banco
+      - name: Build do painel e rotas protegidas
+        run: |
+          pnpm --filter @modolume/web build
+          node scripts/verificar-web.mjs
+      - name: Bundle nativo Android
+        run: pnpm --filter @modolume/mobile exec expo export --platform android --output-dir ../../tmp/auditoria-mobile-ci

@@ -1,4 +1,10 @@
-# MOD-IC-001
+# PRD do requisito MOD-IC-001
+
+**Data registrada no PRD de origem:** 2026-11-11. Preservada da fonte; não representa a criação desta ficha.
+
+**Revisão documental:** 13/11/2026 — Ana Barbiero — Líder de projeto. A aprovação da organização e rastreabilidade não substitui o aceite funcional.
+
+## Objetivo e escopo
 
 A comunicação entre app, plataforma web e servidor usa HTTPS com TLS 1.2 ou superior.
 

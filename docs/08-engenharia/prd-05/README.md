@@ -1,5 +1,9 @@
 # PRD-05 — Gamificação
 
+**Data registrada no PRD de origem:** 2026-11-04. Preservada da fonte; não representa a criação desta ficha.
+
+**Revisão documental:** 13/11/2026 — Ana Barbiero — Líder de projeto. A aprovação da organização e rastreabilidade não substitui o aceite funcional.
+
 As regras de luzes e constelações ficam no núcleo. A loja e a projeção offline ficam no estado do jogador.
 
 [PRD de origem](../../02-modulos/PRD-05%20%E2%80%94%20Gamifica%C3%A7%C3%A3o.md) · [Matriz de rastreabilidade](../matriz.md) · [Qualidade e permissões](../prd-17/README.md)
@@ -28,11 +32,11 @@ As regras de luzes e constelações ficam no núcleo. A loja e a projeção offl
 - **RN-04** A última estrela só acende com todas as missões do mapa concluídas; a constelação vai para o álbum.
 - **RN-05** O próximo mapa é liberado ao concluir o anterior, salvo liberação pelo professor.
 - **RN-10** Itens comprados são permanentes; luzes gastas não voltam.
-- **RN-11** O desafio do dia é igual para todos na data e dobra os pontos uma vez por dia.
+- **RN-11** O desafio do dia é igual para todos na data. O bônus diário é único e corresponde à melhor recompensa base desse desafio no dia, conforme ADR 0024, para independer da ordem de reconexão.
 
 ## Testes e limites
 
-constelacoes.test.ts. Consolidação aditiva e validação do saldo entre aparelhos pendentes.
+progresso.test.ts e verificar-consolidacao.ts cobrem soma, bônus, compras concorrentes e saldo. Aceite em aparelhos pendente.
 
 ## Dependências
 

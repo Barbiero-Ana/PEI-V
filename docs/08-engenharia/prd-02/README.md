@@ -1,5 +1,9 @@
 # PRD-02 — Administração de usuários
 
+**Data registrada no PRD de origem:** 2026-11-10. Preservada da fonte; não representa a criação desta ficha.
+
+**Revisão documental:** 13/11/2026 — Ana Barbiero — Líder de projeto. A aprovação da organização e rastreabilidade não substitui o aceite funcional.
+
 Administrador gerencia a própria escola. A lista filtra nome, perfil e situação antes de paginar. A pessoa define sua credencial pelo e-mail.
 
 [PRD de origem](../../02-modulos/PRD-02%20%E2%80%94%20Administra%C3%A7%C3%A3o%20de%20usu%C3%A1rios.md) · [Matriz de rastreabilidade](../matriz.md) · [Qualidade e permissões](../prd-17/README.md)
@@ -43,7 +47,7 @@ papel-equipe.test.ts e verificar-banco.ts. Importação CSV e homologação visu
 - [MOD-ADM-006](mod-adm-006.md) O administrador deve poder ativar e desativar usuários, preservando o histórico.
 - [MOD-ADM-007](mod-adm-007.md) A lista de usuários deve identificar usuários ativos e inativos por texto.
 - [MOD-ADM-009](mod-adm-009.md) O sistema guarda um registro de atividades (quem fez o quê e quando), que o administrador consulta com filtros e que ninguém altera nem apaga.
-- [MOD-ADM-010](mod-adm-010.md) Quem é cadastrado ou tem a senha redefinida recebe uma senha provisória e precisa criar a própria senha antes de usar o painel.
+- [MOD-ADM-010](mod-adm-010.md) A pessoa cadastrada solicita um link privado em Recuperar acesso e define a própria senha. A revogação administrativa exige uma nova recuperação, sem revelar a senha ao administrador.
 - [MOD-ADM-011](mod-adm-011.md) O administrador cria e edita turmas, encerra e reabre, e cadastra, edita, troca de turma, desativa e reativa alunos.
 - [MOD-ADM-012](mod-adm-012.md) O administrador não pode desativar nem tirar o próprio papel, e a escola nunca fica sem um administrador ativo.
 - [MOD-ADM-008](mod-adm-008.md) O administrador pode importar usuários a partir de planilha CSV.

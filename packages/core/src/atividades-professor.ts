@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { esquemaData } from "./validacao";
 import { MISSOES } from "./missoes";
 
 /**
@@ -87,12 +88,15 @@ export const esquemaAtividade = z
     instrucao: texto,
     habilidade: texto,
     missaoId: texto,
-    questoes: z.array(esquemaQuestao),
+    questoes: z.array(esquemaQuestao).max(200, "Use até 200 questões por atividade."),
     turmas: z.array(z.string()).min(1, "Escolha ao menos uma turma."),
-    liberarEm: texto.regex(/^\d{4}-\d{2}-\d{2}$/, "Escolha a data de liberação."),
+    liberarEm: esquemaData,
+    prazo: z.union([esquemaData, z.literal("")]).optional(),
     planoId: texto,
   })
   .superRefine((a, ctx) => {
+    if (a.prazo && a.prazo < a.liberarEm)
+      ctx.addIssue({ code: "custom", path: ["prazo"], message: "O prazo precisa ser igual ou posterior à liberação." });
     if (a.formato === "pronta" && !MISSOES.some((m) => m.id === a.missaoId))
       ctx.addIssue({ code: "custom", path: ["missaoId"], message: "Escolha a atividade do app." });
     if (a.formato !== "pronta" && a.questoes.length === 0)

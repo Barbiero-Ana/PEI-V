@@ -1,4 +1,10 @@
-# MOD-ADM-011
+# PRD do requisito MOD-ADM-011
+
+**Data registrada no PRD de origem:** 2026-11-10. Preservada da fonte; não representa a criação desta ficha.
+
+**Revisão documental:** 13/11/2026 — Ana Barbiero — Líder de projeto. A aprovação da organização e rastreabilidade não substitui o aceite funcional.
+
+## Objetivo e escopo
 
 O administrador cria e edita turmas, encerra e reabre, e cadastra, edita, troca de turma, desativa e reativa alunos.
 

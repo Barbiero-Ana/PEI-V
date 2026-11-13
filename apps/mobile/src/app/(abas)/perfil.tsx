@@ -310,7 +310,9 @@ export default function Perfil() {
                 onPress={() => setSairTurma(true)}
               />
             ) : null}
-            <Item icone={<IconeLixeira />} titulo="Recomeçar do zero" perigoso onPress={() => setApagar(true)} />
+            {!conta ? (
+              <Item icone={<IconeLixeira />} titulo="Recomeçar do zero" perigoso onPress={() => setApagar(true)} />
+            ) : null}
           </View>
         </View>
 

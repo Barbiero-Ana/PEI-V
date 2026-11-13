@@ -1,5 +1,6 @@
 import "server-only";
 import type { Professor } from "@modolume/core";
+import { avaliacoesPendentes } from "./avaliacoes";
 import { listarAtividades } from "./atividades";
 import { listaDeTurmas, visaoGeral } from "./dados";
 import { listarPlanos } from "./planejamento";
@@ -23,11 +24,12 @@ export async function alertasDoDia(professor: Professor): Promise<Alerta[]> {
   const agora = new Date();
   const hoje = isoDe(agora);
   const amanha = isoDe(new Date(agora.getFullYear(), agora.getMonth(), agora.getDate() + 1));
-  const [planos, atividades, turmas, { atencao }] = await Promise.all([
+  const [planos, atividades, turmas, { atencao }, avaliacoes] = await Promise.all([
     listarPlanos(professor),
     listarAtividades(professor),
     listaDeTurmas(professor),
     visaoGeral(professor),
+    avaliacoesPendentes(),
   ]);
   const turma = (id: string) => turmas.find((t) => t.turma.id === id)?.turma.nome ?? "";
   const alertas: Alerta[] = [];
@@ -89,6 +91,14 @@ export async function alertasDoDia(professor: Professor): Promise<Alerta[]> {
       titulo: `${atencao.length} ${atencao.length === 1 ? "aluno pede" : "alunos pedem"} atenção`,
       detalhe: "Abaixo de 60% de acerto ou em queda no período",
       href: "/professor/alunos?situacao=atencao",
+    });
+  for (const a of avaliacoes)
+    alertas.push({
+      id: `avaliacao-${a.id}-${a.quantidade}`,
+      tipo: "pendencia",
+      titulo: `${a.quantidade} ${a.quantidade === 1 ? "avaliação pendente" : "avaliações pendentes"}`,
+      detalhe: a.titulo,
+      href: `/professor/atividades/${a.id}`,
     });
   return alertas;
 }

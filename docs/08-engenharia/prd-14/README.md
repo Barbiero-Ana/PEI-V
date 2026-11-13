@@ -1,6 +1,10 @@
 # PRD-14 — Atividades do professor
 
-Professor prepara questões ou escolhe missão pronta, publica para turmas vinculadas e consulta resultados concluídos.
+**Data registrada no PRD de origem:** 2026-11-11. Preservada da fonte; não representa a criação desta ficha.
+
+**Revisão documental:** 13/11/2026 — Ana Barbiero — Líder de projeto. A aprovação da organização e rastreabilidade não substitui o aceite funcional.
+
+Professor publica atividades com prazo opcional. O painel distingue início e conclusão e abre a avaliação individual.
 
 [PRD de origem](../../02-modulos/PRD-14%20%E2%80%94%20Atividades%20do%20professor.md) · [Matriz de rastreabilidade](../matriz.md) · [Qualidade e permissões](../prd-17/README.md)
 
@@ -29,7 +33,7 @@ Professor prepara questões ou escolhe missão pronta, publica para turmas vincu
 
 ## Testes e limites
 
-escrita-professor.test.ts e jogada.test.ts. Prazo, encerramento e estado em andamento pendentes.
+verificar-consolidacao.ts valida início, prazo, encerramento e reenvio. Homologação dos formatos no aparelho pendente.
 
 ## Dependências
 

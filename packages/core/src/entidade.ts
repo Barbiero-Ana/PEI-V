@@ -63,6 +63,11 @@ export interface Aplicacao {
 }
 
 export interface Resultado {
+  /** Medidas originais do app. Ausentes em registros demonstrativos antigos. */
+  rodadas?: number;
+  acertosDePrimeira?: number;
+  dicas?: number;
+  estrelas?: 1 | 2 | 3;
   id: Id;
   aplicacaoId: Id;
   alunoId: Id;

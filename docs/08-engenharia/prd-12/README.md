@@ -1,5 +1,9 @@
 # PRD-12 — Painel do professor
 
+**Data registrada no PRD de origem:** 2026-11-05. Preservada da fonte; não representa a criação desta ficha.
+
+**Revisão documental:** 13/11/2026 — Ana Barbiero — Líder de projeto. A aprovação da organização e rastreabilidade não substitui o aceite funcional.
+
 A web recorta dados por professor e turma, calcula indicadores e apresenta agenda, alertas e filtros.
 
 [PRD de origem](../../02-modulos/PRD-12%20%E2%80%94%20Painel%20do%20professor.md) · [Matriz de rastreabilidade](../matriz.md) · [Qualidade e permissões](../prd-17/README.md)

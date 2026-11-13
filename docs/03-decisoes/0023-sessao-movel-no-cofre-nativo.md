@@ -33,3 +33,11 @@ com o token no cache. A migração precisa preservar a fila de jogadas e o progr
 
 Relacionados: [ADR 0017](0017-acesso-individual-do-aluno.md) · [ADR 0022](0022-conclusao-local-atomica.md) ·
 [Expo SecureStore](https://docs.expo.dev/versions/v58.0.0/sdk/securestore/).
+
+## Aprovação da revisão documental
+
+- **Data da revisão e aprovação:** 13/11/2026.
+- **Assinatura de aprovação:** Ana Barbiero — Líder de projeto.
+- **Registro:** aprovação expressa nesta conversa para organizar e consolidar a documentação.
+- **Histórico:** a data original da decisão no cabeçalho foi preservada. Esta assinatura não atribui
+  participação retroativa nem reativa decisões substituídas; evidências de homologação continuam separadas.

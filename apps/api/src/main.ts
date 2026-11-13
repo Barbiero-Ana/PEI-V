@@ -10,6 +10,9 @@ import { Banco } from "./infra.js";
 import { ControladorAdministracao } from "./admin.js";
 import { ControladorCoordenacao } from "./coordenacao.js";
 import { ControladorProfessor } from "./professor.js";
+import { ControladorSincronizacaoAluno } from "./sincronizacao-aluno.js";
+import { ControladorAvaliacoes } from "./avaliacoes.js";
+import { ControladorAvisosAluno } from "./avisos-aluno.js";
 
 /**
  * API do Modolume (ADR 0007 e 0015): liga o app do aluno ao painel do
@@ -29,6 +32,9 @@ if (!segredo && process.env.NODE_ENV === "production") throw new Error("Defina J
   controllers: [
     ControladorAcesso,
     ControladorAluno,
+    ControladorSincronizacaoAluno,
+    ControladorAvaliacoes,
+    ControladorAvisosAluno,
     ControladorProfessor,
     ControladorCoordenacao,
     ControladorAdministracao,

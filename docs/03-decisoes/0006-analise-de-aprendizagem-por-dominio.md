@@ -2,7 +2,7 @@
 
 - **Status:** Aceita
 - **Data:** 13/10/2026
-- **Decisores:** _preencher com os nomes da equipe_
+- **Decisores originais:** não identificados no registro histórico.
 
 ## Contexto
 
@@ -35,3 +35,11 @@ O cálculo fica em `packages/core/src/aprendizagem.ts` e é o mesmo para o aluno
 - **Negativas:** os pesos (65/20/15) e os limites são uma primeira proposta.
 - **Pendente:** ajustar os pesos com dados reais de uso e a opinião dos professores.
 - **Verificação:** coberta pelos testes em `packages/core/src/aprendizagem.test.ts`.
+
+## Aprovação da revisão documental
+
+- **Data da revisão e aprovação:** 13/11/2026.
+- **Assinatura de aprovação:** Ana Barbiero — Líder de projeto.
+- **Registro:** aprovação expressa nesta conversa para organizar e consolidar a documentação.
+- **Histórico:** a data original da decisão no cabeçalho foi preservada. Esta assinatura não atribui
+  participação retroativa nem reativa decisões substituídas; evidências de homologação continuam separadas.

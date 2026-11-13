@@ -2,7 +2,7 @@
 
 - **Status:** Substituída pelo [ADR 0021](0021-portal-da-equipe-e-app-nativo.md) quanto à página inicial do portal
 - **Data:** 05/11/2026
-- **Decisores:** a preencher pela equipe
+- **Decisores originais:** não identificados no registro histórico.
 - **Uso de IA:** auxílio na estrutura da página, na proposta de planos e na remoção da versão web do aluno, a
   partir do pedido da equipe.
 
@@ -43,3 +43,11 @@ o que cada plano oferece.
   demonstração ou formulário de contato no lugar do e-mail.
 
 Relacionados: [[0017-acesso-individual-do-aluno]], [[PRD — Modolume]].
+
+## Aprovação da revisão documental
+
+- **Data da revisão e aprovação:** 13/11/2026.
+- **Assinatura de aprovação:** Ana Barbiero — Líder de projeto.
+- **Registro:** aprovação expressa nesta conversa para organizar e consolidar a documentação.
+- **Histórico:** a data original da decisão no cabeçalho foi preservada. Esta assinatura não atribui
+  participação retroativa nem reativa decisões substituídas; evidências de homologação continuam separadas.

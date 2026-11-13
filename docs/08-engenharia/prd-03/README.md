@@ -1,5 +1,9 @@
 # PRD-03 — Gestão de turmas
 
+**Data registrada no PRD de origem:** 2026-11-05. Preservada da fonte; não representa a criação desta ficha.
+
+**Revisão documental:** 13/11/2026 — Ana Barbiero — Líder de projeto. A aprovação da organização e rastreabilidade não substitui o aceite funcional.
+
 Administração cadastra turmas e alunos. Coordenação gerencia vínculos docentes. Encerrar uma turma invalida o acesso dos alunos.
 
 [PRD de origem](../../02-modulos/PRD-03%20%E2%80%94%20Gest%C3%A3o%20de%20turmas.md) · [Matriz de rastreabilidade](../matriz.md) · [Qualidade e permissões](../prd-17/README.md)

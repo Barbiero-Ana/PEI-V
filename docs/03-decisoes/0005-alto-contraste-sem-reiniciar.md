@@ -2,7 +2,7 @@
 
 - **Status:** Aceita (substitui a solução inicial, que reiniciava o app)
 - **Data:** 09/10/2026
-- **Decisores:** _preencher com os nomes da equipe_
+- **Decisores originais:** não identificados no registro histórico.
 
 ## Contexto
 
@@ -27,3 +27,11 @@ redesenhadas, e a navegação continua no mesmo lugar.
   temas no futuro.
 - **Negativas:** estilos novos precisam usar `criarEstilos` ou `porTema`; um estilo criado de outro jeito não
   acompanha a troca.
+
+## Aprovação da revisão documental
+
+- **Data da revisão e aprovação:** 13/11/2026.
+- **Assinatura de aprovação:** Ana Barbiero — Líder de projeto.
+- **Registro:** aprovação expressa nesta conversa para organizar e consolidar a documentação.
+- **Histórico:** a data original da decisão no cabeçalho foi preservada. Esta assinatura não atribui
+  participação retroativa nem reativa decisões substituídas; evidências de homologação continuam separadas.

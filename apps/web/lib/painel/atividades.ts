@@ -108,6 +108,8 @@ export async function situacaoDaAtividade(id: string) {
       turmaId: string;
       avatarSvg: string | null;
       concluiu: boolean;
+      situacao: "concluida" | "em andamento" | "nao iniciada";
+      avaliada: boolean;
       acerto: number | null;
       data: string | null;
     }[];

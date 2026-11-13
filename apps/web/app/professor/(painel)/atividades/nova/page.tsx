@@ -1,8 +1,9 @@
+import { dataEscolar } from "@modolume/core";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { EditorAtividade } from "@/components/painel/editor-atividade";
 import { IconeVoltar } from "@/components/painel/icones";
-import { dataCurta, isoLocal } from "@/components/painel/blocos";
+import { dataCurta } from "@/components/painel/blocos";
 import { FORMATOS_EDITAVEIS, SOBRE_FORMATOS, type DadosAtividade, type FormatoEditavel } from "@/lib/painel/atividades";
 import { opcoesDePlanejamento, professorLogado } from "@/lib/painel/dados";
 import { HABILIDADES_BNCC, atividadesDoApp, buscarPlano, listarPlanos } from "@/lib/painel/planejamento";
@@ -56,7 +57,7 @@ export default async function NovaAtividade({
     missaoId: formatoInicial === "pronta" ? (plano?.atividadesApp[0] ?? "") : "",
     questoes: vazia,
     turmas: turmaInicial ? [turmaInicial] : [],
-    liberarEm: plano?.data ?? isoLocal(new Date()),
+    liberarEm: plano?.data ?? dataEscolar(),
     planoId: plano?.id ?? "",
   };
 

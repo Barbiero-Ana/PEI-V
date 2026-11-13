@@ -1,4 +1,10 @@
-# MOD-NOT-004
+# PRD do requisito MOD-NOT-004
+
+**Data registrada no PRD de origem:** 2026-11-11. Preservada da fonte; não representa a criação desta ficha.
+
+**Revisão documental:** 13/11/2026 — Ana Barbiero — Líder de projeto. A aprovação da organização e rastreabilidade não substitui o aceite funcional.
+
+## Objetivo e escopo
 
 Oferecer uma central de notificações, distinguindo lidas e não lidas.
 
@@ -17,9 +23,11 @@ Consulte as regras transversais no PRD-17.
 
 ## Implementação e evidência
 
+- [apps/api/src/avisos-aluno.ts](../../../apps/api/src/avisos-aluno.ts)
+- [apps/mobile/src/app/avisos.tsx](../../../apps/mobile/src/app/avisos.tsx)
 - [apps/web/lib/painel/alertas.ts](../../../apps/web/lib/painel/alertas.ts)
 - [apps/web/components/painel/alertas.tsx](../../../apps/web/components/painel/alertas.tsx)
 
-**Aceite nesta auditoria** Pendente.
+**Aceite nesta auditoria** Evidência parcial.
 
-Aceite individual pendente de verificação nesta auditoria. Consulte os cenários e as evidências do módulo.
+Leitura do aluno é guardada no banco, com marcação individual/todos e fila offline. Leitura da equipe continua local ao navegador.

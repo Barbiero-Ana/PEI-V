@@ -2,7 +2,7 @@
 
 - **Status:** Aceita
 - **Data:** 04/11/2026
-- **Decisores:** a preencher pela equipe
+- **Decisores originais:** não identificados no registro histórico.
 - **Uso de IA:** auxílio na análise da interface pelas heurísticas de Nielsen e pelas leis de Hick e Fitts e na escrita
   do código. A decisão de reorganizar a navegação é da equipe, a partir da orientação do professor orientador.
 
@@ -40,3 +40,11 @@ As regras gerais ficam nas [[Diretrizes de usabilidade do painel]].
   maiores e na borda da tela; funciona igual no computador, no tablet e no celular.
 - **Negativas:** o menu ocupa mais largura no computador (248 px contra 84 px).
 - **O que fica pendente:** aplicar o checklist das diretrizes às demais telas e testar com professores na validação.
+
+## Aprovação da revisão documental
+
+- **Data da revisão e aprovação:** 13/11/2026.
+- **Assinatura de aprovação:** Ana Barbiero — Líder de projeto.
+- **Registro:** aprovação expressa nesta conversa para organizar e consolidar a documentação.
+- **Histórico:** a data original da decisão no cabeçalho foi preservada. Esta assinatura não atribui
+  participação retroativa nem reativa decisões substituídas; evidências de homologação continuam separadas.

@@ -1,4 +1,10 @@
-# MOD-USA-018
+# PRD do requisito MOD-USA-018
+
+**Data registrada no PRD de origem:** 2026-11-11. Preservada da fonte; não representa a criação desta ficha.
+
+**Revisão documental:** 13/11/2026 — Ana Barbiero — Líder de projeto. A aprovação da organização e rastreabilidade não substitui o aceite funcional.
+
+## Objetivo e escopo
 
 As interfaces seguem as dez heurísticas de Nielsen e as leis de Hick e de Fitts, conforme as [[Diretrizes de usabilidade do painel]].
 

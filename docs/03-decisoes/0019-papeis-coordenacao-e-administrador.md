@@ -2,7 +2,7 @@
 
 - **Status:** Aceita
 - **Data:** 05/11/2026
-- **Decisores:** a preencher pela equipe
+- **Decisores originais:** não identificados no registro histórico.
 - **Uso de IA:** auxílio no desenho das permissões, na implementação e nos testes, a partir do pedido da equipe de
   ter acesso de administrador (usuários, permissões e registro) e de coordenação (acompanha a escola e vincula
   professores às turmas).
@@ -56,3 +56,11 @@ sistema guarda dados de menores.
 
 Relacionados: [[PRD-01 — Autenticação e controle de acesso]], [[PRD-02 — Administração de usuários]],
 [[PRD-03 — Gestão de turmas]], [[0017-acesso-individual-do-aluno]].
+
+## Aprovação da revisão documental
+
+- **Data da revisão e aprovação:** 13/11/2026.
+- **Assinatura de aprovação:** Ana Barbiero — Líder de projeto.
+- **Registro:** aprovação expressa nesta conversa para organizar e consolidar a documentação.
+- **Histórico:** a data original da decisão no cabeçalho foi preservada. Esta assinatura não atribui
+  participação retroativa nem reativa decisões substituídas; evidências de homologação continuam separadas.

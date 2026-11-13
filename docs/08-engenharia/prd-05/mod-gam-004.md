@@ -1,4 +1,10 @@
-# MOD-GAM-004
+# PRD do requisito MOD-GAM-004
+
+**Data registrada no PRD de origem:** 2026-11-04. Preservada da fonte; não representa a criação desta ficha.
+
+**Revisão documental:** 13/11/2026 — Ana Barbiero — Líder de projeto. A aprovação da organização e rastreabilidade não substitui o aceite funcional.
+
+## Objetivo e escopo
 
 Manter um álbum de constelações, com explicação, meses de visibilidade no céu do Brasil e curiosidades.
 

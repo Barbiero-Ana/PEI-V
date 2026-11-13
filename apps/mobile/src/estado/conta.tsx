@@ -1,11 +1,11 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { AppState } from "react-native";
-import type { Questao, ResultadoJogada } from "@modolume/core";
+import type { AvisoAluno, Questao, ResultadoJogada } from "@modolume/core";
 import { ErroApi, chamarApi, semConexao, temApi } from "@/lib/api";
 import { normalizar, svgDoRosto } from "@/componentes/Rosto";
 import { useJogador, type ProgressoServidor, type Recompensa } from "./jogador";
 import { useIdentidade } from "./identidade";
-import { receberNoEscopo, sincronizarFila, type ContaAluno, type OperacaoAluno } from "./isolamento";
+import { receberNoEscopo, type ContaAluno, type OperacaoAluno } from "./isolamento";
 export type { ContaAluno } from "./isolamento";
 
 /**
@@ -28,11 +28,25 @@ export interface AtividadeDoProfessor {
   missaoId: string;
   questoes: Questao[];
   liberarEm: string;
+  prazo?: string;
+  encerrada?: boolean;
   feita: { percentualAcerto: number; estrelas: number; data: string } | null;
+}
+
+export interface DevolutivaAluno {
+  id: string;
+  feedback: string;
+  percepcao: string | null;
+  criadaEm: string;
+  atividadeId: string | null;
+  atividade: { titulo: string };
+  professor: { nome: string };
 }
 
 export interface JogadaParaEnviar extends ResultadoJogada {
   id: string;
+  recompensar?: boolean;
+  motivoRecusa?: string;
   alunoId: string;
   origem: "mapa" | "professor";
   atividadeId: string | null;
@@ -41,6 +55,10 @@ export interface JogadaParaEnviar extends ResultadoJogada {
 type DestinoJogada = { origem: "mapa" | "professor"; titulo: string; atividadeId?: string };
 
 interface Guardado {
+  inicios: Record<string, { atividadeId: string; iniciadaEm: string }>;
+  avisos: AvisoAluno[];
+  avaliacoes: DevolutivaAluno[];
+  leiturasPendentes: string[];
   fila: JogadaParaEnviar[];
   recusadas: JogadaParaEnviar[];
   atividades: AtividadeDoProfessor[];
@@ -55,6 +73,10 @@ interface Guardado {
 }
 
 const VAZIO: Guardado = {
+  inicios: {},
+  avisos: [],
+  avaliacoes: [],
+  leiturasPendentes: [],
   fila: [],
   recusadas: [],
   atividades: [],
@@ -82,9 +104,14 @@ interface Estado {
   /** Jogadas ainda não enviadas ao servidor. */
   pendentes: number;
   recusadas: number;
+  resultadosRecusados: JogadaParaEnviar[];
   /** Resultado da última tentativa de falar com o servidor. */
   online: boolean | null;
   atividades: AtividadeDoProfessor[];
+  avisos: AvisoAluno[];
+  avaliacoes: DevolutivaAluno[];
+  iniciarAtividade: (id: string) => Promise<void>;
+  marcarAvisosLidos: (ids: string[]) => void;
   carregandoAtividades: boolean;
   estadoAtividades: "aguardando" | "atualizadas" | "erro";
   /** Primeiro passo: o código pessoal que o professor ou a coordenação passou. */
@@ -110,25 +137,15 @@ export function ProvedorConta({ children }: { children: ReactNode }) {
     perfilLocal,
     importarPerfil,
     pronto: jogadorPronto,
-    progresso,
-    pontosPorNivel,
-    constelacoes,
-    desafios,
-    gastos,
-    compras,
+    movimentos,
+    comprasPendentes,
+    capturarProgresso,
+    conciliar,
     importarProgresso,
     prepararResultado,
     aplicarSnapshot,
   } = useJogador();
-  // retrato do progresso do aparelho, no formato que o servidor guarda
-  const retrato = useMemo<ProgressoServidor>(
-    () => ({ progresso, pontosPorNivel, constelacoes, desafios, gastos, compras }),
-    [progresso, pontosPorNivel, constelacoes, desafios, gastos, compras],
-  );
-  const retratoAtual = useRef(retrato);
-  useEffect(() => {
-    retratoAtual.current = retrato;
-  }, [retrato]);
+  const retrato = useMemo(() => ({ movimentos, comprasPendentes }), [movimentos, comprasPendentes]);
   const [pronto, setPronto] = useState(false);
   const [g, setG] = useState<Guardado>(VAZIO);
   const atual = useRef<Guardado>(VAZIO);
@@ -197,8 +214,6 @@ export function ProvedorConta({ children }: { children: ReactNode }) {
     const sessao = capturar();
     if (!temApi || !sessao || enviando.current) return;
     const s = atual.current;
-    const progressoCapturado = retratoAtual.current;
-    const rostoCapturado = rostoAtual;
     enviando.current = true;
     try {
       try {
@@ -208,23 +223,59 @@ export function ProvedorConta({ children }: { children: ReactNode }) {
         return;
       }
       if (!sessao.ativa()) return;
-      await sincronizarFila(
-        sessao,
-        s.fila,
-        (token, lote) =>
-          chamarApi<{ recebidas: string[]; recusadas?: string[] }>("/aluno/jogadas", {
-            token,
-            metodo: "POST",
-            corpo: { jogadas: lote },
-          }),
-        (ok, rejeitadas) =>
-          gravar((x) => ({
-            ...x,
-            fila: x.fila.filter((j) => !ok.has(j.id) && !rejeitadas.has(j.id)),
-            recusadas: [...x.recusadas, ...x.fila.filter((j) => rejeitadas.has(j.id))],
-          })),
-      );
+      const minhas = s.fila.filter((j) => j.alunoId === sessao.alunoId);
+      for (let i = 0; i < Math.max(1, minhas.length); i += 100) {
+        const jogadorCapturado = capturarProgresso();
+        const resposta = await chamarApi<{
+          recebidas: string[];
+          recusadas: string[];
+          motivosRecusa: Record<string, string>;
+          comprasRecusadas: string[];
+          iniciosConfirmados: string[];
+          iniciosRecusados: string[];
+          progresso: ProgressoServidor;
+        }>("/aluno/sincronizar", {
+          token: sessao.token,
+          metodo: "POST",
+          corpo: {
+            dispositivoId: jogadorCapturado.dispositivoId,
+            legado: jogadorCapturado.legado,
+            inicios: Object.values(atual.current.inicios).slice(0, 100),
+            jogadas: minhas.slice(i, i + 100).map(({ alunoId: _alunoId, ...j }) => j),
+            compras: jogadorCapturado.comprasPendentes,
+          },
+        });
+        if (!sessao.ativa()) return;
+        const removidas = new Set([...resposta.recebidas, ...resposta.recusadas]);
+        const novoJogador = conciliar(resposta.progresso, resposta.recusadas, resposta.comprasRecusadas, true);
+        const novo = {
+          ...atual.current,
+          inicios: Object.fromEntries(
+            Object.entries(atual.current.inicios).filter(
+              ([id]) => ![...resposta.iniciosConfirmados, ...resposta.iniciosRecusados].includes(id),
+            ),
+          ),
+          fila: atual.current.fila.filter((j) => !removidas.has(j.id)),
+          recusadas: [
+            ...atual.current.recusadas,
+            ...atual.current.fila
+              .filter((j) => resposta.recusadas.includes(j.id))
+              .map((j) => ({ ...j, motivoRecusa: resposta.motivosRecusa[j.id] })),
+          ],
+        };
+        const escrita = repositorio.salvarJuntos(escopo.identidade, novoJogador, novo);
+        aplicarSnapshot(novoJogador);
+        atual.current = novo;
+        setG(novo);
+        await escrita;
+      }
       if (!sessao.ativa()) return;
+      if (atual.current.leiturasPendentes.length) {
+        const ids = atual.current.leiturasPendentes.slice(0, 500);
+        await chamarApi("/aluno/avisos/lidos", { token: sessao.token, metodo: "POST", corpo: { ids } });
+        if (!sessao.ativa()) return;
+        gravar((x) => ({ ...x, leiturasPendentes: x.leiturasPendentes.filter((id) => !ids.includes(id)) }));
+      }
       // Sessões antigas não trazem avatar: não enviar o padrão sobre o remoto.
       if (!perfilLocal) {
         await receberNoEscopo(
@@ -234,6 +285,7 @@ export function ProvedorConta({ children }: { children: ReactNode }) {
         );
         return; // O novo perfil dispara o próximo envio, com o retrato atualizado.
       }
+      const rostoCapturado = capturarProgresso().jogador?.rosto;
       // avatar: só quando mudou desde o último envio
       if (rostoCapturado) {
         const rosto = normalizar(rostoCapturado);
@@ -244,21 +296,25 @@ export function ProvedorConta({ children }: { children: ReactNode }) {
           gravar((x) => ({ ...x, avatarEnviado: svg }));
         }
       }
-      // progresso de gamificação: só quando mudou desde o último envio
-      if (!sessao.ativa()) return;
-      const progressoJson = JSON.stringify(progressoCapturado);
-      if (progressoJson !== atual.current.progressoEnviado) {
-        await chamarApi("/aluno/progresso", { token: sessao.token, metodo: "PUT", corpo: progressoCapturado });
-        if (!sessao.ativa()) return;
-        gravar((x) => ({ ...x, progressoEnviado: progressoJson }));
-      }
       setOnline(true);
     } catch (e) {
       tratarErro(e, sessao);
     } finally {
       enviando.current = false;
     }
-  }, [capturar, gravar, rostoAtual, tratarErro, perfilLocal, importarPerfil, repositorio, falhar]);
+  }, [
+    capturar,
+    gravar,
+    tratarErro,
+    perfilLocal,
+    importarPerfil,
+    repositorio,
+    falhar,
+    capturarProgresso,
+    conciliar,
+    aplicarSnapshot,
+    escopo,
+  ]);
 
   const guardarJogada = useCallback(
     async (r: ResultadoJogada, destino: DestinoJogada, resultado?: ReturnType<typeof prepararResultado>) => {
@@ -268,7 +324,8 @@ export function ProvedorConta({ children }: { children: ReactNode }) {
       const jogada = contaDaIdentidade && {
         ...r,
         dicas: r.dicas ?? 0,
-        id: novoId(),
+        id: r.id ?? novoId(),
+        recompensar: !!resultado,
         alunoId: contaDaIdentidade.aluno.id,
         origem: destino.origem,
         atividadeId: destino.atividadeId ?? null,
@@ -289,10 +346,12 @@ export function ProvedorConta({ children }: { children: ReactNode }) {
         : s;
 
       try {
-        const escrita = resultado
-          ? repositorio.salvarJuntos(escopo.identidade, resultado.novo, novo)
-          : repositorio.salvar("conta", escopo.identidade, novo);
-        if (resultado) aplicarSnapshot(resultado.novo);
+        const novoJogador = resultado?.novo ?? {
+          ...capturarProgresso(),
+          resultados: [...capturarProgresso().resultados, { ...r, id: jogada ? jogada.id : r.id }],
+        };
+        const escrita = repositorio.salvarJuntos(escopo.identidade, novoJogador, novo);
+        aplicarSnapshot(novoJogador);
         atual.current = novo;
         setG(novo);
         await escrita;
@@ -302,7 +361,7 @@ export function ProvedorConta({ children }: { children: ReactNode }) {
       }
       if (jogada && escopo.ativa()) setTimeout(sincronizar, 0);
     },
-    [aplicarSnapshot, capturar, contaDaIdentidade, escopo, falhar, repositorio, sincronizar],
+    [aplicarSnapshot, capturar, capturarProgresso, contaDaIdentidade, escopo, falhar, repositorio, sincronizar],
   );
 
   /** Traz o progresso guardado no servidor (de outros aparelhos) e junta com o daqui. */
@@ -328,10 +387,28 @@ export function ProvedorConta({ children }: { children: ReactNode }) {
     try {
       await receberNoEscopo(
         sessao,
-        (token) => chamarApi<{ atividades: AtividadeDoProfessor[] }>("/aluno/atividades", { token }),
-        ({ atividades }) => {
+        async (token) => {
+          const [a, n, f] = await Promise.all([
+            chamarApi<{ atividades: AtividadeDoProfessor[] }>("/aluno/atividades", { token }),
+            chamarApi<{ avisos: AvisoAluno[] }>("/aluno/avisos", { token }),
+            chamarApi<{ avaliacoes: DevolutivaAluno[] }>("/aluno/avaliacoes", { token }),
+          ]);
+          return { ...a, ...n, ...f };
+        },
+        ({ atividades, avisos, avaliacoes }) => {
           if (!Array.isArray(atividades)) throw new ErroApi(502, "O servidor não retornou a lista de atividades.");
-          gravar((x) => ({ ...x, atividades }));
+          gravar((x) => ({
+            ...x,
+            atividades,
+            avisos: avisos.map((a) => ({
+              ...a,
+              lida:
+                a.lida ||
+                x.avisos.some((anterior) => anterior.id === a.id && anterior.lida) ||
+                x.leiturasPendentes.includes(a.id),
+            })),
+            avaliacoes,
+          }));
           setEstadoAtividades("atualizadas");
           setOnline(true);
         },
@@ -358,7 +435,9 @@ export function ProvedorConta({ children }: { children: ReactNode }) {
         atualizarAtividades();
       }
     });
-    const tic = setInterval(sincronizar, 60_000);
+    const tic = setInterval(() => {
+      void sincronizar().then(atualizarAtividades);
+    }, 60_000);
     return () => {
       clearTimeout(primeira);
       ao.remove();
@@ -374,6 +453,30 @@ export function ProvedorConta({ children }: { children: ReactNode }) {
     return () => clearTimeout(envio);
   }, [rostoAtual, retrato, pronto, contaDaIdentidade, sincronizar]);
 
+  const iniciarAtividade = useCallback(
+    async (id: string) => {
+      if (!contaDaIdentidade || atual.current.inicios[id]) return;
+      gravar((x) => ({
+        ...x,
+        inicios: { ...x.inicios, [id]: { atividadeId: id, iniciadaEm: new Date().toISOString() } },
+      }));
+      await repositorio.aguardarEscritas();
+      if (escopo.ativa()) setTimeout(sincronizar, 0);
+    },
+    [contaDaIdentidade, gravar, repositorio, escopo, sincronizar],
+  );
+  const marcarAvisosLidos = useCallback(
+    (ids: string[]) => {
+      gravar((x) => ({
+        ...x,
+        avisos: x.avisos.map((a) => ({ ...a, lida: a.lida || ids.includes(a.id) })),
+        leiturasPendentes: [...new Set([...x.leiturasPendentes, ...ids])],
+      }));
+      setTimeout(sincronizar, 0);
+    },
+    [gravar, sincronizar],
+  );
+
   const valor = useMemo<Estado>(
     () => ({
       pronto: pronto && jogadorPronto,
@@ -383,7 +486,12 @@ export function ProvedorConta({ children }: { children: ReactNode }) {
       continuarSemTurma: () => gravar((x) => ({ ...x, semTurma: true })),
       pendentes: contaDaIdentidade ? g.fila.filter((j) => j.alunoId === contaDaIdentidade.aluno.id).length : 0,
       recusadas: g.recusadas.length,
+      resultadosRecusados: g.recusadas,
       online,
+      avisos: g.avisos,
+      avaliacoes: g.avaliacoes,
+      iniciarAtividade,
+      marcarAvisosLidos,
       carregandoAtividades,
       estadoAtividades,
       atividades: g.atividades.map((a) => ({ ...a, feita: g.feitas[a.id] ?? a.feita })),
@@ -405,8 +513,9 @@ export function ProvedorConta({ children }: { children: ReactNode }) {
       },
       registrarJogada: (r, destino) => guardarJogada(r, destino),
       concluirMissao: async (r, destino) => {
-        const resultado = prepararResultado(r);
-        await guardarJogada(r, destino, resultado);
+        const identificada = { ...r, id: novoId() };
+        const resultado = prepararResultado(identificada);
+        await guardarJogada(identificada, destino, resultado);
         return resultado.recompensa;
       },
       atualizarAtividades,
@@ -427,6 +536,8 @@ export function ProvedorConta({ children }: { children: ReactNode }) {
       selecionar,
       gravar,
       jogadorPronto,
+      iniciarAtividade,
+      marcarAvisosLidos,
     ],
   );
 

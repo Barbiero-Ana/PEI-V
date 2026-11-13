@@ -1,4 +1,10 @@
-# MOD-PRF-018
+# PRD do requisito MOD-PRF-018
+
+**Data registrada no PRD de origem:** 2026-11-05. Preservada da fonte; não representa a criação desta ficha.
+
+**Revisão documental:** 13/11/2026 — Ana Barbiero — Líder de projeto. A aprovação da organização e rastreabilidade não substitui o aceite funcional.
+
+## Objetivo e escopo
 
 O filtro de turma é o mesmo em todas as páginas (Turma, Alunos, Desempenho, Habilidades, Planos, Calendário e Atividades): um seletor com a cor e a contagem de cada turma, que ganha campo de busca a partir de 7 opções e funciona pelo teclado.
 

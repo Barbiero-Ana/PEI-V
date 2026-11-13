@@ -2,7 +2,7 @@
 
 - **Status:** Aceita
 - **Data:** 05/11/2026
-- **Decisores:** a preencher pela equipe
+- **Decisores originais:** não identificados no registro histórico.
 - **Uso de IA:** auxílio na comparação das alternativas, na implementação e nos testes, a partir do pedido da
   equipe de que cada aluno entre na própria conta com um código passado pelo professor ou pela coordenação.
 
@@ -46,3 +46,11 @@ tivesse o código.
 - **Pendente:** impressão dos códigos da turma em cartões; acesso próprio da coordenação ao painel.
 
 Relacionados: [[PRD-01 — Autenticação e controle de acesso]], [[0015-integracao-app-painel-pela-api]].
+
+## Aprovação da revisão documental
+
+- **Data da revisão e aprovação:** 13/11/2026.
+- **Assinatura de aprovação:** Ana Barbiero — Líder de projeto.
+- **Registro:** aprovação expressa nesta conversa para organizar e consolidar a documentação.
+- **Histórico:** a data original da decisão no cabeçalho foi preservada. Esta assinatura não atribui
+  participação retroativa nem reativa decisões substituídas; evidências de homologação continuam separadas.

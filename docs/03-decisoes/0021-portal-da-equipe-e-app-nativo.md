@@ -30,3 +30,11 @@ recursos do aparelho, funciona offline e precisa de uma homologação própria n
 - O app e o painel compartilham a API, com sessões e permissões próprias. A demonstração pode ser testada offline.
 
 Relacionados: [ADR 0017](0017-acesso-individual-do-aluno.md) e [ADR 0019](0019-papeis-coordenacao-e-administrador.md).
+
+## Aprovação da revisão documental
+
+- **Data da revisão e aprovação:** 13/11/2026.
+- **Assinatura de aprovação:** Ana Barbiero — Líder de projeto.
+- **Registro:** aprovação expressa nesta conversa para organizar e consolidar a documentação.
+- **Histórico:** a data original da decisão no cabeçalho foi preservada. Esta assinatura não atribui
+  participação retroativa nem reativa decisões substituídas; evidências de homologação continuam separadas.

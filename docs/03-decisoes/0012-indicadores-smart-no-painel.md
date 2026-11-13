@@ -2,7 +2,7 @@
 
 - **Status:** Aceita
 - **Data:** 04/11/2026
-- **Decisores:** a preencher pela equipe
+- **Decisores originais:** não identificados no registro histórico.
 - **Uso de IA:** auxílio na escrita do código, dos testes e da redação das definições, a partir da orientação do
   professor orientador de que os indicadores fossem SMART. As metas propostas dependem de aprovação da equipe.
 
@@ -45,3 +45,11 @@ não divergirem.
   a de hoje, para funcionar com os dados de demonstração.
 - **O que fica pendente:** aprovar as metas, decidir se o professor poderá ajustá-las e, com a API, incluir indicadores
   de dicas e de domínio (RN-07).
+
+## Aprovação da revisão documental
+
+- **Data da revisão e aprovação:** 13/11/2026.
+- **Assinatura de aprovação:** Ana Barbiero — Líder de projeto.
+- **Registro:** aprovação expressa nesta conversa para organizar e consolidar a documentação.
+- **Histórico:** a data original da decisão no cabeçalho foi preservada. Esta assinatura não atribui
+  participação retroativa nem reativa decisões substituídas; evidências de homologação continuam separadas.

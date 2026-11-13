@@ -22,7 +22,7 @@ const GRUPOS: { titulo: string; slots: ItemLoja["slot"][] }[] = [
 
 export default function Loja() {
   const insets = useSafeAreaInsets();
-  const { jogador, luzes, compras, comprar, editarPerfil } = useJogador();
+  const { avisoSincronizacao, jogador, luzes, compras, comprar, editarPerfil } = useJogador();
   useFalarAoAbrir(`Loja. Você tem ${luzes} luzes para gastar.`);
   const [escolhido, setEscolhido] = useState<ItemLoja>(ITENS_LOJA[0]!);
   const [recemComprado, setRecemComprado] = useState<string | null>(null);
@@ -47,6 +47,11 @@ export default function Loja() {
           paddingBottom: 24,
         }}
       >
+        {avisoSincronizacao ? (
+          <Texto accessibilityRole="alert" style={{ marginBottom: 14, color: cor.pessegoEscuro }}>
+            {avisoSincronizacao}
+          </Texto>
+        ) : null}
         <View style={l.topo}>
           <Titulo tamanho={22}>Loja do avatar</Titulo>
           <Pressable onPress={voltar} hitSlop={12} accessibilityLabel="Fechar">

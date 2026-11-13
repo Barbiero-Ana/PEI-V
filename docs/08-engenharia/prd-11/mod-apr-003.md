@@ -1,4 +1,10 @@
-# MOD-APR-003
+# PRD do requisito MOD-APR-003
+
+**Data registrada no PRD de origem:** 2026-11-11. Preservada da fonte; não representa a criação desta ficha.
+
+**Revisão documental:** 13/11/2026 — Ana Barbiero — Líder de projeto. A aprovação da organização e rastreabilidade não substitui o aceite funcional.
+
+## Objetivo e escopo
 
 Classificar cada formato em nível e tendência, conforme a RN-08.
 

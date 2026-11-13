@@ -22,7 +22,11 @@ const ETAPAS = [
 ] as const;
 /** Em que etapa cada campo com erro do servidor é corrigido. */
 const etapaDoErro = (campo: string) =>
-  campo.startsWith("questoes") || campo === "missaoId" ? 1 : campo === "turmas" || campo === "liberarEm" ? 2 : 0;
+  campo.startsWith("questoes") || campo === "missaoId"
+    ? 1
+    : campo === "turmas" || campo === "liberarEm" || campo === "prazo"
+      ? 2
+      : 0;
 
 /** Questão vazia de cada formato, para começar a montar. */
 function vazia(formato: FormatoEditavel): Questao | null {
@@ -720,6 +724,19 @@ export function EditorAtividade({ inicial, id, turmas, planos, habilidades, miss
                 className={`${ENTRADA} h-11 max-w-56 font-normal`}
               />
               <Erro msg={e.liberarEm} />
+            </Campo>
+            <Campo rotulo="Prazo para responder (opcional)">
+              <input
+                type="date"
+                min={dados.liberarEm || undefined}
+                value={dados.prazo ?? ""}
+                onChange={(ev) => mudar({ prazo: ev.target.value })}
+                className={`${ENTRADA} h-11 max-w-56 font-normal`}
+              />
+              <Erro msg={e.prazo} />
+              <p className="mt-1 text-xs text-texto-suave">
+                A atividade encerra ao fim dessa data. Deixe vazio para não limitar.
+              </p>
             </Campo>
           </section>
 

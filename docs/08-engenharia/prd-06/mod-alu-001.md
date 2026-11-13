@@ -1,4 +1,10 @@
-# MOD-ALU-001
+# PRD do requisito MOD-ALU-001
+
+**Data registrada no PRD de origem:** 2026-11-04. Preservada da fonte; não representa a criação desta ficha.
+
+**Revisão documental:** 13/11/2026 — Ana Barbiero — Líder de projeto. A aprovação da organização e rastreabilidade não substitui o aceite funcional.
+
+## Objetivo e escopo
 
 A tela inicial exibe nome e avatar, luzes, o céu do mapa atual, as próximas missões e o desafio do dia.
 

@@ -3,7 +3,30 @@
 10/11/2026 · Expo SDK 58 · `br.com.modolume.app`
 
 Os perfis EAS `play-internal` e `production` estão preparados para gerar Android App Bundles
-com ambientes separados. A geração e a validação do artefato na Play Console estão pendentes.
+com ambientes separados. O primeiro AAB de teste foi gerado e validado estruturalmente em 11/11/2026.
+A instalação e a validação do artefato na Play Console continuam pendentes.
+
+A consolidação de 11/11 usa `versionCode` 3. Os links de código 2 abaixo são históricos e não contêm
+o novo protocolo, as avaliações e os avisos. Implantar API e painel e gerar outro build conforme o
+[roteiro de consolidação](consolidacao-funcional.md).
+
+## Artefato anterior de teste disponível
+
+O [build AAB no EAS](https://expo.dev/accounts/anabarbiero23/projects/modolume/builds/88976f63-a409-4c91-b8f7-8f14b24700d8)
+concluiu com o perfil `play-internal`. O manifesto confirma `br.com.modolume.app`, versão `1.0.0`,
+`versionCode` 2, Android mínimo API 24 e alvo API 36. O `bundletool` 1.18.3 aceitou a estrutura.
+Isso não substitui instalação, teste em aparelho com páginas de 16 KB ou aceite da Google Play.
+
+O [APK para instalação direta](https://expo.dev/artifacts/eas/rxyHOjMetAjzqiYHlPWhQP5K1vBTUka0EWN3wpxicVs.apk)
+também concluiu no [EAS](https://expo.dev/accounts/anabarbiero23/projects/modolume/builds/9369891c-2266-465e-8224-f9ed2f582145),
+com o perfil `preview` e a mesma versão. Abra o link no Android, instale e execute o
+[roteiro em aparelho](plano-correcao-mobile.md#roteiro-de-homologação-em-aparelho). Use apenas dados fictícios.
+O APK serve ao teste direto; o AAB será enviado à faixa interna quando houver acesso à Play Console.
+
+O manifesto mesclado inclui acesso à internet, vibração, biometria, sobreposição de janelas e leitura e
+escrita no armazenamento externo até a API 32. Revisar a origem e a necessidade de cada permissão,
+especialmente `SYSTEM_ALERT_WINDOW` e armazenamento, antes da versão pública. Nenhuma dessas permissões
+deve ser declarada necessária apenas por ter sido acrescentada por uma dependência.
 
 ## Ordem de trabalho
 
@@ -45,6 +68,7 @@ O teste fechado segue as exigências próprias da Play Console. [Faixas de teste
    ```powershell
    Set-Location apps/mobile
    npx eas-cli@latest whoami
+   npx eas-cli@latest env:set --environment preview --name EXPO_PUBLIC_API_URL --value https://api.modolume.com.br --visibility plaintext --scope project --non-interactive
    npx eas-cli@latest build --platform android --profile play-internal
    ```
 
@@ -59,6 +83,9 @@ O teste fechado segue as exigências próprias da Play Console. [Faixas de teste
    `npx eas-cli@latest build --platform android --profile production`. Validar a conexão e o login da versão
    de produção com dados fictícios antes de liberar a versão pública.
    [Perfis de build do EAS](https://docs.expo.dev/eas/json/).
+
+O perfil `play-internal` usa atualmente a API publicada em `https://api.modolume.com.br`. A validação inicial deve
+usar as contas e turmas fictícias já provisionadas. Antes de liberar dados reais, cumprir os critérios da seção 1.
 
 ## 3. Dados e ficha da loja
 
@@ -82,6 +109,7 @@ O teste fechado segue as exigências próprias da Play Console. [Faixas de teste
 | Nome, matrícula e turma | O painel mantém o cadastro escolar no PostgreSQL. A API entrega ao aluno informações de perfil e turma associadas à sua sessão. |
 | Código, PIN e sessão | O servidor mantém o código e o hash do PIN. O app guarda a sessão no cofre nativo e limpa as cópias locais legadas. |
 | Avatar, atividade e desempenho | O app mantém uma cópia local. Na conta escolar, envia avatar, acertos, tentativas, tempo, progresso e demais resultados à API. O painel mostra os dados conforme os vínculos da equipe. |
+| Avisos, avaliações e instalação | Leituras, devolutivas, medidas por fase e um identificador aleatório por instalação são persistidos na conta escolar. Não há serviço de push nesta entrega. |
 | Demonstração e PDF | O visitante guarda o progresso no aparelho. O relatório pode ser gerado localmente e compartilhado pelo aluno pelo menu do sistema. |
 
 Validar este inventário contra o AAB efetivamente distribuído e a infraestrutura usada, inclusive SDKs,
@@ -105,6 +133,7 @@ como a medida alcança as cópias de segurança.
 
 ## Integrações adiadas
 
-- O Resend aguarda a verificação do domínio para homologar a entrega de ativação e recuperação da equipe.
+- O domínio do Resend foi informado como verificado pela equipe. Falta registrar o teste real de entrega,
+  abertura e consumo do link de definição e recuperação de senha.
 - O login Google exige definir o público antes de criar contas independentes. Nessa integração, a API
   verificaria a identidade Google e faria o vínculo com a conta autorizada. A demonstração atual é local.

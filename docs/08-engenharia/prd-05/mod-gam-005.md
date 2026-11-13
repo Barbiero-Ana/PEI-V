@@ -1,4 +1,10 @@
-# MOD-GAM-005
+# PRD do requisito MOD-GAM-005
+
+**Data registrada no PRD de origem:** 2026-11-04. Preservada da fonte; não representa a criação desta ficha.
+
+**Revisão documental:** 13/11/2026 — Ana Barbiero — Líder de projeto. A aprovação da organização e rastreabilidade não substitui o aceite funcional.
+
+## Objetivo e escopo
 
 Sortear diariamente um desafio do dia, conforme a RN-11.
 
@@ -11,7 +17,7 @@ Origem: [PRD-05 — Gamificação](../../02-modulos/PRD-05%20%E2%80%94%20Gamific
 - HU-GAM-03 Como **aluno**, quero um desafio especial por dia, para ter motivo de voltar.
 
 - **HU-GAM-03** CA-01: Dados dois alunos no mesmo dia, então os dois veem o mesmo desafio.
-- **HU-GAM-03** CA-02: Ao concluir o desafio, os pontos dobram só na primeira vez no dia (RN-11).
+- **HU-GAM-03** CA-02: A primeira conclusão recebe o bônus diário. Uma tentativa melhor ajusta apenas a diferença desse único bônus, sem multiplicá-lo por aparelho (RN-11; ADR 0024).
 
 As regras de negócio aplicáveis ao contexto estão no [módulo](README.md) e na seção 5 do PRD.
 

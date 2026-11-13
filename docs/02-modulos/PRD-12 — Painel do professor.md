@@ -2,6 +2,8 @@
 modulo: PRF
 prd: PRD-12
 atualizado: 2026-11-05
+revisao_documental: 2026-11-13
+responsavel_revisao: Ana Barbiero — Líder de projeto
 status: para revisão
 ---
 
@@ -234,3 +236,10 @@ Critérios marcados com [x] já são atendidos pelo painel atual (dados de demon
 - [[PRD-11 — Análise de aprendizagem]] · [[PRD-13 — Planejamento de aulas]] · [[PRD-14 — Atividades do professor]] · [[PRD-16 — Notificações]]
 - [[Diretrizes de usabilidade do painel]]
 - [[0008-painel-do-professor-em-nextjs|ADR 0008]] · [[0009-painel-construido-por-etapas|ADR 0009]] · [[0012-indicadores-smart-no-painel|ADR 0012]] · [[0013-navegacao-do-painel-com-nomes-visiveis|ADR 0013]]
+
+## 13. Controle da revisão documental
+
+A data `atualizado` do histórico foi preservada. A revisão documental de **13/11/2026** foi aprovada por
+**Ana Barbiero — Líder de projeto**, para organização, consistência e rastreabilidade. Essa aprovação não
+substitui o aceite funcional: cenários sem evidência ou dependentes de validação pedagógica, institucional
+e de aparelhos continuam pendentes na matriz de engenharia. Não foi inferida uma data de criação.

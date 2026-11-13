@@ -34,13 +34,13 @@ const modulos = {
     "As regras de luzes e constelações ficam no núcleo. A loja e a projeção offline ficam no estado do jogador.",
     "packages/core/src/constelacoes.ts apps/mobile/src/estado/jogador.tsx apps/mobile/src/app/loja.tsx apps/api/src/aluno.ts",
     "ponto_mapa, progresso_missao, constelacao_conquistada, desafio_concluido, compra_loja",
-    "constelacoes.test.ts. Consolidação aditiva e validação do saldo entre aparelhos pendentes.",
+    "progresso.test.ts e verificar-consolidacao.ts cobrem soma, bônus, compras concorrentes e saldo. Aceite em aparelhos pendente.",
   ],
   "06": [
     "A navegação do aluno apresenta mapas, conquistas, perfil e atividades da turma em abas.",
     "apps/mobile/src/app/(abas) apps/mobile/src/componentes/BarraAbas.tsx",
     "missao, mapa, jogada",
-    "Teste de tarefa em celular pendente. Feedback recente depende do PRD-15.",
+    "Início mostra a devolutiva publicada e acesso aos avisos. Teste de tarefa e acessibilidade em celular pendentes.",
   ],
   "07": [
     "Aluno configura avatar e preferências no app. A equipe consulta a conta e altera a própria senha pela web.",
@@ -58,19 +58,19 @@ const modulos = {
     "O app gera PDF A4 a partir do progresso disponível localmente e abre o compartilhamento do sistema.",
     "apps/mobile/src/app/relatorio.tsx apps/mobile/src/lib/relatorioPdf.ts",
     "Histórico local e progresso da conta",
-    "Geração, compartilhamento e tempo no aparelho pendentes. Histórico remoto detalhado ainda não é restaurado.",
+    "Histórico remoto é restaurado para a análise. Geração, compartilhamento e tempo no aparelho pendentes.",
   ],
   10: [
     "A fila é separada por aluno. A API retorna confirmações por ID e o app guarda recusas separadas de pendências.",
-    "apps/mobile/src/estado/conta.tsx apps/mobile/src/estado/isolamento.ts apps/mobile/src/estado/jogador.tsx apps/api/src/aluno.ts",
+    "apps/mobile/src/estado/conta.tsx apps/mobile/src/estado/isolamento.ts apps/mobile/src/estado/progresso-local.ts apps/api/src/sincronizacao-aluno.ts apps/api/src/progresso-aluno.ts",
     "jogada e tabelas de progresso",
-    "Testes de isolamento e de validação da jogada. Persistência atômica da recompensa com a fila e recuperação integral entre aparelhos pendentes.",
+    "progresso-local.test.ts cobre conciliação, resposta antiga e migração do histórico. verificar-consolidacao.ts cobre transação, soma, compras, saldo e rollback. Homologação em aparelhos pendente.",
   ],
   11: [
-    "O núcleo calcula domínio para o app. O pentagrama web ainda usa acerto médio.",
+    "App e painel usam o domínio do núcleo com medidas originais e ordenação estável. O painel agrupa formatos por jeito e identifica separadamente o acerto médio.",
     "packages/core/src/aprendizagem.ts apps/web/lib/painel/pentagrama.ts apps/web/lib/painel/dados.ts",
     "jogada, formato_atividade",
-    "aprendizagem.test.ts e indicador.test.ts. Paridade entre interfaces pendente.",
+    "aprendizagem.test.ts e aprendizagem-painel.test.ts cobrem domínio, adaptação e recência. Conferência visual entre interfaces pendente.",
   ],
   12: [
     "A web recorta dados por professor e turma, calcula indicadores e apresenta agenda, alertas e filtros.",
@@ -85,22 +85,22 @@ const modulos = {
     "escrita-professor.test.ts e validacao.test.ts. Revisar datas e fluxo completo pela web.",
   ],
   14: [
-    "Professor prepara questões ou escolhe missão pronta, publica para turmas vinculadas e consulta resultados concluídos.",
+    "Professor publica atividades com prazo opcional. O painel distingue início e conclusão e abre a avaliação individual.",
     "packages/core/src/atividades-professor.ts apps/web/app/professor/(painel)/atividades apps/api/src/professor.ts apps/api/src/aluno.ts",
     "atividade_professor, atividade_turma, questao_atividade, opcao_questao, jogada",
-    "escrita-professor.test.ts e jogada.test.ts. Prazo, encerramento e estado em andamento pendentes.",
+    "verificar-consolidacao.ts valida início, prazo, encerramento e reenvio. Homologação dos formatos no aparelho pendente.",
   ],
   15: [
-    "Professor consulta resultados já concluídos. Avaliação, percepções e feedback aguardam implementação.",
-    "apps/api/src/professor.ts apps/web/app/professor/(painel)/alunos",
-    "jogada; entidade de avaliação pendente",
-    "Homologar histórico e implementar testes de privacidade de rascunho e publicação.",
+    "Professor consulta fases e salva versões de avaliação. Rascunhos são privados; a publicação libera a devolutiva e o aviso ao aluno.",
+    "apps/api/src/avaliacoes.ts apps/web/app/professor/(painel)/atividades apps/mobile/src/app/feedback",
+    "jogada, avaliacao_atividade, registro",
+    "verificar-consolidacao.ts cobre privacidade, publicação, histórico, imutabilidade no banco e preservação ao excluir a atividade. Aceite em aparelho pendente.",
   ],
   16: [
-    "O sino do professor reúne alertas derivados dos dados do painel. O app ainda não tem central de avisos.",
-    "apps/web/lib/painel/alertas.ts apps/web/components/painel/alertas.tsx",
-    "Derivado de plano_aula, atividade_professor e jogada",
-    "Homologar sino, contagem e links. Avisos e persistência de leitura pendentes.",
+    "O app reúne avisos de atividade, prazo e avaliação. O sino do professor inclui avaliações pendentes.",
+    "apps/api/src/avisos-aluno.ts apps/mobile/src/app/avisos.tsx apps/web/lib/painel/alertas.ts apps/web/components/painel/alertas.tsx",
+    "Derivado de plano_aula, atividade_professor, avaliacao_atividade e jogada; leitura_aviso_aluno",
+    "O aluno tem leitura persistida no banco e fila offline. O sino da equipe mantém lidos por conta/dia no navegador. Push e leitura da equipe entre aparelhos ficam fora desta entrega.",
   ],
   17: [
     "Requisitos transversais de segurança, qualidade, desempenho, interfaces e portabilidade.",
@@ -111,6 +111,12 @@ const modulos = {
 };
 
 const evidencias = {
+  "ATI-005": "Prazo opcional no contrato, editor, API e CHECK no banco. verificar-consolidacao.ts cobre prazo e encerramento. Aceite visual pendente.",
+  "ATI-010": "Primeiro início persistido e separado da entrega. Teste real confirma em andamento e concluída. Conferência em aparelho pendente.",
+  "AVA-003": "Avaliação versionada com rascunho privado. Publicação exige texto; percepção usa a escala do PRD. Testes reais de persistência e autorização.",
+  "AVA-005": "Somente avaliações publicadas são retornadas ao aluno. Teste real cobre ausência do rascunho e aviso de publicação.",
+  "NOT-004": "Leitura do aluno é guardada no banco, com marcação individual/todos e fila offline. Leitura da equipe continua local ao navegador.",
+  "MAN-003": "ESLint da API verifica regras e fronteiras além da tipagem. Workflow de CI versionado executa lint, tipagem, testes, migrações, build web e bundle Android. Primeira execução remota pendente.",
   "AUT-007":
     "Uso único concorrente, expiração, resposta uniforme e contrato Resend simulado em verificar-banco.ts. Entrega real e análise do tempo de resposta pendentes.",
   "AUT-004":
@@ -123,16 +129,16 @@ const evidencias = {
   "ADM-009":
     "verificar-banco.ts verifica o papel do banco e rollback da revogação de senha. Demais operações e consulta pela interface precisam de cobertura.",
   "ADM-010":
-    "Fluxo substituído por link privado por decisão desta auditoria. verificador comprova resposta de cadastro sem credencial e consumo único. Resend pendente.",
+    "verificar-banco.ts cobre cadastro sem credencial na resposta e consumo único do link. A pessoa solicita o link em Recuperar acesso. Entrega real e convite automático no cadastro seguem pendentes.",
   "TUR-009": "leitura-professor.test.ts verifica recorte ao perder vínculo e quando turma encerra.",
   "HIS-005": "Suíte mobile cobre gravação conjunta da recompensa e da fila, reabertura e troca de identidade. verificar-banco.ts cobre reenvio e consulta do resultado pelo professor. Queda e reconexão em celular pendentes.",
-  "HIS-006": "verificar-banco.ts valida que atualizações concorrentes preservam o maior total. A soma de ganhos distintos em dois aparelhos ainda está pendente.",
-  "CON-002": "A conclusão local grava recompensa e fila na mesma operação. A API ainda recebe a jogada e o retrato de gamificação por operações distintas.",
+  "HIS-006": "verificar-consolidacao.ts cobre ganhos distintos nas duas ordens, reenvio sem novo crédito, compras concorrentes e importação legada única. Aceite físico pendente.",
+  "CON-002": "Conclusão local e fila são gravadas juntas. O protocolo novo grava histórico, crédito e compras na mesma transação da API. verificar-consolidacao.ts força falha no débito e confirma rollback de tudo.",
   "SEG-012": "verificar-banco.ts verifica privilégios efetivos e rollback de uma ação sensível no PostgreSQL local.",
   "SEG-006": "jogada.test.ts e validacao.test.ts exercitam incoerências no resultado e datas inválidas.",
   "PLA-004":
     "escrita-professor.test.ts confirma a recusa do registro futuro pela API. O fluxo pela interface fica pendente.",
-  "APR-002": "aprendizagem.test.ts exercita domínio no núcleo. O painel ainda usa uma medida distinta.",
+  "APR-002": "aprendizagem-painel.test.ts verifica as mesmas medidas e domínio, com recência estável por data/ID. A UI mantém acerto médio identificado separadamente.",
   "PRF-008":
     "indicadores-smart.test.ts exercita cálculos em memória. Unidade de IND-06 e viés de IND-04 permanecem em revisão.",
 };
@@ -149,6 +155,9 @@ for (const nome of readdirSync(origem)
   .sort()) {
   const prd = readFileSync(resolve(origem, nome), "utf8").replaceAll("\r\n", "\n");
   const numero = nome.slice(4, 6);
+  const dataOrigem = prd.match(/^atualizado: (\d{4}-\d{2}-\d{2})$/m)?.[1];
+  if (!dataOrigem) throw new Error(`Data de origem ausente: ${nome}`);
+  const historico = `**Data registrada no PRD de origem:** ${dataOrigem}. Preservada da fonte; não representa a criação desta ficha.\n\n**Revisão documental:** 13/11/2026 — Ana Barbiero — Líder de projeto. A aprovação da organização e rastreabilidade não substitui o aceite funcional.`;
   const pasta = resolve(destino, `prd-${numero}`);
   mkdirSync(pasta, { recursive: true });
   const [objetivo, codigo, persistencia, teste] = modulos[numero];
@@ -191,7 +200,7 @@ for (const nome of readdirSync(origem)
     const arquivo = `${id.toLowerCase()}.md`;
     escrever(
       resolve(pasta, arquivo),
-      `# ${id}\n\n${descricao}\n\nOrigem: [${titulo}](${fonte}), seção 5. Prioridade **${prioridade}**, método **${verificacao}**. Situação declarada na origem **${situacao}**.\n\n[Módulo, fluxo, perfis e entidades](README.md). [Requisitos transversais](../prd-17/README.md).\n\n## Regras, histórias e critérios de aceite\n\n${historiasVinculadas.map((h) => `- ${h[1]} ${h[2]}`).join("\n") || "O PRD não mapeia uma história individual a este requisito."}\n\n${criterios.join("\n") || "Use a descrição da seção 5 como cenário de verificação. O PRD não associa um critério de aceite individual a este item."}\n\n${regras.length ? "As regras de negócio aplicáveis ao contexto estão no [módulo](README.md) e na seção 5 do PRD." : "Consulte as regras transversais no PRD-17."}\n\n## Implementação e evidência\n\n${referencias}\n\n**Aceite nesta auditoria** ${aceiteLocal}.\n\n${evidencia}`,
+      `# PRD do requisito ${id}\n\n${historico}\n\n## Objetivo e escopo\n\n${descricao}\n\nOrigem: [${titulo}](${fonte}), seção 5. Prioridade **${prioridade}**, método **${verificacao}**. Situação declarada na origem **${situacao}**.\n\n[Módulo, fluxo, perfis e entidades](README.md). [Requisitos transversais](../prd-17/README.md).\n\n## Regras, histórias e critérios de aceite\n\n${historiasVinculadas.map((h) => `- ${h[1]} ${h[2]}`).join("\n") || "O PRD não mapeia uma história individual a este requisito."}\n\n${criterios.join("\n") || "Use a descrição da seção 5 como cenário de verificação. O PRD não associa um critério de aceite individual a este item."}\n\n${regras.length ? "As regras de negócio aplicáveis ao contexto estão no [módulo](README.md) e na seção 5 do PRD." : "Consulte as regras transversais no PRD-17."}\n\n## Implementação e evidência\n\n${referencias}\n\n**Aceite nesta auditoria** ${aceiteLocal}.\n\n${evidencia}`,
     );
     lista.push(`- [${id}](${arquivo}) ${descricao}`);
     linhasMatriz.push(
@@ -203,7 +212,7 @@ for (const nome of readdirSync(origem)
   const dependencias = [...new Set((prd.split("## 12. Documentos vinculados")[1] ?? "").match(/PRD-\d{2}/g))];
   escrever(
     resolve(pasta, "README.md"),
-    `# ${titulo}\n\n${objetivo}\n\n[PRD de origem](${fonte}) · [Matriz de rastreabilidade](../matriz.md) · [Qualidade e permissões](../prd-17/README.md)\n\n## Perfis e necessidades\n\n${perfis}\n\n## Implementação\n\n${referencias}\n\n**Persistência** ${persistencia}.\n\n## Regras de negócio\n\n${regras.join("\n") || "Sem regras numeradas próprias no PRD. Consulte a seção 5 da origem."}\n\n## Testes e limites\n\n${teste}\n\n## Dependências\n\n${dependencias.map((prd) => `[${prd}](../${prd.toLowerCase()}/README.md)`).join(" · ") || "Veja o PRD de origem."}\n\n## Requisitos\n\n${lista.join("\n")}`,
+    `# ${titulo}\n\n${historico}\n\n${objetivo}\n\n[PRD de origem](${fonte}) · [Matriz de rastreabilidade](../matriz.md) · [Qualidade e permissões](../prd-17/README.md)\n\n## Perfis e necessidades\n\n${perfis}\n\n## Implementação\n\n${referencias}\n\n**Persistência** ${persistencia}.\n\n## Regras de negócio\n\n${regras.join("\n") || "Sem regras numeradas próprias no PRD. Consulte a seção 5 da origem."}\n\n## Testes e limites\n\n${teste}\n\n## Dependências\n\n${dependencias.map((prd) => `[${prd}](../${prd.toLowerCase()}/README.md)`).join(" · ") || "Veja o PRD de origem."}\n\n## Requisitos\n\n${lista.join("\n")}`,
   );
   entradas.push(`- [${titulo}](prd-${numero}/README.md) (${lista.length} requisitos)`);
 }
@@ -213,6 +222,6 @@ escrever(
 );
 escrever(
   resolve(destino, "README.md"),
-  `# Engenharia do Modolume\n\n- [Arquitetura e convenções](arquitetura.md)\n- [Relatório de auditoria](auditoria.md)\n- [Plano de correção e testes do app](plano-correcao-mobile.md)\n- [Publicação na Google Play](publicacao-android.md)\n- [Matriz de rastreabilidade](matriz.md)\n\n## Módulos\n\n${entradas.join("\n")}\n\nRegere as fichas e a matriz com \`node scripts/gerar-rastreabilidade.mjs\`. Os PRDs em \`docs/02-modulos\` são a fonte dos critérios. As evidências e pendências são mantidas no gerador.`,
+  `# Engenharia do Modolume\n\n- [Arquitetura e convenções](arquitetura.md)\n- [Relatório de auditoria](auditoria.md)\n- [Consolidação funcional e roteiro de implantação](consolidacao-funcional.md)\n- [Implantação de 13/11/2026](implantacao-2026-11-13.md)\n- [Plano de correção e testes do app](plano-correcao-mobile.md)\n- [Publicação na Google Play](publicacao-android.md)\n- [Matriz de rastreabilidade](matriz.md)\n\n## Módulos\n\n${entradas.join("\n")}\n\nRegere as fichas e a matriz com \`node scripts/gerar-rastreabilidade.mjs\`. Os PRDs em \`docs/02-modulos\` são a fonte dos critérios. As evidências e pendências são mantidas no gerador.`,
 );
 console.log(`${ids.size} requisitos em ${entradas.length} módulos.`);

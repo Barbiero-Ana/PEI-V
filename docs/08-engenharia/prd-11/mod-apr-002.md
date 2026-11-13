@@ -1,4 +1,10 @@
-# MOD-APR-002
+# PRD do requisito MOD-APR-002
+
+**Data registrada no PRD de origem:** 2026-11-11. Preservada da fonte; não representa a criação desta ficha.
+
+**Revisão documental:** 13/11/2026 — Ana Barbiero — Líder de projeto. A aprovação da organização e rastreabilidade não substitui o aceite funcional.
+
+## Objetivo e escopo
 
 Calcular, para cada formato jogado, o acerto de primeira, a autonomia, a precisão e o domínio, conforme a RN-07.
 
@@ -24,4 +30,4 @@ As regras de negócio aplicáveis ao contexto estão no [módulo](README.md) e n
 
 **Aceite nesta auditoria** Evidência parcial.
 
-aprendizagem.test.ts exercita domínio no núcleo. O painel ainda usa uma medida distinta.
+aprendizagem-painel.test.ts verifica as mesmas medidas e domínio, com recência estável por data/ID. A UI mantém acerto médio identificado separadamente.

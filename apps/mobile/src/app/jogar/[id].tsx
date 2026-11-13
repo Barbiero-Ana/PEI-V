@@ -1,5 +1,6 @@
+import { useConta } from "@/estado/conta";
 import { View } from "react-native";
-import { missaoPorId, nivelDaMissao, nivelLiberado } from "@modolume/core";
+import { dataEscolar, missaoPorId, nivelDaMissao, nivelLiberado } from "@modolume/core";
 import { useLocalSearchParams } from "expo-router";
 import { voltar } from "@/lib/navegacao";
 import { useJogador } from "@/estado/jogador";
@@ -13,6 +14,9 @@ export default function Jogar() {
   // "atividade": a missão foi enviada pelo professor como atividade pronta do app
   const { id, atividade } = useLocalSearchParams<{ id: string; atividade?: string }>();
   const { pronto, jogador, progresso, preferencias } = useJogador();
+  const { atividades } = useConta();
+  const enviada = atividades.find((a) => a.id === atividade);
+  const encerrada = !!(atividade && (!enviada || (enviada.prazo && enviada.prazo < dataEscolar())));
   const missao = missaoPorId(id);
 
   if (!pronto || !jogador) return <EsqueletoTela formato="jogo" />;
@@ -22,7 +26,7 @@ export default function Jogar() {
   const liberado =
     Boolean(atividade) || (nivel ? nivelLiberado(nivel.numero, progresso, preferencias.liberarTodos) : false);
 
-  if (!missao || !liberado) {
+  if (!missao || !liberado || encerrada) {
     return (
       <View
         style={{
@@ -36,7 +40,7 @@ export default function Jogar() {
       >
         <Lilo humor="triste" tamanho={110} />
         <Titulo tamanho={20} style={{ textAlign: "center" }}>
-          {missao ? "Missão bloqueada" : "Missão não encontrada"}
+          {encerrada ? "Atividade encerrada ou indisponível" : missao ? "Missão bloqueada" : "Missão não encontrada"}
         </Titulo>
         <Texto style={{ textAlign: "center", color: cor.textoSuave }}>
           {missao ? `Conclua o mapa ${(nivel?.numero ?? 2) - 1} para liberar.` : "Volte e escolha outra missão."}
@@ -46,5 +50,5 @@ export default function Jogar() {
     );
   }
 
-  return <Partida key={missao.id} missao={missao} atividadeId={atividade} />;
+  return <Partida key={`${missao.id}:${atividade ?? "mapa"}`} missao={missao} atividadeId={atividade} />;
 }

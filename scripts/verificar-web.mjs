@@ -29,7 +29,7 @@ try {
   assert.match(await entrada.text(), /Boas-vindas/);
   assert.equal((await fetch(`${origem}/redefinir-senha`)).status, 200);
   assert.equal((await fetch(`${origem}/endereco-inexistente-auditoria`)).status, 404);
-  for (const caminho of ["/admin/usuarios", "/coordenacao", "/professor", "/conta/senha"]) {
+  for (const caminho of ["/admin/usuarios", "/coordenacao", "/professor", "/conta/senha", "/professor/atividades/exemplo/alunos/aluno-exemplo"]) {
     const resposta = await fetch(`${origem}${caminho}`, { redirect: "manual" });
     assert.equal(resposta.status, 307, caminho);
     assert.equal(new URL(resposta.headers.get("location"), origem).pathname, "/entrar", caminho);

@@ -1,4 +1,10 @@
-# MOD-PRF-009
+# PRD do requisito MOD-PRF-009
+
+**Data registrada no PRD de origem:** 2026-11-05. Preservada da fonte; não representa a criação desta ficha.
+
+**Revisão documental:** 13/11/2026 — Ana Barbiero — Líder de projeto. A aprovação da organização e rastreabilidade não substitui o aceite funcional.
+
+## Objetivo e escopo
 
 Cada indicador mostra, na própria tela, sua definição SMART: o que mede, como é calculado, por que a meta é atingível, por que importa e em que período.
 

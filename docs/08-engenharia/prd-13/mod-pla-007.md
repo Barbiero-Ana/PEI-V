@@ -1,4 +1,10 @@
-# MOD-PLA-007
+# PRD do requisito MOD-PLA-007
+
+**Data registrada no PRD de origem:** 2026-11-04. Preservada da fonte; não representa a criação desta ficha.
+
+**Revisão documental:** 13/11/2026 — Ana Barbiero — Líder de projeto. A aprovação da organização e rastreabilidade não substitui o aceite funcional.
+
+## Objetivo e escopo
 
 A ficha da turma e a do aluno levam a um plano novo com a turma (e o aluno) já marcados.
 

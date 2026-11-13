@@ -101,6 +101,21 @@ function consultarPlanos({ where, include }: ConsultaPlano) {
     }));
 }
 const banco = {
+  atividadeInicio: {
+    findMany: async ({ where }: { where: { atividadeId: string; aluno: FiltroAluno } }) => {
+      assert.equal(where.atividadeId, "atividade");
+      assert.ok(where.aluno.turma.professores.some.professorId);
+      return [];
+    },
+  },
+  avaliacaoAtividade: {
+    findMany: async ({ where }: { where: { atividadeId: string; aluno: FiltroAluno; publicada: boolean } }) => {
+      assert.equal(where.atividadeId, "atividade");
+      assert.equal(where.publicada, true);
+      assert.ok(where.aluno.turma.professores.some.professorId);
+      return [];
+    },
+  },
   professor: {
     findUnique: async () => ({
       id: "professor",

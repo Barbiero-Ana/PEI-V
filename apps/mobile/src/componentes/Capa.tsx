@@ -1,3 +1,4 @@
+import { PRECOS_LOJA } from "@modolume/core";
 import { memo, useEffect, useState, type ReactNode } from "react";
 import { Animated, Easing, Platform, StyleSheet, View, type DimensionValue, type ViewStyle } from "react-native";
 import { useAcessibilidade } from "@/estado/acessibilidade";
@@ -25,11 +26,11 @@ export const CAPAS = porTema(
       { id: "floresta", nome: "Floresta", fundo: "#7DBE8E", escura: false },
       { id: "confete", nome: "Confete", fundo: "#C9B4FF", escura: false },
       // compradas com luzes
-      { id: "doces", nome: "Doces", fundo: "#FFD3E2", escura: false, preco: 20 },
-      { id: "neve", nome: "Neve", fundo: "#3D7FC4", escura: true, preco: 25 },
-      { id: "galaxia", nome: "Galáxia", fundo: "#14134A", escura: true, preco: 30 },
-      { id: "mar", nome: "Fundo do mar", fundo: "#1D4E8F", escura: true, preco: 35 },
-      { id: "arcoiris", nome: "Arco-íris", fundo: "#BFE6FF", escura: false, preco: 40 },
+      { id: "doces", nome: "Doces", fundo: "#FFD3E2", escura: false, preco: PRECOS_LOJA["capa-doces"] },
+      { id: "neve", nome: "Neve", fundo: "#3D7FC4", escura: true, preco: PRECOS_LOJA["capa-neve"] },
+      { id: "galaxia", nome: "Galáxia", fundo: "#14134A", escura: true, preco: PRECOS_LOJA["capa-galaxia"] },
+      { id: "mar", nome: "Fundo do mar", fundo: "#1D4E8F", escura: true, preco: PRECOS_LOJA["capa-mar"] },
+      { id: "arcoiris", nome: "Arco-íris", fundo: "#BFE6FF", escura: false, preco: PRECOS_LOJA["capa-arcoiris"] },
     ] as { id: string; nome: string; fundo: string; escura: boolean; preco?: number }[],
 );
 

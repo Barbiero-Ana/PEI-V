@@ -1,4 +1,10 @@
-# MOD-ATI-010
+# PRD do requisito MOD-ATI-010
+
+**Data registrada no PRD de origem:** 2026-11-11. Preservada da fonte; não representa a criação desta ficha.
+
+**Revisão documental:** 13/11/2026 — Ana Barbiero — Líder de projeto. A aprovação da organização e rastreabilidade não substitui o aceite funcional.
+
+## Objetivo e escopo
 
 O professor vê, por atividade, os alunos que concluíram, que estão em andamento e que não iniciaram.
 
@@ -22,6 +28,6 @@ As regras de negócio aplicáveis ao contexto estão no [módulo](README.md) e n
 - [apps/api/src/professor.ts](../../../apps/api/src/professor.ts)
 - [apps/api/src/aluno.ts](../../../apps/api/src/aluno.ts)
 
-**Aceite nesta auditoria** Pendente.
+**Aceite nesta auditoria** Evidência parcial.
 
-Aceite individual pendente de verificação nesta auditoria. Consulte os cenários e as evidências do módulo.
+Primeiro início persistido e separado da entrega. Teste real confirma em andamento e concluída. Conferência em aparelho pendente.

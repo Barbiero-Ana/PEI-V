@@ -2,7 +2,7 @@
 
 - **Status:** Aceita (o acesso do aluno foi substituído pelo [[0017-acesso-individual-do-aluno|ADR 0017]])
 - **Data:** 04/11/2026
-- **Decisores:** a preencher pela equipe
+- **Decisores originais:** não identificados no registro histórico.
 - **Uso de IA:** auxílio na escrita da API, das telas e dos testes de ponta a ponta. A escolha de NestJS com PostgreSQL
   (ADR 0007) e o pedido de separar as atividades do professor das missões dos mapas são da equipe.
 
@@ -52,3 +52,11 @@ como as atividades padrão de mapeamento da aprendizagem.
   aparelho (falta a área segura, MOD-SEG-002); o painel ainda usa o acerto médio, e não o domínio, no pentagrama.
 - **O que fica pendente:** publicar a API no Railway, guardar os planos no banco, cadastro de turmas e usuários pela
   gestão, renovação do código da turma e data limite das atividades.
+
+## Aprovação da revisão documental
+
+- **Data da revisão e aprovação:** 13/11/2026.
+- **Assinatura de aprovação:** Ana Barbiero — Líder de projeto.
+- **Registro:** aprovação expressa nesta conversa para organizar e consolidar a documentação.
+- **Histórico:** a data original da decisão no cabeçalho foi preservada. Esta assinatura não atribui
+  participação retroativa nem reativa decisões substituídas; evidências de homologação continuam separadas.

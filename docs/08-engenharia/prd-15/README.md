@@ -1,6 +1,10 @@
 # PRD-15 — Avaliação e feedback
 
-Professor consulta resultados já concluídos. Avaliação, percepções e feedback aguardam implementação.
+**Data registrada no PRD de origem:** 2026-11-11. Preservada da fonte; não representa a criação desta ficha.
+
+**Revisão documental:** 13/11/2026 — Ana Barbiero — Líder de projeto. A aprovação da organização e rastreabilidade não substitui o aceite funcional.
+
+Professor consulta fases e salva versões de avaliação. Rascunhos são privados; a publicação libera a devolutiva e o aviso ao aluno.
 
 [PRD de origem](../../02-modulos/PRD-15%20%E2%80%94%20Avalia%C3%A7%C3%A3o%20e%20feedback.md) · [Matriz de rastreabilidade](../matriz.md) · [Qualidade e permissões](../prd-17/README.md)
 
@@ -14,10 +18,11 @@ Professor consulta resultados já concluídos. Avaliação, percepções e feedb
 
 ## Implementação
 
-- [apps/api/src/professor.ts](../../../apps/api/src/professor.ts)
-- [apps/web/app/professor/(painel)/alunos](../../../apps/web/app/professor/(painel)/alunos)
+- [apps/api/src/avaliacoes.ts](../../../apps/api/src/avaliacoes.ts)
+- [apps/web/app/professor/(painel)/atividades](../../../apps/web/app/professor/(painel)/atividades)
+- [apps/mobile/src/app/feedback](../../../apps/mobile/src/app/feedback)
 
-**Persistência** jogada; entidade de avaliação pendente.
+**Persistência** jogada, avaliacao_atividade, registro.
 
 ## Regras de negócio
 
@@ -25,7 +30,7 @@ Professor consulta resultados já concluídos. Avaliação, percepções e feedb
 
 ## Testes e limites
 
-Homologar histórico e implementar testes de privacidade de rascunho e publicação.
+verificar-consolidacao.ts cobre privacidade, publicação, histórico, imutabilidade no banco e preservação ao excluir a atividade. Aceite em aparelho pendente.
 
 ## Dependências
 

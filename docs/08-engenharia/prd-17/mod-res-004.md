@@ -1,4 +1,10 @@
-# MOD-RES-004
+# PRD do requisito MOD-RES-004
+
+**Data registrada no PRD de origem:** 2026-11-11. Preservada da fonte; não representa a criação desta ficha.
+
+**Revisão documental:** 13/11/2026 — Ana Barbiero — Líder de projeto. A aprovação da organização e rastreabilidade não substitui o aceite funcional.
+
+## Objetivo e escopo
 
 O conteúdo pedagógico se limita à Matemática do Ensino Fundamental.
 

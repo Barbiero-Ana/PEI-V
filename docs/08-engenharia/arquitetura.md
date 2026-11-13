@@ -44,11 +44,23 @@ A autenticação e a persistência de progresso têm ciclos separados. [ADR 0023
 
 Configure na API `RESEND_API_KEY`, `EMAIL_REMETENTE` em domínio verificado e `WEB_URL` apontando para a origem confiável da web. `REDEFINICAO_MINUTOS` aceita inteiros de 5 a 60 e tem padrão 30. Em produção a origem exige HTTPS. O fluxo responde com indisponibilidade se faltarem variáveis. O [contrato de envio do Resend](https://resend.com/docs/api-reference/emails/send-email) foi exercitado com resposta simulada. A [orientação de recuperação da OWASP](https://cheatsheetseries.owasp.org/cheatsheets/Forgot_Password_Cheat_Sheet.html) fundamenta o uso único, o prazo e a revogação.
 
-## Envio de jogadas
+## Envio de jogadas e atividades
 
-O app mantém uma fila separada por identidade e não aplica respostas que chegaram depois da troca de conta. O servidor valida data, resultado e referência a uma missão ou atividade da turma. Lotes retornam `recebidas` e `recusadas`. Um ID só é confirmado se existir no histórico do próprio aluno. O app guarda recusas em uma área separada, informa o aluno e deixa pendente o que não recebeu confirmação nem recusa.
+O app separa fila e progresso por identidade. A conclusão local grava a recompensa e a jogada juntas.
+`POST /aluno/sincronizar` confirma histórico, créditos e compras na mesma transação, serializada por aluno.
+O servidor calcula recompensas e preços no núcleo, deduplica IDs e devolve a revisão confirmada. O app
+reaplica as operações pendentes sobre essa revisão e ignora respostas antigas. A migração importa o retrato
+legado uma vez por instalação como piso histórico. Veja o [ADR 0024](../03-decisoes/0024-progresso-por-operacoes-confirmadas.md).
 
-Atividades recolhidas continuam aceitando resultados offline quando o vínculo e o formato ainda correspondem. Atividade excluída ou desvinculada gera recusa. A auditoria preservou esse recorte e deixou a política histórica de prazo e revisão da atividade para decisão de produto.
+Os controladores de sincronização, avaliações e avisos têm responsabilidades próprias. O primeiro início
+é separado do resultado, o prazo é opcional e a avaliação publicada é uma versão imutável. O aluno recebe
+somente devolutivas publicadas e seus avisos. A leitura do aluno fica no banco. O app funciona com cache e
+fila local; os avisos novos chegam na atualização com conexão. Questões históricas por revisão de conteúdo
+continuam no roteiro de evolução do [ADR 0025](../03-decisoes/0025-ciclo-de-atividades-e-devolutivas.md).
+
+App e painel usam o mesmo cálculo de aprendizagem. A adaptação web conserva medidas originais e o
+agrupamento do pentagrama é feito sobre o domínio. Acerto médio nas tabelas continua sendo uma medida
+distinta, identificada como acerto. Consulte a [consolidação funcional](consolidacao-funcional.md).
 
 ## Operação e verificação
 

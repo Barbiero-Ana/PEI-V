@@ -1,4 +1,10 @@
-# MOD-MIS-010
+# PRD do requisito MOD-MIS-010
+
+**Data registrada no PRD de origem:** 2026-11-11. Preservada da fonte; não representa a criação desta ficha.
+
+**Revisão documental:** 13/11/2026 — Ana Barbiero — Líder de projeto. A aprovação da organização e rastreabilidade não substitui o aceite funcional.
+
+## Objetivo e escopo
 
 Exibir ao fim da missão as estrelas, os pontos de luz ganhos, o avanço da constelação e o resumo da jogada.
 

@@ -2,6 +2,10 @@
 
 Base: branch `feat/backend-guilherme`, até `0deda39`. Revisão: 06/11/2026. Inventário por leitura dos testes e scripts. As suítes não foram executadas nesta revisão documental; não há resultado de aprovação atribuído a esta etapa.
 
+> **Inventário histórico.** O mobile passou a ter suíte própria, SecureStore e testes de migração. O lint web
+> usa ESLint diretamente. Os resultados e limites atuais estão na [auditoria](../08-engenharia/auditoria.md)
+> e no [plano do app](../08-engenharia/plano-correcao-mobile.md).
+
 ## Comandos automatizados
 
 Pré-requisito: dependências instaladas, conforme [guia Windows](Executar%20localmente%20no%20Windows.md). Execute cada comando na raiz do repositório, em PowerShell. Use o código de saída e o resumo emitido pela ferramenta como evidência, sem antecipar que haverá aprovação.

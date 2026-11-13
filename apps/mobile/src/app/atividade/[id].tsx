@@ -4,6 +4,7 @@ import { useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   calcularResultado,
+  dataEscolar,
   esquemaQuestao,
   respostasDeCompletar,
   type Questao,
@@ -292,7 +293,8 @@ function AbrirAtividade({ id }: { id: string }) {
   }, [atividade]);
   // Uma atualização da lista não altera as perguntas de uma partida em andamento.
   if (atividade && questoes && !copia) guardarCopia(atividade);
-  if (atividade && questoes) return <ResponderAtividade atividade={atividade} questoes={questoes} />;
+  if (atividade && questoes && !(atividade.prazo && atividade.prazo < dataEscolar()))
+    return <ResponderAtividade atividade={atividade} questoes={questoes} />;
   if (!pronto || carregandoAtividades) return <EsqueletoTela formato="jogo" />;
 
   return (
@@ -309,7 +311,7 @@ function AbrirAtividade({ id }: { id: string }) {
 
 function ResponderAtividade({ atividade, questoes }: { atividade: AtividadeDoProfessor; questoes: Questao[] }) {
   const insets = useSafeAreaInsets();
-  const { registrarJogada, online } = useConta();
+  const { registrarJogada, online, iniciarAtividade } = useConta();
   const { vibrar } = useJogador();
   const { falar } = useAcessibilidade();
   useFalarAoAbrir(`${atividade.titulo}. ${atividade.instrucao}`);
@@ -319,11 +321,15 @@ function ResponderAtividade({ atividade, questoes }: { atividade: AtividadeDoPro
   const [retorno, setRetorno] = useState<Retorno | null>(null);
   const [resultado, setResultado] = useState<ResultadoJogada | null>(null);
   const inicio = useRef(0);
+  const inicioFase = useRef(0);
+  const tempos = useRef<number[]>([]);
   const concluiu = useRef(false);
   const conferirAtual = useRef<Conferir>(null);
   useEffect(() => {
-    inicio.current = Date.now();
-  }, []);
+    if (inicio.current) return;
+    inicio.current = inicioFase.current = Date.now();
+    void iniciarAtividade(atividade.id).catch(() => {});
+  }, [atividade.id, iniciarAtividade]);
 
   const total = questoes.length;
   const q = questoes[indice]!;
@@ -335,6 +341,7 @@ function ResponderAtividade({ atividade, questoes }: { atividade: AtividadeDoPro
     if (!r) return;
     const texto = r.tipo === "erro" ? q.feedbackErro || r.texto : r.texto;
     if (r.tipo === "acerto") {
+      tempos.current[indice] = (Date.now() - inicioFase.current) / 1000;
       Keyboard.dismiss();
       vibrar("acerto");
     } else if (r.tipo === "erro") {
@@ -348,6 +355,7 @@ function ResponderAtividade({ atividade, questoes }: { atividade: AtividadeDoPro
   async function continuar() {
     if (indice + 1 < total) {
       setRetorno(null);
+      inicioFase.current = Date.now();
       setIndice(indice + 1);
       return;
     }
@@ -356,6 +364,7 @@ function ResponderAtividade({ atividade, questoes }: { atividade: AtividadeDoPro
     const r = calcularResultado({
       missao: { id: atividade.id, formato: q.tipo },
       errosPorRodada: erros,
+      temposPorRodada: tempos.current,
       tempoSegundos: (Date.now() - inicio.current) / 1000,
     });
     try {

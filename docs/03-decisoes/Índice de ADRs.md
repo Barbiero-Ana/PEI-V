@@ -30,6 +30,8 @@ alternativas consideradas e as consequências. Juntos, contam como o projeto che
 | [0021](0021-portal-da-equipe-e-app-nativo.md) | Portal da equipe e app nativo | Aceita | 09/11/2026 |
 | [0022](0022-conclusao-local-atomica.md) | Conclusão local atômica | Aceita | 09/11/2026 |
 | [0023](0023-sessao-movel-no-cofre-nativo.md) | Sessão móvel no cofre nativo | Aceita | 10/11/2026 |
+| [0024](0024-progresso-por-operacoes-confirmadas.md) | Progresso por operações confirmadas | Aceita; homologação física pendente | 11/11/2026 |
+| [0025](0025-ciclo-de-atividades-e-devolutivas.md) | Ciclo de atividades e devolutivas | Aceita; homologação física pendente | 11/11/2026 |
 
 Os ADRs dizem **como** e **por que** o sistema foi construído assim. O **que** o sistema faz está nos PRDs de módulo
 (`docs/02-modulos/`).
@@ -46,3 +48,11 @@ Os ADRs dizem **como** e **por que** o sistema foi construído assim. O **que** 
 5. **Uso de IA:** registre se a IA foi usada e para quê (por exemplo, levantar alternativas ou auxiliar no
    código). A decisão é sempre da equipe.
 6. Atualize a tabela acima.
+
+## Aprovação e preservação das datas
+
+A coluna **Data** e o cabeçalho de cada ADR conservam a data original registrada, de outubro e novembro de 2026.
+A revisão documental foi aprovada em **13/11/2026** por **Ana Barbiero — Líder de projeto**, conforme assinatura
+em cada registro. As ADRs 0024 e 0025 mantêm a data de 11/11/2026; o aceite arquitetural não encerra a
+homologação em aparelhos. A ADR 0018 continua parcialmente substituída. Autores originais não identificados
+não receberam atribuição retroativa.

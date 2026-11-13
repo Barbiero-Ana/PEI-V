@@ -85,6 +85,7 @@ function permitida(turmaId: string, filtro: Filtro) {
   );
 }
 const banco = {
+  avaliacaoAtividade: { count: async () => 0 },
   $transaction: async (executar: (transacao: unknown) => Promise<unknown>) => executar(banco),
   professor: {
     findUnique: async () => ({

@@ -1,6 +1,8 @@
 # Configuração de ambiente
 
-Base: branch `feat/backend-guilherme`, até `0deda39`. Revisão: 06/11/2026. Informações extraídas do código e scripts; nenhum conteúdo de arquivo `.env` foi consultado. Valores entre `<...>` são placeholders e devem ser substituídos privadamente.
+Revisão: 11/11/2026, conforme o código e os scripts atuais. Os exemplos não contêm credenciais reais.
+Valores entre `<...>` são placeholders e devem ser substituídos privadamente. Cada aplicação tem um
+`.env.example` versionado. Arquivos locais preenchidos ficam fora do Git.
 
 ## API e Prisma
 
@@ -16,6 +18,10 @@ Arquivo de desenvolvimento: `apps/api/.env`. Execute comandos a partir da raiz c
 | `ORIGENS`      | Origens CORS, separadas por vírgula e com espaços aparados           | Fallback `http://localhost:3000`.                                                                                       |
 | `SENHA_DEMO`   | Senha usada pelo seed para contas de demonstração                    | Há fallback no código, omitido aqui. Não é senha universal para contas existentes e não configura o login simulado web. |
 | `NODE_ENV`     | Seleciona a exigência de segredo em produção                         | `production` ativa a exigência de `JWT_SEGREDO`.                                                                        |
+| `RESEND_API_KEY` | Chave privada de envio | Somente na API. Sem ela, a recuperação fica indisponível. |
+| `EMAIL_REMETENTE` | Remetente autorizado no Resend | Exemplo: `Modolume <acesso@envios.modolume.com.br>`. O domínio precisa estar verificado. |
+| `WEB_URL` | Origem do painel nos links de definição e recuperação | Produção exige HTTPS. No ambiente publicado: `https://www.modolume.com.br`. |
+| `REDEFINICAO_MINUTOS` | Prazo do link de uso único | Inteiro de 5 a 60. Padrão 30. |
 
 Modelo de arquivo para o banco local embutido, sem credenciais reais:
 
@@ -48,7 +54,7 @@ Arquivo local: `apps/web/.env.local`. O script `pnpm.cmd web`, executado na raiz
 
 | Variável            | Uso confirmado                                    | Padrão e observações                                                                                      |
 | ------------------- | ------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| `API_URL`           | URL usada pelo servidor Next.js para chamar a API | Ausente/vazia seleciona demonstração. Barra final é removida. Para o guia local: `http://localhost:3333`. |
+| `API_URL`           | URL usada pelo servidor Next.js para chamar a API | Obrigatória em produção. Ausente/vazia seleciona demonstração apenas em desenvolvimento. Barra final é removida. Local: `http://localhost:3333`. |
 | `SESSAO_SEGREDO`    | Assinatura HMAC do cookie de sessão               | Fallback de desenvolvimento omitido aqui; obrigatório em produção. Não substitui `JWT_SEGREDO`.           |
 | `PAINEL_SENHA_DEMO` | Login simulado sem API                            | Fallback omitido. Não altera a senha persistida no PostgreSQL.                                            |
 | `NEXT_DIST_DIR`     | Diretório de build em `next.config.ts`            | Padrão `.next`; pode separar uma segunda build.                                                           |
@@ -65,10 +71,28 @@ Não é necessário configurar `PAINEL_SENHA_DEMO` para autenticação pela API.
 
 ## Identificar o modo efetivo
 
-`apps/web/lib/painel/api.ts` usa API quando `API_URL` não está vazia. `apps/web/lib/painel/dados.ts` fornece dados de `MockDataProvider` no modo sem API; `app/professor/acoes.ts` também separa os dois caminhos de login. Configurar uma URL inválida gera erro de comunicação, não prova de conexão nem troca intencional para dados simulados.
+`apps/web/lib/painel/api.ts` usa API quando `API_URL` não está vazia e rejeita demonstração em produção.
+`apps/web/lib/painel/dados.ts` fornece dados de `ProvedorDadosDemonstracao` no modo local sem API;
+`app/professor/acoes.ts` também separa os dois caminhos de login. Configurar uma URL inválida gera erro
+de comunicação, não troca para dados simulados.
+
+## App nativo e EAS
+
+O app é exclusivo de Android e iOS. Copie `apps/mobile/.env.example` para `.env.local` no desenvolvimento.
+`EXPO_PUBLIC_API_URL` define a API e é incluída no bundle. Não coloque segredos em variáveis `EXPO_PUBLIC_`.
+Sem endereço, a conta escolar fica indisponível e a demonstração permanece local.
+
+`auto` procura a API na porta 3333 do computador que serve o Metro. Isso requer conectividade com esse
+computador; um túnel do Expo não publica a API. Em APK distribuído, use uma API HTTPS acessível.
+O ambiente EAS `preview` atende os perfis `preview` e `play-internal`; o ambiente `production` atende
+o perfil `production`. Configure `EXPO_PUBLIC_API_URL` em cada ambiente usado e gere outro build
+ao mudar o endereço. Os perfis de loja rejeitam endereço ausente, `auto`, HTTP ou domínio local.
+O [roteiro Android](../08-engenharia/publicacao-android.md) contém o comando e os aceites.
 
 A receita de confirmação está em [Executar localmente no Windows](Executar%20localmente%20no%20Windows.md). Não publique `.env`, URLs com credenciais, cookies, JWT ou capturas de respostas de login.
 
 ## Fontes
 
-`apps/api/{package.json,scripts/banco-local.ts,src/main.ts,prisma/schema.prisma,prisma/seed.ts}`, `apps/web/next.config.ts`, `apps/web/lib/painel/{api,sessao,cookie-sessao}.ts` e `apps/web/app/professor/acoes.ts`.
+`apps/api/{package.json,scripts/banco-local.ts,src/main.ts,src/credencial.ts,prisma/schema.prisma,prisma/seed.ts}`,
+`apps/web/next.config.ts`, `apps/web/lib/painel/{api,sessao,cookie-sessao}.ts`, `apps/web/app/professor/acoes.ts`,
+`apps/mobile/src/lib/api.ts`, `apps/mobile/eas.json` e `apps/mobile/scripts/verificar-api-loja.mjs`.

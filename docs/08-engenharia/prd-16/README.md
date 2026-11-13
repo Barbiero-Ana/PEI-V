@@ -1,6 +1,10 @@
 # PRD-16 — Notificações
 
-O sino do professor reúne alertas derivados dos dados do painel. O app ainda não tem central de avisos.
+**Data registrada no PRD de origem:** 2026-11-11. Preservada da fonte; não representa a criação desta ficha.
+
+**Revisão documental:** 13/11/2026 — Ana Barbiero — Líder de projeto. A aprovação da organização e rastreabilidade não substitui o aceite funcional.
+
+O app reúne avisos de atividade, prazo e avaliação. O sino do professor inclui avaliações pendentes.
 
 [PRD de origem](../../02-modulos/PRD-16%20%E2%80%94%20Notifica%C3%A7%C3%B5es.md) · [Matriz de rastreabilidade](../matriz.md) · [Qualidade e permissões](../prd-17/README.md)
 
@@ -13,10 +17,12 @@ O sino do professor reúne alertas derivados dos dados do painel. O app ainda n�
 
 ## Implementação
 
+- [apps/api/src/avisos-aluno.ts](../../../apps/api/src/avisos-aluno.ts)
+- [apps/mobile/src/app/avisos.tsx](../../../apps/mobile/src/app/avisos.tsx)
 - [apps/web/lib/painel/alertas.ts](../../../apps/web/lib/painel/alertas.ts)
 - [apps/web/components/painel/alertas.tsx](../../../apps/web/components/painel/alertas.tsx)
 
-**Persistência** Derivado de plano_aula, atividade_professor e jogada.
+**Persistência** Derivado de plano_aula, atividade_professor, avaliacao_atividade e jogada; leitura_aviso_aluno.
 
 ## Regras de negócio
 
@@ -24,7 +30,7 @@ Sem regras numeradas próprias no PRD. Consulte a seção 5 da origem.
 
 ## Testes e limites
 
-Homologar sino, contagem e links. Avisos e persistência de leitura pendentes.
+O aluno tem leitura persistida no banco e fila offline. O sino da equipe mantém lidos por conta/dia no navegador. Push e leitura da equipe entre aparelhos ficam fora desta entrega.
 
 ## Dependências
 

@@ -1,3 +1,4 @@
+import { dataEscolar } from "@modolume/core";
 import {
   BadRequestException,
   ForbiddenException,
@@ -187,4 +188,4 @@ export const SessaoAtual = createParamDecorator(
 );
 
 /** Hoje no fuso de Brasília (AAAA-MM-DD), para comparar com datas de liberação. */
-export const hojeBrasil = () => new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(new Date());
+export const hojeBrasil = () => dataEscolar();

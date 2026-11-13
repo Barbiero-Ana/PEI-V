@@ -2,7 +2,7 @@
 
 - **Status:** Aceita
 - **Data:** 27/10/2026
-- **Decisores:** a preencher pela equipe
+- **Decisores originais:** não identificados no registro histórico.
 - **Uso de IA:** auxílio na escrita do código e na organização dos campos do plano de aula, a partir da necessidade
   descrita pela equipe. A decisão de incluir o planejamento e o que ele deve conter é da equipe.
 
@@ -42,3 +42,11 @@ Até a integração com a API (etapa 5 da ADR 0009), os planos ficam em memória
 - **Negativas:** mais telas para manter; enquanto não há API, os planos voltam aos exemplos quando o servidor reinicia.
 - **O que fica pendente:** tabela de planos de aula no banco (ADR 0007) e rotas na API; revisar com professores a lista
   de habilidades da BNCC (hoje um recorte do 6º ano, com o texto resumido).
+
+## Aprovação da revisão documental
+
+- **Data da revisão e aprovação:** 13/11/2026.
+- **Assinatura de aprovação:** Ana Barbiero — Líder de projeto.
+- **Registro:** aprovação expressa nesta conversa para organizar e consolidar a documentação.
+- **Histórico:** a data original da decisão no cabeçalho foi preservada. Esta assinatura não atribui
+  participação retroativa nem reativa decisões substituídas; evidências de homologação continuam separadas.

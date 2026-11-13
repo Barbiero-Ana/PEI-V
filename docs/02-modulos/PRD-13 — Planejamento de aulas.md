@@ -2,6 +2,8 @@
 modulo: PLA
 prd: PRD-13
 atualizado: 2026-11-04
+revisao_documental: 2026-11-13
+responsavel_revisao: Ana Barbiero — Líder de projeto
 status: para revisão
 ---
 
@@ -155,3 +157,10 @@ Critérios marcados com [x] já são atendidos pelo painel atual.
 - [[PRD — Modolume]]
 - [[PRD-12 — Painel do professor]] · [[PRD-14 — Atividades do professor]]
 - [[0010-planejamento-de-aulas-no-painel|ADR 0010]]
+
+## 13. Controle da revisão documental
+
+A data `atualizado` do histórico foi preservada. A revisão documental de **13/11/2026** foi aprovada por
+**Ana Barbiero — Líder de projeto**, para organização, consistência e rastreabilidade. Essa aprovação não
+substitui o aceite funcional: cenários sem evidência ou dependentes de validação pedagógica, institucional
+e de aparelhos continuam pendentes na matriz de engenharia. Não foi inferida uma data de criação.

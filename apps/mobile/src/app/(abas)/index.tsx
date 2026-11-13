@@ -1,3 +1,4 @@
+import { useConta } from "@/estado/conta";
 import { Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from "react-native";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -46,6 +47,7 @@ const MESES = [
 ];
 
 export default function Inicio() {
+  const { conta, avisos, avaliacoes } = useConta();
   const insets = useSafeAreaInsets();
   const { jogador, progresso, preferencias, luzes, pronto } = useJogador();
   const montada = useMontagemAdiada();
@@ -91,6 +93,25 @@ export default function Inicio() {
         </Pressable>
       </View>
 
+      {conta ? (
+        <View style={{ marginTop: 18, gap: 10 }}>
+          <Botao
+            titulo={`Seus avisos${avisos.some((a) => !a.lida) ? ` (${avisos.filter((a) => !a.lida).length} novos)` : ""}`}
+            onPress={() => router.push("/avisos")}
+          />
+          {avaliacoes[0] ? (
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => router.push({ pathname: "/feedback/[id]", params: { id: avaliacoes[0]!.id } })}
+              style={{ backgroundColor: cor.roxoClaro, borderRadius: 18, padding: 16, gap: 6 }}
+            >
+              <Titulo tamanho={17}>Seu professor deixou uma orientação</Titulo>
+              <Texto numberOfLines={2}>{avaliacoes[0].feedback}</Texto>
+              <Texto>Ler devolutiva →</Texto>
+            </Pressable>
+          ) : null}
+        </View>
+      ) : null}
       <MeuCeu numero={nivel.numero} />
 
       <TrilhaDoMapa nivel={nivel} proxima={proxima?.id} />

@@ -1,8 +1,14 @@
-# MOD-ATI-007
+# PRD do requisito MOD-ATI-007
+
+**Data registrada no PRD de origem:** 2026-11-11. Preservada da fonte; não representa a criação desta ficha.
+
+**Revisão documental:** 13/11/2026 — Ana Barbiero — Líder de projeto. A aprovação da organização e rastreabilidade não substitui o aceite funcional.
+
+## Objetivo e escopo
 
 O professor edita atividades em rascunho e o prazo de atividades publicadas.
 
-Origem: [PRD-14 — Atividades do professor](../../02-modulos/PRD-14%20%E2%80%94%20Atividades%20do%20professor.md), seção 5. Prioridade **E**, método **T**. Situação declarada na origem **Parcial**.
+Origem: [PRD-14 — Atividades do professor](../../02-modulos/PRD-14%20%E2%80%94%20Atividades%20do%20professor.md), seção 5. Prioridade **E**, método **T**. Situação declarada na origem **Implementado**.
 
 [Módulo, fluxo, perfis e entidades](README.md). [Requisitos transversais](../prd-17/README.md).
 

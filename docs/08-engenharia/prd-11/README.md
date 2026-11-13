@@ -1,6 +1,10 @@
 # PRD-11 — Análise de aprendizagem
 
-O núcleo calcula domínio para o app. O pentagrama web ainda usa acerto médio.
+**Data registrada no PRD de origem:** 2026-11-11. Preservada da fonte; não representa a criação desta ficha.
+
+**Revisão documental:** 13/11/2026 — Ana Barbiero — Líder de projeto. A aprovação da organização e rastreabilidade não substitui o aceite funcional.
+
+App e painel usam o domínio do núcleo com medidas originais e ordenação estável. O painel agrupa formatos por jeito e identifica separadamente o acerto médio.
 
 [PRD de origem](../../02-modulos/PRD-11%20%E2%80%94%20An%C3%A1lise%20de%20aprendizagem.md) · [Matriz de rastreabilidade](../matriz.md) · [Qualidade e permissões](../prd-17/README.md)
 
@@ -29,7 +33,7 @@ O núcleo calcula domínio para o app. O pentagrama web ainda usa acerto médio.
 
 ## Testes e limites
 
-aprendizagem.test.ts e indicador.test.ts. Paridade entre interfaces pendente.
+aprendizagem.test.ts e aprendizagem-painel.test.ts cobrem domínio, adaptação e recência. Conferência visual entre interfaces pendente.
 
 ## Dependências
 

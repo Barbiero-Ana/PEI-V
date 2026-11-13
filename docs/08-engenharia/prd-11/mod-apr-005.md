@@ -1,4 +1,10 @@
-# MOD-APR-005
+# PRD do requisito MOD-APR-005
+
+**Data registrada no PRD de origem:** 2026-11-11. Preservada da fonte; não representa a criação desta ficha.
+
+**Revisão documental:** 13/11/2026 — Ana Barbiero — Líder de projeto. A aprovação da organização e rastreabilidade não substitui o aceite funcional.
+
+## Objetivo e escopo
 
 Representar o resultado em um radar (pentagrama) com um eixo por jeito de aprender (Visual, Mãos na massa, Lógico, Simbólico e Espacial), cada um agrupando formatos de atividade.
 

@@ -9,7 +9,6 @@ import type { Ponta, ValorPonta } from "./pentagrama";
  */
 
 /** A partir desta quantidade de atividades num jeito, ele entra nas conclusões. */
-export const MINIMO_JEITO = 3;
 
 /** O que cada jeito de aprender sugere para ensinar e para avaliar. */
 export const GUIA_JEITOS: Record<Ponta, { ensinar: string; avaliar: string; questao: string; formatos: FormatoId[] }> =
@@ -55,17 +54,19 @@ export interface Insight {
   base?: string;
 }
 
-/** Jeitos com dados suficientes, do maior para o menor acerto. */
+/** Jeitos com dados suficientes, do maior para o menor domínio. */
 export function jeitosConfiaveis(pontas: ValorPonta[]) {
-  return pontas.filter((p) => p.aluno !== null && p.atividades >= MINIMO_JEITO).sort((a, b) => b.aluno! - a.aluno!);
+  return pontas.filter((p) => p.aluno !== null && p.confianca === "boa").sort((a, b) => b.aluno! - a.aluno!);
 }
 
 export function insightsDoAluno(
   pontas: ValorPonta[],
   numeros: { tentativas: number; conclusao: number; tendencia: number; nome: string },
+  jeitoPrincipal: Ponta | null,
 ): { forte: ValorPonta | null; fraco: ValorPonta | null; dicas: Insight[]; formatosSugeridos: FormatoId[] } {
   const ok = jeitosConfiaveis(pontas);
-  const forte = ok[0] ?? null;
+  // A indicação individual vem do núcleo, antes do arredondamento visual do pentagrama.
+  const forte = ok.find((p) => p.jeito === jeitoPrincipal) ?? null;
   const fraco = ok.length > 1 ? ok.at(-1)! : null;
   const primeiro = numeros.nome.split(" ")[0];
   const dicas: Insight[] = [];
@@ -73,8 +74,8 @@ export function insightsDoAluno(
   if (!forte) {
     dicas.push({
       tipo: "dados",
-      titulo: "Ainda faltam dados",
-      texto: `Ainda não há atividades suficientes em nenhum jeito de aprender para apontar o ponto forte de ${primeiro}. Varie os formatos nas próximas aulas.`,
+      titulo: ok.length ? "Ainda sem predominância" : "Ainda faltam dados",
+      texto: `Ainda não há um jeito predominante com dados suficientes para ${primeiro}. Varie os formatos nas próximas aulas.`,
     });
     return { forte, fraco, dicas, formatosSugeridos: [] };
   }
@@ -84,7 +85,7 @@ export function insightsDoAluno(
     tipo: "ensinar",
     titulo: "Para ensinar",
     texto: guia.ensinar,
-    base: `${forte.aluno}% de acerto em ${forte.atividades} atividades do jeito ${forte.jeito.toLowerCase()}${forte.turma !== null ? ` (turma: ${forte.turma}%)` : ""}`,
+    base: `${forte.aluno}% de domínio em ${forte.atividades} atividades do jeito ${forte.jeito.toLowerCase()}${forte.turma !== null ? ` (turma: ${forte.turma}%)` : ""}`,
   });
   dicas.push({
     tipo: "avaliar",
@@ -95,7 +96,7 @@ export function insightsDoAluno(
     dicas.push({
       tipo: "ponte",
       titulo: "Ponte para a dificuldade",
-      texto: `Em ${fraco.jeito.toLowerCase()} o acerto é menor. Apresente esses conteúdos primeiro pelo jeito ${forte.jeito.toLowerCase()} e só depois no formato de ${fraco.formatos.join(" e ").toLowerCase()}.`,
+      texto: `Em ${fraco.jeito.toLowerCase()} o domínio é menor. Apresente esses conteúdos primeiro pelo jeito ${forte.jeito.toLowerCase()} e só depois no formato de ${fraco.formatos.join(" e ").toLowerCase()}.`,
       base: `${fraco.aluno}% em ${fraco.jeito.toLowerCase()} contra ${forte.aluno}% em ${forte.jeito.toLowerCase()}`,
     });
   }
@@ -143,8 +144,8 @@ export function insightsDaTurma(turma: ValorPonta[], alunos: { nome: string; for
     dicas.push({
       tipo: "ponte",
       titulo: `Reforçar o jeito ${fracos[0].jeito.toLowerCase()}`,
-      texto: `É onde a turma tem menos acerto. ${GUIA_JEITOS[fracos[0].jeito].ensinar}`,
-      base: `${fracos[0].aluno}% de acerto médio da turma${fracos[0].turma !== null ? ` (todas as turmas: ${fracos[0].turma}%)` : ""}`,
+      texto: `É onde a turma tem menor domínio. ${GUIA_JEITOS[fracos[0].jeito].ensinar}`,
+      base: `${fracos[0].aluno}% de domínio médio da turma${fracos[0].turma !== null ? ` (todas as turmas: ${fracos[0].turma}%)` : ""}`,
     });
   }
   if (semDados > 0)

@@ -1,4 +1,10 @@
-# MOD-TUR-008
+# PRD do requisito MOD-TUR-008
+
+**Data registrada no PRD de origem:** 2026-11-05. Preservada da fonte; não representa a criação desta ficha.
+
+**Revisão documental:** 13/11/2026 — Ana Barbiero — Líder de projeto. A aprovação da organização e rastreabilidade não substitui o aceite funcional.
+
+## Objetivo e escopo
 
 ~~Gerar para cada turma um código de acesso, que pode ser renovado.~~ Substituído pelo código pessoal do aluno (MOD-AUT-009, ADR 0017).
 

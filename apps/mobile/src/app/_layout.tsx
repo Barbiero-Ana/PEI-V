@@ -98,6 +98,8 @@ function Telas() {
         })}
       />
       <Stack.Screen name="atividade/[id]" options={{ animation: anima("slide_from_bottom"), gestureEnabled: false }} />
+      <Stack.Screen name="avisos" />
+      <Stack.Screen name="feedback/[id]" />
       <Stack.Screen name="editar-perfil" options={{ presentation: "modal" }} />
       <Stack.Screen name="avatar" options={{ presentation: "modal" }} />
       <Stack.Screen name="loja" options={{ presentation: "modal" }} />

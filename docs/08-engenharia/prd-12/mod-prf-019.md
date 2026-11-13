@@ -1,4 +1,10 @@
-# MOD-PRF-019
+# PRD do requisito MOD-PRF-019
+
+**Data registrada no PRD de origem:** 2026-11-05. Preservada da fonte; não representa a criação desta ficha.
+
+**Revisão documental:** 13/11/2026 — Ana Barbiero — Líder de projeto. A aprovação da organização e rastreabilidade não substitui o aceite funcional.
+
+## Objetivo e escopo
 
 Os filtros ficam no endereço da página (podem ser compartilhados e desfeitos com o botão voltar), mostram a contagem de cada opção e oferecem "Limpar filtros".
 

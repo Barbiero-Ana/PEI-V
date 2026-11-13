@@ -1,4 +1,10 @@
-# MOD-PRF-020
+# PRD do requisito MOD-PRF-020
+
+**Data registrada no PRD de origem:** 2026-11-05. Preservada da fonte; não representa a criação desta ficha.
+
+**Revisão documental:** 13/11/2026 — Ana Barbiero — Líder de projeto. A aprovação da organização e rastreabilidade não substitui o aceite funcional.
+
+## Objetivo e escopo
 
 Páginas com conteúdo em pastas mostram as abas na lateral esquerda, com nome e descrição; em telas estreitas, viram uma faixa com rolagem acima do conteúdo.
 

@@ -2,7 +2,7 @@
 
 - **Status:** Aceita
 - **Data:** 04/11/2026
-- **Decisores:** a preencher pela equipe
+- **Decisores originais:** não identificados no registro histórico.
 - **Uso de IA:** auxílio no desenho das tabelas, na migração, nos testes de integridade e no dicionário de dados, a
   partir do pedido da equipe de migrar tudo para o banco com tabelas mães e filhas.
 
@@ -51,3 +51,11 @@ local de desenvolvimento usava a codificação do Windows (WIN1252), que não gu
   `ALTER`, `TRUNCATE` e na tabela de migrações.
 - **O que fica pendente:** telas de
   gestão para usar `professor_turma` com mais de um professor e os campos `ativo`.
+
+## Aprovação da revisão documental
+
+- **Data da revisão e aprovação:** 13/11/2026.
+- **Assinatura de aprovação:** Ana Barbiero — Líder de projeto.
+- **Registro:** aprovação expressa nesta conversa para organizar e consolidar a documentação.
+- **Histórico:** a data original da decisão no cabeçalho foi preservada. Esta assinatura não atribui
+  participação retroativa nem reativa decisões substituídas; evidências de homologação continuam separadas.

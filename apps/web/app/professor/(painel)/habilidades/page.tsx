@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import { Avatar, ChipResultado, pct } from "@/components/painel/blocos";
 import { CORES_PENTAGRAMA, Pentagrama } from "@/components/painel/pentagrama";
 import { habilidadesDaTurma, listaDeTurmas, professorLogado, avataresDosAlunos } from "@/lib/painel/dados";
-import { COR_JEITO, GUIA_JEITOS, MINIMO_JEITO, insightsDaTurma, provaSugerida } from "@/lib/painel/insights";
+import { COR_JEITO, GUIA_JEITOS, insightsDaTurma, provaSugerida } from "@/lib/painel/insights";
 import { PONTAS } from "@/lib/painel/pentagrama";
 
 export const metadata: Metadata = { title: "Habilidades e insights · Painel do professor · Modolume" };
@@ -237,7 +237,7 @@ export default async function Habilidades({ searchParams }: { searchParams: Prom
           })}
           {semDados.length > 0 ? (
             <li className="border-t border-[#EEEBF6] px-5 py-4 text-sm text-texto">
-              <strong className="text-tinta">Ainda sem ponto forte</strong> (menos de {MINIMO_JEITO} atividades por
+              <strong className="text-tinta">Ainda sem ponto forte</strong> (sem predominância ou dados suficientes por
               jeito): {semDados.map((a) => a.nome.split(" ")[0]).join(", ")}
             </li>
           ) : null}
@@ -270,7 +270,7 @@ export default async function Habilidades({ searchParams }: { searchParams: Prom
                       {p.aluno === null ? (
                         <span className="text-texto-fraco">—</span>
                       ) : (
-                        <span className={`inline-flex ${p.atividades < MINIMO_JEITO ? "opacity-45" : ""}`}>
+                        <span className={`inline-flex ${p.confianca !== "boa" ? "opacity-45" : ""}`}>
                           <ChipResultado
                             valor={p.aluno}
                             titulo={`${a.nome} · ${p.jeito}: ${p.aluno}% em ${p.atividades} atividades`}

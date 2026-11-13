@@ -1,5 +1,9 @@
 # PRD-10 — Histórico e sincronização
 
+**Data registrada no PRD de origem:** 2026-11-11. Preservada da fonte; não representa a criação desta ficha.
+
+**Revisão documental:** 13/11/2026 — Ana Barbiero — Líder de projeto. A aprovação da organização e rastreabilidade não substitui o aceite funcional.
+
 A fila é separada por aluno. A API retorna confirmações por ID e o app guarda recusas separadas de pendências.
 
 [PRD de origem](../../02-modulos/PRD-10%20%E2%80%94%20Hist%C3%B3rico%20e%20sincroniza%C3%A7%C3%A3o.md) · [Matriz de rastreabilidade](../matriz.md) · [Qualidade e permissões](../prd-17/README.md)
@@ -16,8 +20,9 @@ A fila é separada por aluno. A API retorna confirmações por ID e o app guarda
 
 - [apps/mobile/src/estado/conta.tsx](../../../apps/mobile/src/estado/conta.tsx)
 - [apps/mobile/src/estado/isolamento.ts](../../../apps/mobile/src/estado/isolamento.ts)
-- [apps/mobile/src/estado/jogador.tsx](../../../apps/mobile/src/estado/jogador.tsx)
-- [apps/api/src/aluno.ts](../../../apps/api/src/aluno.ts)
+- [apps/mobile/src/estado/progresso-local.ts](../../../apps/mobile/src/estado/progresso-local.ts)
+- [apps/api/src/sincronizacao-aluno.ts](../../../apps/api/src/sincronizacao-aluno.ts)
+- [apps/api/src/progresso-aluno.ts](../../../apps/api/src/progresso-aluno.ts)
 
 **Persistência** jogada e tabelas de progresso.
 
@@ -27,7 +32,7 @@ A fila é separada por aluno. A API retorna confirmações por ID e o app guarda
 
 ## Testes e limites
 
-Testes de isolamento e de validação da jogada. Persistência atômica da recompensa com a fila e recuperação integral entre aparelhos pendentes.
+progresso-local.test.ts cobre conciliação, resposta antiga e migração do histórico. verificar-consolidacao.ts cobre transação, soma, compras, saldo e rollback. Homologação em aparelhos pendente.
 
 ## Dependências
 

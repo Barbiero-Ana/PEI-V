@@ -1,8 +1,14 @@
-# MOD-ATI-009
+# PRD do requisito MOD-ATI-009
+
+**Data registrada no PRD de origem:** 2026-11-11. Preservada da fonte; não representa a criação desta ficha.
+
+**Revisão documental:** 13/11/2026 — Ana Barbiero — Líder de projeto. A aprovação da organização e rastreabilidade não substitui o aceite funcional.
+
+## Objetivo e escopo
 
 Exibir a situação da atividade: rascunho, publicada ou encerrada.
 
-Origem: [PRD-14 — Atividades do professor](../../02-modulos/PRD-14%20%E2%80%94%20Atividades%20do%20professor.md), seção 5. Prioridade **E**, método **D**. Situação declarada na origem **Parcial**.
+Origem: [PRD-14 — Atividades do professor](../../02-modulos/PRD-14%20%E2%80%94%20Atividades%20do%20professor.md), seção 5. Prioridade **E**, método **D**. Situação declarada na origem **Implementado**.
 
 [Módulo, fluxo, perfis e entidades](README.md). [Requisitos transversais](../prd-17/README.md).
 

@@ -2,7 +2,7 @@
 
 - **Status:** Aceita
 - **Data:** 07/10/2026
-- **Decisores:** _preencher com os nomes da equipe_
+- **Decisores originais:** não identificados no registro histórico.
 
 ## Contexto
 
@@ -26,3 +26,11 @@ back-end, as jogadas feitas sem conexão serão enviadas ao servidor assim que a
 - **Negativas:** até existir sincronização, o progresso fica preso ao aparelho; trocar de celular perde os
   dados.
 - **Pendente:** implementar a sincronização e a recuperação do progresso em outro aparelho.
+
+## Aprovação da revisão documental
+
+- **Data da revisão e aprovação:** 13/11/2026.
+- **Assinatura de aprovação:** Ana Barbiero — Líder de projeto.
+- **Registro:** aprovação expressa nesta conversa para organizar e consolidar a documentação.
+- **Histórico:** a data original da decisão no cabeçalho foi preservada. Esta assinatura não atribui
+  participação retroativa nem reativa decisões substituídas; evidências de homologação continuam separadas.

@@ -31,3 +31,11 @@ escritas podia preservar só parte da conclusão.
   para dados legados. O [plano de correção](../08-engenharia/plano-correcao-mobile.md) registra o aceite pendente.
 
 Relacionado: [ADR 0003](0003-progresso-local-e-uso-sem-conexao.md).
+
+## Aprovação da revisão documental
+
+- **Data da revisão e aprovação:** 13/11/2026.
+- **Assinatura de aprovação:** Ana Barbiero — Líder de projeto.
+- **Registro:** aprovação expressa nesta conversa para organizar e consolidar a documentação.
+- **Histórico:** a data original da decisão no cabeçalho foi preservada. Esta assinatura não atribui
+  participação retroativa nem reativa decisões substituídas; evidências de homologação continuam separadas.

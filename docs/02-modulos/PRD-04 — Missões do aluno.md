@@ -1,7 +1,9 @@
 ---
 modulo: MIS
 prd: PRD-04
-atualizado: 2026-11-05
+atualizado: 2026-11-11
+revisao_documental: 2026-11-13
+responsavel_revisao: Ana Barbiero — Líder de projeto
 status: para revisão
 ---
 
@@ -55,7 +57,7 @@ Testes automatizados do cálculo de resultado (`packages/core/src/missoes.test.t
 | MOD-MIS-010 | Exibir ao fim da missão as estrelas, os pontos de luz ganhos, o avanço da constelação e o resumo da jogada. | E | D | Implementado |
 | MOD-MIS-011 | A tela de resultado oferece jogar de novo, voltar e seguir para a próxima missão. | I | D | Implementado |
 | MOD-MIS-012 | O aluno pode sair de uma missão a qualquer momento, sem gerar registro. | I | T | Implementado |
-| MOD-MIS-013 | Exibir o prazo das atividades publicadas pelo professor. | I | D | Parcial |
+| MOD-MIS-013 | Exibir o prazo das atividades publicadas pelo professor. | I | D | Implementado |
 
 **Situação atual:** 28 missões em 8 mapas, nos formatos associação visual, montagem, sequência, completar, manipulação e exploração 3D. As missões dos mapas são as **atividades padrão de mapeamento da aprendizagem**: toda jogada vai para o professor com a origem "mapa". As atividades enviadas pelo professor ficam numa **aba separada** ("Professor"), com a data de liberação; a data limite (MIS-013) ainda não existe ([[PRD-14 — Atividades do professor]]).
 
@@ -129,7 +131,7 @@ Critérios marcados com [x] já são atendidos pelo app atual.
 | --- | --- | --- |
 | 1 | 28 missões em 8 mapas, dica, retorno imediato, resultado padronizado. | Implementado |
 | 4 | Atividades do professor no app, na aba "Professor", com data de liberação. | Implementado |
-| 5 | Data limite das atividades (MOD-ATI, fase 5). | Pendente |
+| 5 | Data limite das atividades (MOD-ATI, fase 5). | Implementado; homologação física pendente |
 
 ## 9. Diretrizes do produto
 
@@ -153,3 +155,10 @@ Critérios marcados com [x] já são atendidos pelo app atual.
 - [[PRD — Modolume]]
 - [[PRD-05 — Gamificação]] · [[PRD-11 — Análise de aprendizagem]] · [[PRD-14 — Atividades do professor]]
 - [[0004-ultima-estrela-so-com-o-mapa-completo|ADR 0004]]
+
+## 13. Controle da revisão documental
+
+A data `atualizado` do histórico foi preservada. A revisão documental de **13/11/2026** foi aprovada por
+**Ana Barbiero — Líder de projeto**, para organização, consistência e rastreabilidade. Essa aprovação não
+substitui o aceite funcional: cenários sem evidência ou dependentes de validação pedagógica, institucional
+e de aparelhos continuam pendentes na matriz de engenharia. Não foi inferida uma data de criação.

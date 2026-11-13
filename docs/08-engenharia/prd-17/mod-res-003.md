@@ -1,4 +1,10 @@
-# MOD-RES-003
+# PRD do requisito MOD-RES-003
+
+**Data registrada no PRD de origem:** 2026-11-11. Preservada da fonte; não representa a criação desta ficha.
+
+**Revisão documental:** 13/11/2026 — Ana Barbiero — Líder de projeto. A aprovação da organização e rastreabilidade não substitui o aceite funcional.
+
+## Objetivo e escopo
 
 A interface segue a identidade visual do Modolume: Poppins nos títulos, Inter no texto e Lexend como opção de leitura facilitada; sem gradientes e sem emojis.
 

@@ -1,4 +1,10 @@
-# MOD-USA-012
+# PRD do requisito MOD-USA-012
+
+**Data registrada no PRD de origem:** 2026-11-11. Preservada da fonte; não representa a criação desta ficha.
+
+**Revisão documental:** 13/11/2026 — Ana Barbiero — Líder de projeto. A aprovação da organização e rastreabilidade não substitui o aceite funcional.
+
+## Objetivo e escopo
 
 Animações de interface duram no máximo 1,5 segundo, exceto as de comemoração.
 

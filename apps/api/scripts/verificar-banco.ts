@@ -1,4 +1,6 @@
+import { verificarConsolidacao } from "./verificar-consolidacao.js";
 import "reflect-metadata";
+import { execFileSync } from "node:child_process";
 import assert from "node:assert/strict";
 import { mkdirSync, mkdtempSync, readFileSync, readdirSync } from "node:fs";
 import { resolve } from "node:path";
@@ -253,6 +255,40 @@ try {
   assert.equal(situacao.alunos[0]?.acerto, 100);
   assert.equal(situacao.alunos[0]?.concluiu, true);
   console.log("OK: professor publica, aluno recebe feedback e envia uma vez, professor consulta o resultado");
+
+  await verificarConsolidacao(banco, equipe);
+
+  // Exercita o comando de implantação real, duas vezes, em outra base descartável.
+  await servidor.createDatabase("migracoes_cli");
+  const urlMigracao = `postgresql://postgres:teste-local@127.0.0.1:${porta}/migracoes_cli`;
+  for (let tentativa = 0; tentativa < 2; tentativa++)
+    execFileSync(
+      process.execPath,
+      [
+        resolve(import.meta.dirname, "../../../node_modules/prisma/build/index.js"),
+        "migrate",
+        "deploy",
+        "--schema",
+        resolve(import.meta.dirname, "../prisma/schema.prisma"),
+      ],
+      {
+        cwd: resolve(import.meta.dirname, ".."),
+        env: { ...process.env, DATABASE_URL: urlMigracao, DIRECT_URL: urlMigracao },
+        windowsHide: true,
+        stdio: "pipe",
+      },
+    );
+  const cli = servidor.getPgClient("migracoes_cli");
+  await cli.connect();
+  try {
+    const aplicadas = await cli.query(
+      "SELECT count(*)::int AS total FROM _prisma_migrations WHERE finished_at IS NOT NULL AND rolled_back_at IS NULL",
+    );
+    assert.equal(aplicadas.rows[0].total, nomes.length);
+  } finally {
+    await cli.end();
+  }
+  console.log("OK: prisma migrate deploy aplica todas as migrações e a segunda execução é idempotente");
 
   await cliente.query(
     `CREATE FUNCTION recusar_registro_teste() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'falha deliberada'; END $$; CREATE TRIGGER recusar_registro_teste BEFORE INSERT ON registro FOR EACH ROW EXECUTE FUNCTION recusar_registro_teste();`,

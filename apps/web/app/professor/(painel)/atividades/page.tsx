@@ -1,7 +1,8 @@
+import { dataEscolar } from "@modolume/core";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Filtro, FiltroTurmas, comFiltros } from "@/components/painel/filtros";
-import { BotaoLink, dataCurta, isoLocal } from "@/components/painel/blocos";
+import { BotaoLink, dataCurta } from "@/components/painel/blocos";
 import { IconeMais } from "@/components/painel/icones";
 import { SOBRE_FORMATOS, listarAtividades, missaoDa } from "@/lib/painel/atividades";
 import { listaDeTurmas, professorLogado } from "@/lib/painel/dados";
@@ -24,7 +25,7 @@ export default async function Atividades({
   const naTurma = (t: string) => todas.filter((a) => !t || a.turmas.includes(t));
   const lista = naTurma(turma).filter((a) => !status || a.status === status);
   const link = (mudar: Record<string, string>) => comFiltros("/professor/atividades", { status, turma }, mudar);
-  const hoje = isoLocal(new Date());
+  const hoje = dataEscolar();
   const nomeTurma = (id: string) => turmas.find((t) => t.turma.id === id)?.turma.nome ?? "";
 
   return (
@@ -105,7 +106,9 @@ export default async function Atividades({
                   <span className="w-44 text-right text-sm">
                     {enviada ? (
                       <>
-                        <span className="block font-semibold text-[#24704A]">{liberada ? "No app" : "Enviada"}</span>
+                        <span className="block font-semibold text-[#24704A]">
+                          {a.prazo && a.prazo < hoje ? "Encerrada" : liberada ? "No app" : "Enviada"}
+                        </span>
                         <span className="text-xs text-texto-suave">
                           {liberada ? `desde ${dataCurta(a.liberarEm)}` : `libera em ${dataCurta(a.liberarEm)}`}
                         </span>

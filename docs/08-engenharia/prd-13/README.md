@@ -1,5 +1,9 @@
 # PRD-13 — Planejamento de aulas
 
+**Data registrada no PRD de origem:** 2026-11-04. Preservada da fonte; não representa a criação desta ficha.
+
+**Revisão documental:** 13/11/2026 — Ana Barbiero — Líder de projeto. A aprovação da organização e rastreabilidade não substitui o aceite funcional.
+
 Professor cria e acompanha planos das turmas vinculadas. A API protege vínculos, data e registro da aula.
 
 [PRD de origem](../../02-modulos/PRD-13%20%E2%80%94%20Planejamento%20de%20aulas.md) · [Matriz de rastreabilidade](../matriz.md) · [Qualidade e permissões](../prd-17/README.md)

@@ -2,7 +2,7 @@
 
 - **Status:** Aceita
 - **Data:** 27/10/2026
-- **Decisores:** _preencher com os nomes da equipe_
+- **Decisores originais:** não identificados no registro histórico.
 - **Uso de IA:** ver a seção [Papel da equipe e da IA](#papel-da-equipe-e-da-ia).
 
 ## Contexto
@@ -58,3 +58,11 @@ A IA não decidiu requisitos, não escolheu tecnologias por conta própria e nã
 - **Positivas:** cada etapa pode ser testada e validada isoladamente; o que já funciona não é afetado; a
   integração com a API acontece num ponto só.
 - **Negativas:** até a etapa 5 os dados são de demonstração e o login é provisório.
+
+## Aprovação da revisão documental
+
+- **Data da revisão e aprovação:** 13/11/2026.
+- **Assinatura de aprovação:** Ana Barbiero — Líder de projeto.
+- **Registro:** aprovação expressa nesta conversa para organizar e consolidar a documentação.
+- **Histórico:** a data original da decisão no cabeçalho foi preservada. Esta assinatura não atribui
+  participação retroativa nem reativa decisões substituídas; evidências de homologação continuam separadas.

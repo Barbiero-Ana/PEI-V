@@ -101,6 +101,10 @@ async function equipeDemo() {
 }
 
 async function main() {
+  if (process.env.NODE_ENV === "production")
+    throw new Error("O seed contém contas de demonstração e não pode ser executado em produção. Use migrações.");
+  if (recomecar && (await prisma.avaliacaoAtividade.count()) > 0)
+    throw new Error("Há avaliações históricas imutáveis. Para recomeçar os testes, use outro banco descartável.");
   await catalogos();
   if (recomecar) await apagarTudo();
   else if ((await prisma.professor.count()) > 0) {
