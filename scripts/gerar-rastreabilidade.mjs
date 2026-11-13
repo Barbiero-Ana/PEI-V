@@ -116,7 +116,7 @@ const evidencias = {
   "AVA-003": "Avaliação versionada com rascunho privado. Publicação exige texto; percepção usa a escala do PRD. Testes reais de persistência e autorização.",
   "AVA-005": "Somente avaliações publicadas são retornadas ao aluno. Teste real cobre ausência do rascunho e aviso de publicação.",
   "NOT-004": "Leitura do aluno é guardada no banco, com marcação individual/todos e fila offline. Leitura da equipe continua local ao navegador.",
-  "MAN-003": "ESLint da API verifica regras e fronteiras além da tipagem. Workflow de CI versionado executa lint, tipagem, testes, migrações, build web e bundle Android. Primeira execução remota pendente.",
+  "MAN-003": "ESLint da API verifica regras e fronteiras além da tipagem. Workflow de CI executa lint, tipagem, testes, rastreabilidade, migrações, build web e bundle Android. Execução remota 43427120758 aprovada em 13/11/2026.",
   "AUT-007":
     "Uso único concorrente, expiração, resposta uniforme e contrato Resend simulado em verificar-banco.ts. Entrega real e análise do tempo de resposta pendentes.",
   "AUT-004":

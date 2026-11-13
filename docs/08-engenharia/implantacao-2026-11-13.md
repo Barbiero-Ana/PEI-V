@@ -33,8 +33,10 @@ interromper escritas, preservar uma cópia do estado atual e restaurar primeiro 
 - O seed foi bloqueado em produção e recusa reinicialização de bases com avaliações imutáveis,
   evitando contas de demonstração ou exclusões incompatíveis com o histórico.
 - A CI verifica também a reprodução da rastreabilidade e a consistência das datas no índice de ADRs.
-- Os builds locais e a execução remota são registrados após sua conclusão; um teste local não comprova
-  publicação nem substitui o aceite em um aparelho.
+- A [primeira execução remota](https://github.com/Barbiero-Ana/PEI-V/actions/runs/43427120758)
+  concluiu todas as etapas com sucesso, incluindo migrações, build web e bundle Android.
+- A revisão corrigiu o calendário dos alertas da equipe: usa `dataEscolar` do núcleo em vez do fuso do
+  servidor, mantendo hoje/amanhã coerentes com a API e o aplicativo.
 
 ## Serviços e compatibilidade
 
@@ -45,6 +47,24 @@ interromper escritas, preservar uma cópia do estado atual e restaurar primeiro 
   depois do envio; a migração do banco sozinha não atualiza o código em execução.
 - Distribuir APK/AAB novo com código 3 ou superior. O código 2 não contém o novo protocolo; após adotar
   a sincronização nova em uma conta, a escrita de totais pelo app antigo recebe conflito para proteger os ganhos.
+
+## Validação no domínio publicado
+
+A revisão `d8e9274` foi implantada com sucesso nos dois serviços. O teste HTTP utilizou exclusivamente
+as contas fictícias de demonstração já existentes, sem cadastrar escola, aluno, compra ou atividade de teste.
+
+- `GET /saude`: 200; rotas novas `/aluno/avisos` e `/aluno/avaliacoes`: 401 sem sessão.
+- API autenticada: dados, atividades e avaliações pendentes do professor; visão da coordenação; resumo,
+  pessoas e turmas da administração retornaram 200.
+- Coordenação e administração receberam 403 ao tentar acessar a rota exclusiva de avaliações do professor.
+- Login pelo formulário público do painel: redirecionamento correto para cada um dos três perfis.
+- Onze páginas autenticadas retornaram 200: início, atividades, criação de atividade e alunos do professor;
+  início, turmas e vínculos da coordenação; início, pessoas, turmas e registros da administração.
+- Cookies de sessão com `HttpOnly` e `Secure`. A saída por POST retornou 303 e expirou a sessão em
+  uma tentativa; a área protegida sem cookie redirecionou ao login.
+
+Essas verificações comprovam a integração HTTP publicada, não uma inspeção visual ou o aceite físico do
+aplicativo. O resultado detalhado, sem credenciais, está no registro privado local `validacao-producao.json`.
 
 ## Documentação e pendências
 

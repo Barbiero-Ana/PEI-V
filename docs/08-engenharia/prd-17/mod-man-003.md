@@ -31,4 +31,4 @@ Consulte as regras transversais no PRD-17.
 
 **Aceite nesta auditoria** Evidência parcial.
 
-ESLint da API verifica regras e fronteiras além da tipagem. Workflow de CI versionado executa lint, tipagem, testes, migrações, build web e bundle Android. Primeira execução remota pendente.
+ESLint da API verifica regras e fronteiras além da tipagem. Workflow de CI executa lint, tipagem, testes, rastreabilidade, migrações, build web e bundle Android. Execução remota 43427120758 aprovada em 13/11/2026.

@@ -1,5 +1,5 @@
 import "server-only";
-import type { Professor } from "@modolume/core";
+import { dataEscolar, type Professor } from "@modolume/core";
 import { avaliacoesPendentes } from "./avaliacoes";
 import { listarAtividades } from "./atividades";
 import { listaDeTurmas, visaoGeral } from "./dados";
@@ -17,13 +17,11 @@ export interface Alerta {
   href: string;
 }
 
-const isoDe = (d: Date) =>
-  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-
 export async function alertasDoDia(professor: Professor): Promise<Alerta[]> {
-  const agora = new Date();
-  const hoje = isoDe(agora);
-  const amanha = isoDe(new Date(agora.getFullYear(), agora.getMonth(), agora.getDate() + 1));
+  const hoje = dataEscolar(new Date());
+  const proximoDia = new Date(`${hoje}T12:00:00Z`);
+  proximoDia.setUTCDate(proximoDia.getUTCDate() + 1);
+  const amanha = proximoDia.toISOString().slice(0, 10);
   const [planos, atividades, turmas, { atencao }, avaliacoes] = await Promise.all([
     listarPlanos(professor),
     listarAtividades(professor),

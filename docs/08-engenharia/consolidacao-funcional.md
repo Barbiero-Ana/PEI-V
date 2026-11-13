@@ -30,6 +30,10 @@ disponível nas tabelas de desempenho, identificado como acerto.
 
 ## Migrações e implantação
 
+**Atualização de 13/11/2026:** o backup foi restaurado e as duas migrações foram aplicadas no Railway.
+API e painel foram publicados, e a CI remota passou. O [registro da execução](implantacao-2026-11-13.md)
+documenta evidências, testes dos três perfis e as validações ainda pendentes no aplicativo.
+
 1. Ensaiar backup e restauração e aplicar as duas migrações novas em homologação:
    `20261111120000_consolidacao_progresso` e `20261111130000_ciclo_atividades`.
 2. Gerar Prisma e implantar a API com os novos controladores. As variáveis de serviço existentes permanecem

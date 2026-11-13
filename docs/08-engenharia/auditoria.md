@@ -1,5 +1,17 @@
 # Auditoria técnica do Modolume
 
+## Migração e publicação em 13/11/2026
+
+Banco migrado após backup consistente e ensaio de restauração. API no Railway e painel na Vercel
+publicados e verificados nos três perfis fictícios. Os 152 testes, a suíte PostgreSQL, lint, tipagem,
+rastreabilidade, build web e bundle Android passaram na CI remota. A revisão corrigiu também o calendário
+dos alertas web para usar a data escolar compartilhada, sem depender do fuso do servidor.
+
+As datas originais dos 25 ADRs e dos PRDs foram preservadas. A assinatura de aprovação documental de
+**Ana Barbiero — Líder de projeto**, em **13/11/2026**, está separada do histórico e do aceite funcional.
+Há 17 PRDs de módulo e 230 PRDs de requisitos rastreáveis. Os detalhes e limites estão no
+[registro de implantação](implantacao-2026-11-13.md). As seções anteriores abaixo são históricas.
+
 ## Consolidação funcional em 11/11/2026
 
 Foram implementadas as quatro frentes solicitadas. O [roteiro de consolidação](consolidacao-funcional.md)
